@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-const String portalUrl =
-    'https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/';
+/// Existing live CMA MCQ Portal.
+const String portalUrl = 'https://rohitfcg123-arch.github.io/';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,13 +41,35 @@ class _PortalWebViewState extends State<PortalWebView> {
   bool _loading = true;
   bool _hasError = false;
 
+  static const String _mobileViewportFix = r'''
+(function () {
+  try {
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'viewport';
+      document.head.appendChild(meta);
+    }
+    meta.content =
+      'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+
+    document.documentElement.style.width = '100%';
+    document.documentElement.style.maxWidth = '100%';
+    document.body.style.width = '100%';
+    document.body.style.maxWidth = '100%';
+    document.body.style.margin = '0';
+    document.body.style.overflowX = 'hidden';
+  } catch (e) {}
+})();
+''';
+
   @override
   void initState() {
     super.initState();
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setUserAgent('CMA-MCQ-Portal-Android/1.0')
+      ..setUserAgent('CMA-MCQ-Portal-Android/1.1')
       ..setBackgroundColor(const Color(0xFFFAF6EE))
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -59,7 +81,8 @@ class _PortalWebViewState extends State<PortalWebView> {
               });
             }
           },
-          onPageFinished: (_) {
+          onPageFinished: (_) async {
+            await _controller.runJavaScript(_mobileViewportFix);
             if (mounted) setState(() => _loading = false);
           },
           onWebResourceError: (error) {
@@ -76,12 +99,10 @@ class _PortalWebViewState extends State<PortalWebView> {
             final uri = Uri.tryParse(request.url);
             if (uri == null) return NavigationDecision.prevent;
 
-            // Keep normal web navigation inside the app.
             if (uri.scheme == 'http' || uri.scheme == 'https') {
               return NavigationDecision.navigate;
             }
 
-            // Open WhatsApp, email, phone, etc. using Android's external apps.
             try {
               final launched = await launchUrl(
                 uri,
@@ -89,9 +110,9 @@ class _PortalWebViewState extends State<PortalWebView> {
               );
               return launched
                   ? NavigationDecision.prevent
-                  : NavigationDecision.navigate;
+                  : NavigationDecision.prevent;
             } catch (_) {
-              return NavigationDecision.navigate;
+              return NavigationDecision.prevent;
             }
           },
         ),
@@ -108,8 +129,13 @@ class _PortalWebViewState extends State<PortalWebView> {
   }
 
   Future<void> _reload() async {
-    if (mounted) setState(() => _hasError = false);
-    await _controller.reload();
+    if (mounted) {
+      setState(() {
+        _hasError = false;
+        _loading = true;
+      });
+    }
+    await _controller.loadRequest(Uri.parse(portalUrl));
   }
 
   @override
