@@ -40,12 +40,30 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          printf '%s' "$KEYSTORE_BASE64" \
-            | tr -cd 'A-Za-z0-9+/=' \
-            | base64 --decode \
-            > android/app/cma-release-key.jks
+          python3 - <<'PY'
+          import os
+          import base64
+          import re
+          from pathlib import Path
 
-          test -s android/app/cma-release-key.jks
+          value = os.environ["KEYSTORE_BASE64"]
+
+          # Remove whitespace and any accidental non-Base64 characters.
+          value = re.sub(r"[^A-Za-z0-9+/=]", "", value)
+
+          # Add missing Base64 padding if necessary.
+          value += "=" * (-len(value) % 4)
+
+          keystore = base64.b64decode(value, validate=True)
+
+          output = Path("android/app/cma-release-key.jks")
+          output.write_bytes(keystore)
+
+          if output.stat().st_size == 0:
+              raise RuntimeError("Keystore file is empty")
+
+          print(f"Keystore restored successfully: {output.stat().st_size} bytes")
+          PY
 
       - name: Configure release signing
         env:
@@ -115,5 +133,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CMA-MCQ-Portal-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/apk/release/app-release.apk
           if-no-files-found: error
