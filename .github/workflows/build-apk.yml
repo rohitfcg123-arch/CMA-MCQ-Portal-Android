@@ -36,6 +36,66 @@ jobs:
             --org com.taxpath \
             --project-name cma_mcq_portal
 
+      - name: Configure Firebase / Google Sign-In
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 || secrets.GOOGLE_SERVICES_BASE64 }}
+        run: |
+          python3 - <<'PY'
+          import os, base64, re
+          from pathlib import Path
+
+          value = os.environ.get("GOOGLE_SERVICES_JSON_BASE64", "").strip()
+          if not value:
+              raise RuntimeError(
+                  "Missing GOOGLE_SERVICES_JSON_BASE64 (or GOOGLE_SERVICES_BASE64) GitHub secret."
+              )
+
+          # Accept either raw JSON or Base64 JSON.
+          if value.lstrip().startswith("{"):
+              data = value
+          else:
+              value = re.sub(r"[^A-Za-z0-9+/=]", "", value)
+              value += "=" * (-len(value) % 4)
+              data = base64.b64decode(value, validate=True).decode("utf-8")
+
+          out = Path("android/app/google-services.json")
+          out.write_text(data, encoding="utf-8")
+
+          if not out.exists() or out.stat().st_size < 100:
+              raise RuntimeError("google-services.json was not restored correctly.")
+
+          print("google-services.json restored.")
+
+          # Flutter's generated Android project uses Kotlin DSL. Add the
+          # Google Services Gradle plugin so the Android OAuth client from
+          # google-services.json is available to google_sign_in.
+          settings = Path("android/settings.gradle.kts")
+          s = settings.read_text(encoding="utf-8")
+          if 'id("com.google.gms.google-services") version "4.4.2" apply false' not in s:
+              marker = 'plugins {'
+              if marker not in s:
+                  raise RuntimeError("Could not locate plugins block in android/settings.gradle.kts")
+              s = s.replace(
+                  marker,
+                  marker + '\\n    id("com.google.gms.google-services") version "4.4.2" apply false',
+                  1
+              )
+              settings.write_text(s, encoding="utf-8")
+
+          app = Path("android/app/build.gradle.kts")
+          a = app.read_text(encoding="utf-8")
+          if 'id("com.google.gms.google-services")' not in a:
+              marker = 'plugins {'
+              if marker not in a:
+                  raise RuntimeError("Could not locate plugins block in android/app/build.gradle.kts")
+              a = a.replace(
+                  marker,
+                  marker + '\\n    id("com.google.gms.google-services")',
+                  1
+              )
+              app.write_text(a, encoding="utf-8")
+          PY
+
       - name: Restore release keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
