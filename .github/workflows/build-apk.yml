@@ -135,3 +135,5 @@ jobs:
           name: CMA-MCQ-Portal-APK
           path: build/app/outputs/apk/release/app-release.apk
           if-no-files-found: error
+
+# Google Sign-In bridge workflow made idempotent.
