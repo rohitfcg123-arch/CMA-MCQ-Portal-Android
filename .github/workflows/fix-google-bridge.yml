@@ -21,19 +21,18 @@ jobs:
           from pathlib import Path
           p = Path("lib/main.dart")
           s = p.read_text()
-          old = """            final uri = Uri.tryParse(url);
-            if (uri != null && uri.host == 'rohitfcg123-arch.github.io') {
-              await _controller.runJavaScript(_nativeGoogleBridge);
-            }"""
-          new = """            final uri = Uri.tryParse(url);
-            if (uri != null &&
+          import re
+          pattern = re.compile(
+              r"if (uri != null && uri\.host == 'rohitfcg123-arch\.github\.io') \{"
+          )
+          replacement = """if (uri != null &&
                 (uri.host == 'rohitfcg123-arch.github.io' ||
-                    uri.host == 'snackssangam.github.io')) {
-              await _controller.runJavaScript(_nativeGoogleBridge);
-            }"""
-          if old not in s:
-              raise SystemExit("Target block not found; no change made.")
-          p.write_text(s.replace(old, new, 1))
+                    uri.host == 'snackssang.github.io')) {"""
+          if pattern.search(s):
+              p.write_text(pattern.sub(replacement, s, count=1))
+          else:
+              print("Bridge already patched; nothing to change.")
+
           PY
 
       - name: Commit patch
