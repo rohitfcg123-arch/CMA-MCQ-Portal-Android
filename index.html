@@ -38,7 +38,16 @@ document.getElementById('google').onclick=async()=>{
   const b=document.getElementById('google');b.disabled=true;b.textContent='Signing in…';
   try{
     await persistenceReady;
-    const result=await auth.signInWithPopup(provider);
+const CMA_ANDROID_APP=/CMA-MCQ-Portal-Android/i.test(navigator.userAgent);
+async function cmaGoogleSignIn(provider){
+  if(CMA_ANDROID_APP){
+    try{sessionStorage.setItem('cma_pending_path',location.href);}catch(e){}
+    await auth.signInWithRedirect(provider);
+    return null;
+  }
+  return await auth.signInWithPopup(provider);
+}
+    const result=await cmaGoogleSignIn(provider);
     const user=result&&result.user;
     const h=pendingHref;
     closeLogin();
@@ -53,7 +62,15 @@ document.getElementById('google').onclick=async()=>{
     b.disabled=false;b.textContent='G  Continue with Google';
   }
 };
-auth.getRedirectResult().catch(console.error).finally(()=>ready=true);
+auth.getRedirectResult().then(result=>{
+  try{
+    const pending=sessionStorage.getItem('cma_pending_path');
+    if(result&&result.user&&pending){
+      sessionStorage.removeItem('cma_pending_path');
+      if(pending!==location.href) location.href=pending;
+    }
+  }catch(e){console.warn(e)}
+}).catch(console.error).finally(()=>ready=true);
 function norm(v){return(v||'').trim().toLowerCase()}async function track(user){try{const ref=db.collection('portalUsers').doc(user.uid),snap=await ref.get();await ref.set({uid:user.uid,email:norm(user.email),displayName:user.displayName||'',photoURL:user.photoURL||'',provider:'google.com',lastActive:firebase.firestore.FieldValue.serverTimestamp(),lastSeenPage:location.pathname,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),...(snap.exists?{}:{createdAt:firebase.firestore.FieldValue.serverTimestamp()})},{merge:true});if(!sessionStorage.getItem('cma_login_event_recorded_'+user.uid)){await db.collection('loginEvents').add({uid:user.uid,email:norm(user.email),displayName:user.displayName||'',provider:'google.com',loginAt:firebase.firestore.FieldValue.serverTimestamp(),page:location.pathname});sessionStorage.setItem('cma_login_event_recorded_'+user.uid,'1')}}catch(e){console.warn('Tracking failed',e)}}
 const SETTINGS_DEFAULTS={freeAccessMode:'attemptLimit',freeAttemptLimit:5,freePoolSize:30,siteWideFree:false};
 let siteSettings=SETTINGS_DEFAULTS;
