@@ -36,7 +36,7 @@ jobs:
             --org com.taxpath \
             --project-name cma_mcq_portal
 
-            - name: Restore release keystore
+      - name: Restore release keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
@@ -109,5 +109,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CMA-MCQ-Portal-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error          name: CMA-MCQ-Portal-APK
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
