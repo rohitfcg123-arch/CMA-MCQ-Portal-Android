@@ -1,16 +1,17 @@
 name: cma_mcq_portal
-description: CMA MCQ Portal Android app wrapper.
+description: CMA MCQ Portal Android wrapper with native Google Sign-In.
 publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.10.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  webview_flutter: ^4.14.1
+  google_sign_in: ^7.2.17
   url_launcher: ^6.3.2
+  webview_flutter: ^4.13.0
 
 dev_dependencies:
   flutter_test:
