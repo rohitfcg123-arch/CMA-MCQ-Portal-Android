@@ -1,9 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 const String portalUrl =
     'https://rohitfcg123-arch.github.io/snackssangam.github.io/index.html';
+
+const String webClientId =
+    '208738737302-qpv57rh3voh02dtpqs369175ahieb3q7.apps.googleusercontent.com';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,8 +44,12 @@ class PortalWebView extends StatefulWidget {
 
 class _PortalWebViewState extends State<PortalWebView> {
   late final WebViewController _controller;
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+
   bool _loading = true;
   bool _hasError = false;
+  bool _googleBusy = false;
+  bool _googleInitialized = false;
 
   static const String _mobileViewportFix = r'''
 (function () {
@@ -52,7 +62,6 @@ class _PortalWebViewState extends State<PortalWebView> {
     }
     meta.content =
       'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
-
     document.documentElement.style.width = '100%';
     document.documentElement.style.maxWidth = '100%';
     document.body.style.width = '100%';
@@ -63,14 +72,92 @@ class _PortalWebViewState extends State<PortalWebView> {
 })();
 ''';
 
+  static const String _nativeGoogleBridge = r'''
+(function () {
+  try {
+    window.__cmaNativeGoogleLogin = function () {
+      if (window.NativeGoogleSignIn) {
+        window.NativeGoogleSignIn.postMessage('signin');
+      }
+    };
+
+    window.__cmaNativeGoogleToken = function (idToken) {
+      try {
+        var provider = new firebase.auth.GoogleAuthProvider();
+        var credential = provider.credential(idToken);
+        firebase.auth().signInWithCredential(credential)
+          .then(function () {
+            var button = document.getElementById('google');
+            if (button) {
+              button.disabled = false;
+              button.textContent = 'G  Continue with Google';
+            }
+          })
+          .catch(function (e) {
+            console.error('Native Google Firebase sign-in failed', e);
+            var msg = document.getElementById('authMsg');
+            if (msg) {
+              msg.textContent =
+                'Google sign-in failed: ' + (e && e.code ? e.code : 'unknown-error');
+              msg.className = 'error';
+            }
+            var button = document.getElementById('google');
+            if (button) {
+              button.disabled = false;
+              button.textContent = 'G  Continue with Google';
+            }
+          });
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    var button = document.getElementById('google');
+    if (button) {
+      button.onclick = function () {
+        window.__cmaNativeGoogleLogin();
+      };
+    }
+
+    var googleLogin = document.getElementById('googleLogin');
+    if (googleLogin) {
+      googleLogin.onclick = function () {
+        window.__cmaNativeGoogleLogin();
+      };
+    }
+  } catch (e) {
+    console.error('Native Google bridge setup failed', e);
+  }
+})();
+''';
+
   @override
   void initState() {
     super.initState();
+    _initializeGoogle();
+    _initializeWebView();
+  }
 
+  Future<void> _initializeGoogle() async {
+    try {
+      await _googleSignIn.initialize(
+        serverClientId: webClientId,
+      );
+      _googleInitialized = true;
+    } catch (e) {
+      debugPrint('Google Sign-In initialization failed: $e');
+    }
+  }
+
+  void _initializeWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setUserAgent('CMA-MCQ-Portal-Android/1.2')
+      ..setUserAgent('CMA-MCQ-Portal-Android/2.0')
       ..setBackgroundColor(const Color(0xFFFAF6EE))
+      ..addJavaScriptChannel(
+        'NativeGoogleSignIn',
+        onMessageReceived: (_) => _startNativeGoogleSignIn(),
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (_) {
@@ -81,8 +168,12 @@ class _PortalWebViewState extends State<PortalWebView> {
               });
             }
           },
-          onPageFinished: (_) async {
+          onPageFinished: (url) async {
             await _controller.runJavaScript(_mobileViewportFix);
+            final uri = Uri.tryParse(url);
+            if (uri != null && uri.host == 'rohitfcg123-arch.github.io') {
+              await _controller.runJavaScript(_nativeGoogleBridge);
+            }
             if (mounted) setState(() => _loading = false);
           },
           onWebResourceError: (error) {
@@ -98,11 +189,9 @@ class _PortalWebViewState extends State<PortalWebView> {
           onNavigationRequest: (request) async {
             final uri = Uri.tryParse(request.url);
             if (uri == null) return NavigationDecision.prevent;
-
             if (uri.scheme == 'http' || uri.scheme == 'https') {
               return NavigationDecision.navigate;
             }
-
             try {
               await launchUrl(uri, mode: LaunchMode.externalApplication);
             } catch (_) {}
@@ -111,6 +200,53 @@ class _PortalWebViewState extends State<PortalWebView> {
         ),
       )
       ..loadRequest(Uri.parse(portalUrl));
+  }
+
+  Future<void> _startNativeGoogleSignIn() async {
+    if (_googleBusy) return;
+    if (!_googleInitialized) await _initializeGoogle();
+    if (!_googleInitialized) {
+      _showMessage('Google Sign-In could not be initialized. Please try again.');
+      return;
+    }
+
+    setState(() => _googleBusy = true);
+    try {
+      final GoogleSignInAccount account =
+          await _googleSignIn.authenticate();
+      final idToken = account.authentication.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('Google did not return an ID token.');
+      }
+      final tokenForJs = jsonEncode(idToken);
+      await _controller.runJavaScript(
+        'window.__cmaNativeGoogleToken($tokenForJs);',
+      );
+    } catch (e) {
+      debugPrint('Native Google Sign-In failed: $e');
+      final message = e.toString().toLowerCase().contains('cancel')
+          ? 'Google sign-in was cancelled.'
+          : 'Google sign-in failed. Please try again.';
+      _showMessage(message);
+    } finally {
+      if (mounted) setState(() => _googleBusy = false);
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+    _controller.runJavaScript('''
+      (function () {
+        var msg = document.getElementById('authMsg');
+        if (msg) {
+          msg.textContent = ${jsonEncode(message)};
+          msg.className = 'error';
+        }
+      })();
+    ''');
   }
 
   Future<bool> _handleBack() async {
@@ -138,23 +274,17 @@ class _PortalWebViewState extends State<PortalWebView> {
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         final shouldExit = await _handleBack();
-        if (shouldExit && mounted) {
-          Navigator.of(context).pop();
-        }
+        if (shouldExit && mounted) Navigator.of(context).pop();
       },
       child: Scaffold(
         body: SafeArea(
           child: Stack(
             children: [
               WebViewWidget(controller: _controller),
-              if (_loading)
+              if (_loading || _googleBusy)
                 const Align(
                   alignment: Alignment.topCenter,
-                  child: LinearProgressIndicator(
-                    minHeight: 2,
-                    color: Color(0xFFC8A24A),
-                    backgroundColor: Color(0xFFE8E0CE),
-                  ),
+                  child: LinearProgressIndicator(minHeight: 2),
                 ),
               if (_hasError)
                 Center(
