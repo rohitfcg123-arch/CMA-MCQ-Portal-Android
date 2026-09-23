@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-/// Existing live CMA MCQ Portal.
-const String portalUrl = 'https://rohitfcg123-arch.github.io/';
+const String portalUrl =
+    'https://rohitfcg123-arch.github.io/snackssangam.github.io/index.html';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,7 +69,7 @@ class _PortalWebViewState extends State<PortalWebView> {
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setUserAgent('CMA-MCQ-Portal-Android/1.1')
+      ..setUserAgent('CMA-MCQ-Portal-Android/1.2')
       ..setBackgroundColor(const Color(0xFFFAF6EE))
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -104,16 +104,9 @@ class _PortalWebViewState extends State<PortalWebView> {
             }
 
             try {
-              final launched = await launchUrl(
-                uri,
-                mode: LaunchMode.externalApplication,
-              );
-              return launched
-                  ? NavigationDecision.prevent
-                  : NavigationDecision.prevent;
-            } catch (_) {
-              return NavigationDecision.prevent;
-            }
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            } catch (_) {}
+            return NavigationDecision.prevent;
           },
         ),
       )
