@@ -1,0 +1,149 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email == "rohit.fcg123@gmail.com";
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isOwnEmail(email) {
+      return signedIn()
+        && request.auth.token.email == email;
+    }
+
+    // ------------------------------------------------------------
+    // User/profile records
+    // ------------------------------------------------------------
+    match /portalUsers/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------
+    // Premium access records
+    // Only admin can create/change premium access.
+    // A signed-in student can read only their own access record.
+    // ------------------------------------------------------------
+    match /access/{email} {
+      allow read: if isAdmin() || isOwnEmail(email);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /subscriptions/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /approvedUsers/{email} {
+      allow read, write: if isAdmin();
+    }
+
+    match /admins/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------
+    // Attempts / activity
+    // ------------------------------------------------------------
+    match /attempts/{attemptId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+
+      allow update, delete: if isAdmin();
+    }
+
+    match /loginEvents/{eventId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /portalVisits/{visitId} {
+      allow create: if signedIn()
+        && request.resource.data.visitorId is string;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------
+    // Payment records
+    // Students can submit their own payment verification request.
+    // Only admin can view/modify payment records.
+    // ------------------------------------------------------------
+    match /payments/{paymentId} {
+      allow create: if signedIn()
+        && request.resource.data.email == request.auth.token.email;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------
+    // Global portal settings / pricing
+    // settings/access is intentionally readable by signed-in users and
+    // is also readable anonymously because the Home/Payment pages need
+    // to display public subscription pricing before login.
+    // Only admin can write it.
+    // ------------------------------------------------------------
+    match /settings/access {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{document} {
+      allow read, write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------
+    // Admin audit history
+    // ------------------------------------------------------------
+    match /settingsHistory/{historyId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------
+    // Promo codes
+    // Payment page is client-side and must be able to look up a code.
+    // Therefore signed-in users can read promo documents.
+    // Only admin can create/change/delete them.
+    // ------------------------------------------------------------
+    match /promoCodes/{code} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Existing referral-code support
+    match /referralCodes/{code} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------
+    // Catch-all deny
+    // ------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fundamentals of Business Economics and Management — CMA MCQ Practice</title>
+<style>
+:root{
+  --ink:#1c2a2e;--paper:#f6f3ec;--paper-2:#efe9dc;--rule:#d8d0bd;
+  --brass:#8a6a1f;--brass-deep:#6b5117;--teal:#12484a;--teal-deep:#0b3436;
+  --good:#2f6d3f;--good-bg:#e4efe2;--bad:#9c3b30;--bad-bg:#f3e2df;--muted:#6f6a5c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink)}
+body{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Serif",serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:auto;padding:18px 16px 45px}
+.masthead{border-bottom:3px double var(--rule);padding-bottom:12px;margin-bottom:18px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.masthead h1{font-size:1.25rem;margin:0;color:var(--teal-deep);font-weight:650}
+.sub{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted)}
+button,select{font:inherit}
+.btn{border:1px solid var(--rule);background:var(--paper);color:var(--teal);border-radius:4px;padding:9px 13px;cursor:pointer;font-weight:650}
+.btn.primary{background:var(--teal);color:var(--paper);border-color:var(--teal)}
+.btn.danger{background:var(--bad);color:white;border-color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.screen{display:none}.screen.active{display:block}
+.card{background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;padding:18px;margin:14px 0}
+.card h2{font-family:ui-monospace,monospace;text-transform:uppercase;letter-spacing:.09em;font-size:.75rem;color:var(--brass-deep);margin:0 0 12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--rule)}
+.row:last-child{border-bottom:0}.row label{flex:1;line-height:1.4}
+select{border:1px solid var(--rule);background:var(--paper);padding:8px;border-radius:4px;color:var(--ink)}
+.lede{color:var(--muted);line-height:1.55;margin-top:0}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.quizbar{display:flex;justify-content:space-between;gap:8px;font-family:ui-monospace,monospace;font-size:.76rem;color:var(--muted)}
+.progress{height:5px;background:var(--rule);margin:8px 0 18px;border-radius:4px;overflow:hidden}.fill{height:100%;background:var(--brass);width:0}
+.timer{font-weight:700;color:var(--teal)}.urgent{color:var(--bad)}
+.qnum{font-family:ui-monospace,monospace;color:var(--brass-deep);font-size:.8rem;margin-bottom:7px}
+.qtext{font-size:1.12rem;line-height:1.5;margin:0 0 18px;font-weight:550}
+.options{display:flex;flex-direction:column;gap:10px}
+.option{display:flex;align-items:flex-start;gap:10px;padding:13px;border:1px solid var(--rule);border-radius:4px;background:var(--paper-2);cursor:pointer;line-height:1.4}
+.option:hover{border-color:var(--teal)}.option input{margin-top:4px}
+.option.correct{border-color:var(--good);background:var(--good-bg)}.option.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.feedback{margin-top:13px;padding:11px;border-radius:4px;display:none;line-height:1.45}.feedback.show{display:block}
+.feedback.good{background:var(--good-bg);color:var(--good)}.feedback.bad{background:var(--bad-bg);color:var(--bad)}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:18px;flex-wrap:wrap}
+.review{margin-top:18px}.review-item{padding:12px;border-bottom:1px solid var(--rule);line-height:1.45}
+.score{font-size:2rem;color:var(--teal);font-weight:750}
+.small{font-size:.8rem;color:var(--muted)}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{border:1px solid var(--rule);padding:12px;background:var(--paper-2);text-align:center}
+.lock{background:#fff8e8;border:1px dashed var(--brass);padding:14px;border-radius:4px;color:#684f1a}
+@media(max-width:560px){.statgrid{grid-template-columns:1fr}.qtext{font-size:1.02rem}}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<style id="cma-access-gate-style">
+#cmaSessionBar{position:sticky;top:0;z-index:4000;background:#0d3b3e;color:#fff;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:Arial,sans-serif;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+#cmaSessionBar .cma-session-left{display:flex;align-items:center;gap:8px;min-width:0}
+#cmaSessionBar .cma-session-email{color:#e4c98a;word-break:break-all}
+#cmaSessionBar button{border:1px solid rgba(255,255,255,.35);border-radius:7px;padding:7px 11px;background:#fff;color:#082627;font-weight:700;cursor:pointer}
+#cmaSessionBar button.cma-logout{background:#c8a24a;border-color:#c8a24a}
+#cmaAuthOverlay{display:none;position:fixed;inset:0;background:rgba(8,38,39,.68);z-index:99999;align-items:center;justify-content:center;padding:20px;font-family:Arial,sans-serif}
+#cmaAuthCard{width:min(420px,100%);background:#fff;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center;position:relative;color:#22302f}
+#cmaAuthCard h2{margin:0 0 8px;color:#0d3b3e}
+#cmaAuthCard p{color:#687572;line-height:1.5;font-size:14px}
+#cmaGoogleLogin{width:100%;padding:12px 16px;border:1px solid #d8d0bd;border-radius:9px;background:#fff;color:#22302f;font-weight:700;cursor:pointer}
+#cmaGoogleLogin:disabled{opacity:.6}
+#cmaCloseAuth{position:absolute;right:12px;top:10px;border:0;background:transparent;font-size:24px;cursor:pointer;color:#687572}
+#cmaAuthMsg{margin-top:12px;font-size:13px;line-height:1.45}
+#cmaAccessNotice{display:none;position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:100000;background:#fff;border:1px solid #d8d0bd;border-radius:10px;padding:12px 16px;box-shadow:0 8px 30px rgba(0,0,0,.18);font:600 13px Arial,sans-serif;color:#22302f;max-width:min(560px,calc(100% - 30px));text-align:center}
+</style>
+<style id="ui-refresh">
+/* CMA Portal visual refresh — preserves all quiz logic and question data */
+body{background:var(--paper);}
+.app{max-width:820px;padding:12px 16px 48px}
+.top{box-shadow:0 5px 18px rgba(8,56,58,.04);background:rgba(247,245,239,.96)}
+.brand{font-size:1.12rem;letter-spacing:-.01em}.mini{color:var(--gold);font-size:.68rem}
+.home{background:var(--paper2);transition:.16s}.home:hover,.outline:hover,.bookmark:hover{border-color:var(--gold);transform:translateY(-1px)}
+.hero{padding:28px 3px 20px}.hero h1{font-size:1.9rem;letter-spacing:-.025em}.hero p{max-width:700px}
+.card{background:var(--paper2);box-shadow:0 4px 14px rgba(8,56,58,.035);transition:.16s}.card:hover{box-shadow:0 8px 22px rgba(8,56,58,.07);border-color:#cfc4aa}
+.card h2{font-size:.68rem}.desc{font-size:.8rem}
+select,.field{outline:none;transition:.15s}select:focus,.field:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,80,82,.08)}
+.start{box-shadow:0 8px 20px rgba(14,80,82,.14);transition:.16s}.start:hover{transform:translateY(-1px)}
+.palette{padding-bottom:12px}.dot{transition:.12s}.dot:hover{border-color:var(--gold)}
+.option{transition:.13s;box-shadow:0 2px 6px rgba(8,56,58,.025)}.option:hover:not(.disabled){border-color:#bcae8d;transform:translateY(-1px)}
+.option.selected{box-shadow:0 4px 12px rgba(14,80,82,.07)}
+.feedback{border:1px solid transparent}.feedback.right{border-color:#bdd8c2}.feedback.miss{border-color:#e4b9b4}
+.nav button{transition:.14s}.nav button:hover{transform:translateY(-1px)}
+.results{padding-top:32px}.score{letter-spacing:-.04em}.stat{box-shadow:0 3px 10px rgba(8,56,58,.03)}
+.review-item{box-shadow:0 3px 10px rgba(8,56,58,.025)}
+button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid rgba(200,162,74,.38);outline-offset:2px}
+@media(max-width:520px){.app{padding-left:12px;padding-right:12px}.hero{padding-top:22px}.hero h1{font-size:1.55rem}.qtext{font-size:1.03rem}.option{padding:13px}.topline{align-items:flex-start}}
+</style></head>
+<body>
+<div id="cmaSessionBar">
+  <div class="cma-session-left"><strong>CMA MCQ Portal</strong><span id="cmaSessionEmail" class="cma-session-email"></span></div>
+  <div style="display:flex;gap:7px;align-items:center">
+    <a href="index.html" style="color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:7px;padding:7px 11px;font-weight:700">Home</a>
+    <button id="cmaLoginBtn">Login</button>
+    <button id="cmaLogoutBtn" class="cma-logout" style="display:none">Logout</button>
+  </div>
+</div>
+<div id="cmaAuthOverlay">
+  <div id="cmaAuthCard">
+    <button id="cmaCloseAuth" aria-label="Close">×</button>
+    <h2>Sign in to continue</h2>
+    <p>Use the same Google account you used on the CMA MCQ Portal. If you are already signed in, the test will open directly.</p>
+    <button id="cmaGoogleLogin">Continue with Google</button>
+    <div id="cmaAuthMsg"></div>
+  </div>
+</div>
+<div id="cmaAccessNotice"></div>
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <h1>Fundamentals of Business Economics and Management</h1>
+      <div class="sub">Paper 4 • 117 MCQs</div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="location.href='index.html'">⌂ Home</button>
+    </div>
+  </header>
+
+  <section id="setup" class="screen active">
+    <p class="lede">Complete MCQ practice using the question bank supplied for this paper. The bank and answer key are embedded in this single HTML file.</p>
+    <div class="card">
+      <h2>Test Setup</h2>
+      <div class="row"><label>Question count<br><span class="small" id="bankSize"></span></label><select id="count"></select></div>
+      <div class="row"><label>Random questions<br><span class="small">Shuffle the selected questions</span></label><input id="random" type="checkbox" checked></div>
+      <div class="row"><label>Instant answer<br><span class="small">Show correctness immediately after selection</span></label><input id="instant" type="checkbox" checked></div>
+      <div class="row"><label>Timer<br><span class="small">Automatically submit when time ends</span></label><input id="timer" type="checkbox"></div>
+      <div class="row"><label>Time limit</label><select id="minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">60 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></div>
+      <button id="start" class="btn primary" style="width:100%;margin-top:12px">Start Practice</button>
+    </div>
+  </section>
+
+  <section id="quiz" class="screen">
+    <div class="quizbar"><span id="progressText"></span><span id="timerBox" class="timer"></span></div>
+    <div class="progress"><div id="fill" class="fill"></div></div>
+    <div class="card">
+      <div id="qnum" class="qnum"></div>
+      <p id="qtext" class="qtext"></p>
+      <div id="options" class="options"></div>
+      <div id="feedback" class="feedback"></div>
+      <div class="nav">
+        <button id="prev" class="btn">← Previous</button>
+        <button id="bookmark" class="btn">☆ Bookmark</button>
+        <button id="next" class="btn primary">Next</button>
+      </div>
+    </div>
+    <button id="finishNow" class="btn danger">Submit Test</button>
+  </section>
+
+  <section id="result" class="screen">
+    <div class="card">
+      <h2>Result</h2>
+      <div class="score" id="score">0 / 0</div>
+      <p id="timeoutNote" class="small"></p>
+      <div class="statgrid">
+        <div class="stat"><strong id="answered">0</strong><br><span class="small">Attempted</span></div>
+        <div class="stat"><strong id="accuracy">0%</strong><br><span class="small">Accuracy</span></div>
+        <div class="stat"><strong>117</strong><br><span class="small">Bank size</span></div>
+      </div>
+      <div class="actions"><button id="restart" class="btn primary">New Test</button><button class="btn" onclick="location.href='index.html'">Home</button></div>
+    </div>
+    <div class="card review"><h2>Review</h2><div id="review"></div></div>
+  </section>
+</div>
+
+<script>
+
+const QUESTIONS = [{"id":1,"q":"Who was the father of Economics ?","options":["Marshall","Adam smith","Robbins","Keynes"],"sourcePage":1,"ans":1},{"id":2,"q":"Normative Economic theory deals with ___________","options":["What to produce","How to produce","Whom to produce","How the problem should be solved"],"sourcePage":1,"ans":3},{"id":3,"q":"In economics goods includes material things which _____________","options":["A can be transferred","can be visible","both A & B","None"],"sourcePage":1,"ans":2},{"id":4,"q":"Nature of PPF curve is ____________","options":["convex to the origin","concave to the origin","both","none"],"sourcePage":1,"ans":1},{"id":5,"q":"Point elasticity was propounded by:","options":["Adam smith","Marshall","Robbins","Keynes"],"sourcePage":1,"ans":1},{"id":6,"q":"Luxury goods have ____ degree of elasticity.","options":["High","low","Moderate","none"],"sourcePage":1,"ans":0},{"id":7,"q":"___________ is the functional relationship between physical inputs (i.e. factors of production), and physical outputs (i.e. quantity of good / service produced)","options":["Input- Output Function","Demand – Supply Function","Production Function","Cost Function"],"sourcePage":1,"ans":2},{"id":8,"q":"At the point of Inflexion, TP will generally-","options":["Show increases trend","Show decreasing or increasing trends","Equal to Zero","be negative"],"sourcePage":1,"ans":1},{"id":9,"q":"Identify the correct statement.","options":["Average product is at its maximum when Marginal Product is equal to Average Product.","Law of Increasing Returns to Scale relates to the effect of changes in factor proportions","Economies of Scale arise only because of invisibilities of factor proportions.","Internal Economies of scale can accrue only to the exporting sector."],"sourcePage":1,"ans":0},{"id":10,"q":"Modes of production was propounded by __________","options":["Adam Smith","Karl Marx","David Ricardo","Alfred Marshall"],"sourcePage":1,"ans":1},{"id":11,"q":"Which of the following is not a factor in market supply of a product?","options":["cost of production","number of buyers","market price of the product","price of related products"],"sourcePage":1,"ans":1},{"id":12,"q":"The demand for salt is inelastic, because ___________________.","options":["of low price","absence of it makes food tasteless","no substitutes","All the three"],"sourcePage":1,"ans":2},{"id":13,"q":"Price elasticity demand of product will be more elastic if it __________________.","options":["has no substitutes","has number of substitutes","is an item of necessity","is life saving product"],"sourcePage":1,"ans":1},{"id":14,"q":"All factor of production become variable in –","options":["Medium – run","Short- run","Long –run","none of the above"],"sourcePage":1,"ans":2},{"id":15,"q":"What is the maximum point of TP?","options":["When AP become zero","When MP become zero","At the intersecting point of AP& MP","None of these"],"sourcePage":1,"ans":1},{"id":16,"q":"A Rational Producer will operate in –","options":["Stage I","Stage II","Stage III","All of the above"],"sourcePage":1,"ans":1},{"id":17,"q":"Capitalistic economy means where the wealth and income of the country are owned by the","options":["state","land owners","state and public","bourgeoises"],"sourcePage":1,"ans":3},{"id":18,"q":"In the primitive age the factors used in production were mainly","options":["Capital","Land","Labour","Both land and labour"],"sourcePage":1,"ans":3},{"id":19,"q":"If PPF is linear it implies_____________","options":["constant opportunity cost","diminishing apart cost","Increasing opportunity cost","none"],"sourcePage":1,"ans":0},{"id":20,"q":"Micro Economics theory deals with.","options":["Economy as a whole","Individual units","Economic growth","all the above"],"sourcePage":1,"ans":1},{"id":21,"q":"Human wants are ________","options":["limited","unlimited","undefined","none"],"sourcePage":1,"ans":1},{"id":22,"q":"Any point beyond PPF is _________________","options":["attainable","unattainable","both","none"],"sourcePage":1,"ans":1},{"id":23,"q":"If an economy is working at the point left to PPF curve that shows…","options":["Full employment","unemployment","excess production","none"],"sourcePage":1,"ans":1},{"id":24,"q":"If the price of burger rises from ₹12 per piece to ₹ 20 per piece as a result of which the daily sales decrease from 300 to 200 pieces per day. The price elasticity of demand can be estimated as:","options":["0.5","0.8","0.25","2.1"],"sourcePage":2,"ans":0},{"id":25,"q":"An increase in price will result in an increase in total revenue if ________________","options":["percentage change in quantity demanded in greater than the percentage change in price","percentage change in quantity demanded is less than the percentage change in price","percentage change in quantity demanded is equal to the percentage change in price","none"],"sourcePage":2,"ans":1},{"id":26,"q":"Which of these will have highly inelastic supply?","options":["perishable goods","consumer durables goods","Items of elite class consumption","All the three"],"sourcePage":2,"ans":0},{"id":27,"q":"The supply function of a product x is as Sx = 5px+3. Where px stand for price. The quantity supplied corresponding to price of ` 2 will be ……… .","options":["18","13","15","23"],"sourcePage":2,"ans":1},{"id":28,"q":"Variable factor means those factors of production","options":["Which can be only changed in the long run?","Which can be changed in the short run?","Which can be never be changed","Both (a) & (b) correct"],"sourcePage":2,"ans":3},{"id":29,"q":"If the Marginal product of labour is below the Average product of Labour, it must be true that","options":["The Marginal product of Labour is negative","The Marginal Product of Labour is Zero","The Marginal Product of Labour is falling","The Average product of Labour is negative 26"],"sourcePage":2,"ans":2},{"id":30,"q":"Why does the Law of Increasing Returns operate?","options":["Full use of Fixed Indivisible Factors.","Efficiency of Variable Factors","Need to reach the right combination","All of the above"],"sourcePage":2,"ans":3},{"id":31,"q":"Internal Economies and Diseconomies arise due to –","options":["Overall industry-level changes","Changes at the Firm Level","Both (a) and (b)","Neither (a) nor (b)"],"sourcePage":2,"ans":1},{"id":32,"q":"The labour surplus is the difference between value of output minus","options":["Values of materials used","Values of fixed land used","Values of capital used","none"],"sourcePage":2,"ans":0},{"id":33,"q":"Socialistic nature of an economy means","options":["income and wealth are owned by the capitalists","income and wealth are owned by the labour class","income and wealth are owned by the state and public","All"],"sourcePage":2,"ans":2},{"id":34,"q":"Which of the following is/are an essential feature of the market :","options":["Buyers","Sellers","Price","All the three"],"sourcePage":2,"ans":3},{"id":35,"q":"In the long run price is governed by _________________","options":["Cost of Production","Demand supply forces","Marginal utility","None"],"sourcePage":2,"ans":0},{"id":36,"q":"In the long run a firm in perfect competition earns :","options":["Normal profit only","Abnormal profit","Average profit of past five years","12.33% profits on capital employed"],"sourcePage":2,"ans":0},{"id":37,"q":"A firm faces the shut down situation when :","options":["Price is less than average variable cost","Price is more than the average variable cost","Price is equal to fixed cost","Price is more than the average fixed cost"],"sourcePage":2,"ans":0},{"id":38,"q":"A firm that makes profit in excess of normal profit is earning","options":["Economic profit","Costing profit","Normal profit","Super normal profit"],"sourcePage":2,"ans":3},{"id":39,"q":"The market state that satisfy all the essential features of a perfect competitive market except identity of product is known as :","options":["Oligopoly","Duopoly","Monopoly","Monopolistic competition"],"sourcePage":2,"ans":3},{"id":40,"q":"In the short run if the price is above the average total cost in a monopolistic competitive market, the firm makes :","options":["Profits and new firms join the market","Profit and bar entry to new firms","Makes losses and exit the market","Quick profit and disappears"],"sourcePage":3,"ans":0},{"id":41,"q":"Which of these is associated with a monopolistic competitive market –","options":["Product differentiation","Homogeneous Product","Normal in short run","Single buyer"],"sourcePage":3,"ans":0},{"id":42,"q":"In a competitive market_____________ is the price maker :","options":["Firm","Industry","Consumer","Trade association"],"sourcePage":3,"ans":1},{"id":43,"q":"A Monopoly demand curve is :","options":["Same as its average revenue curve","Same as its supply curve","Same as marginal cost curve","None of these"],"sourcePage":3,"ans":0},{"id":44,"q":"When the firm is in the long period equilibrium it gets only :","options":["normal profit","no loss no profit","super normal profit","loss"],"sourcePage":3,"ans":0},{"id":45,"q":"Equilibrium of the firm under perfect Market means ,when :","options":["MR curve cuts the MC curve from below","MC curve cuts the MR curve from from below","MC Curve and MR curve are Parallel to each other","AR curve is Equal to MC curve"],"sourcePage":3,"ans":1},{"id":46,"q":"Penetration pricing means :","options":["price will reduced after gaining market share","reduce price when loosing market share","price will be raised later after gaining market share","None of these"],"sourcePage":3,"ans":2},{"id":47,"q":"One of the example of Oligopoly market is :","options":["Cosmetic industry","Cartel","automobile industry","Technology"],"sourcePage":3,"ans":2},{"id":48,"q":"The forces of supply and demand determine the :","options":["the quantity of the goods","the price of the goods","different prices from different customers","demand of customers"],"sourcePage":3,"ans":1},{"id":49,"q":"Excess profits earned by each firm during short time would attract :","options":["new firms to enter into the market","market share of each firm will be less","there is no barrier on the entry into the market","All of the above"],"sourcePage":3,"ans":3},{"id":50,"q":"In monopoly market there is :","options":["A singlefirm ,single product","A single firm, many substitute identical product","A single product , many firm","None of the above"],"sourcePage":3,"ans":0},{"id":51,"q":"the concept of monopolistic competition market was introduced by :","options":["Alfred Marshall","Prof. Chamberlin","Karl Marx","John Rbinson"],"sourcePage":3,"ans":1},{"id":52,"q":"Which of the following is near money?","options":["Bill of exchange","Saving bonds","Gilt edged securities","All the three"],"sourcePage":3,"ans":3},{"id":53,"q":"Optional money is a:","options":["Legal tender money","Non-legal tender money","Limited legal tender money","Full bodied money"],"sourcePage":3,"ans":1},{"id":54,"q":"Which of the following function does money serve when used to measure the prices of different goods and services?","options":["Store of value","Medium of exchange","Standard of value","Display of power"],"sourcePage":3,"ans":2},{"id":55,"q":"Which of these affects the demand for money?","options":["Real income","Price level","Rate of interest","Both (a) and (c)"],"sourcePage":3,"ans":3},{"id":56,"q":"Which of these would lead to fall in demand for money?","options":["Inflation","Increase in real income","Increase in real rate of interest","Increase in wealth"],"sourcePage":3,"ans":2},{"id":57,"q":"Supply of money refers to :","options":["Total money held by the public","Total money held by RBI","Total money with all the commercial banks and RBI","Total money in Government account"],"sourcePage":3,"ans":0},{"id":58,"q":"Which is the apex bank for agricultural credit in India?","options":["RBI","SIDBI","NABARD","IDBI"],"sourcePage":3,"ans":2},{"id":59,"q":"RBI check inflation by","options":["Increasing bank rate","Increasing CRR","Both","None"],"sourcePage":3,"ans":2},{"id":60,"q":"If the country is passing through recession, the RBI would","options":["Buy bonds","Reduce CRR","Ease out bank rate","All or any of the above three"],"sourcePage":3,"ans":3},{"id":61,"q":"Manipulation in CRR enables the RBI to _____________","options":["Influence the lending ability of the commercial banks","Check unemployment growth","Check poverty","Increase GDP"],"sourcePage":4,"ans":0},{"id":62,"q":"EXIM Bank is authorized to raise loan from :","options":["RBI","Government of India","International market","Trading activities"],"sourcePage":4,"ans":1},{"id":63,"q":"RBI was nationalized in:","options":["June 1947","Jan. 1949","March 1954","April 1936"],"sourcePage":4,"ans":1},{"id":64,"q":"FERA has been replaced by:","options":["FINA","FEMA","FENA","MRTP"],"sourcePage":4,"ans":1},{"id":65,"q":"Repo transaction means :","options":["Sale of securities by the bolder to the investor with the agreement to purchase them at a predetermined rate and date","Sale of securities by the holder to the investor with the agreement to resell them at a predetermined rate and date.","Sale and purchase of securities by the holder to the investor with the agreement to purchase them at the prevailing rate and date","Sale of securities by the holder to the investor with the agreement to purchase them at market driven rate."],"sourcePage":4,"ans":0},{"id":66,"q":"Reverse Repo transaction means :","options":["Sale of securities by the holder to the investor with the agreement to purchase them at a predetermined rate and date","Sale or purchase of securities by the holder to the investor with the commitment to sell or purchase them at a predetermined rate and date","Sale and purchase of securities by the holder to the investor with the agreement to purchase them at the prevailing rate and date","Sale of securities by the holder to the investor with the agreement to purchase them at market driven rate"],"sourcePage":4,"ans":3},{"id":67,"q":"Given a reserve ratio of 20% in initial deposit of ₹1000 in a banking system would create secondary deposit of ₹________________","options":["₹ 3,000","₹ 5,000","₹ 4,000","₹ 6,000"],"sourcePage":4,"ans":2},{"id":68,"q":"Money market deals with the ____________","options":["Short term credit","Long term credit","both A & B","None"],"sourcePage":4,"ans":0},{"id":69,"q":"Money market includes _________________","options":["Government securities","treasury bill","bills of exchange","All the above"],"sourcePage":4,"ans":3},{"id":70,"q":"In Indian money market, who are the main borrowers of short term funds","options":["central government","State government","local bodies","All the above"],"sourcePage":4,"ans":3},{"id":71,"q":"Money market is controlled by ________________","options":["Government","R.B.I","S.B.I","all the above"],"sourcePage":4,"ans":1},{"id":72,"q":"In April 1999 the government of India introduced the bills for the period of ________________","options":["91 days","182 days","364 days","None"],"sourcePage":4,"ans":2},{"id":73,"q":"In call money market funds are borrowed of rent without any security for the period of _____________","options":["one day","14 days","a & b","NONE"],"sourcePage":4,"ans":0},{"id":74,"q":"If buyer of the goods is called ___________","options":["Drawer","drawee","payee","none"],"sourcePage":4,"ans":1},{"id":75,"q":"Certificate of deposits are issued by the banks to___________","options":["individual","companies","P.S.U.S","All the above"],"sourcePage":4,"ans":3},{"id":76,"q":"Which are unsecured promissory notes","options":["Commercial paper","Certificate of deposits","Treasury bills","All the above"],"sourcePage":4,"ans":0},{"id":77,"q":"Commercial banks provide collateral loans against ______________","options":["bonds","Govt. security","both A & B","None"],"sourcePage":4,"ans":2},{"id":78,"q":"Profit is the difference between________________","options":["Total cost and total revenue","Total revenue and total cost","both A & B","None"],"sourcePage":5,"ans":1},{"id":79,"q":"The internal business environment includes factors such as : The term ‘T’ in SWOT Analysis is :","options":["business philosophy & business priorities","management s tructure","capital structure","All"],"sourcePage":5,"ans":3},{"id":80,"q":"","options":["Transparency","Total revenue","Threat","Transaction"],"sourcePage":5,"ans":2},{"id":81,"q":"The components of micro business environment are-","options":["Firms and consumers","M a r ket & competitors","Organization","All"],"sourcePage":5,"ans":3},{"id":82,"q":"The term ‘S’ in PESTEL stands for-","options":["Strength","Socio-economic","S ustainability","None"],"sourcePage":5,"ans":1},{"id":83,"q":"VUCA is an acronym , first used in :","options":["1984","1987","1997","1992"],"sourcePage":5,"ans":1},{"id":84,"q":"In PESTEL Analysis, government policy, political stability or instability, corruption, foreign trade policy, tax policy, labour law, trade restrictions etc. are related to:","options":["Political factors","Economic factors","Environmental factors","Legal factors"],"sourcePage":5,"ans":0},{"id":85,"q":"The term ‘W’ in SWOT Analysis is :","options":["Wealth","Wellness","Waste","Weakness"],"sourcePage":5,"ans":3},{"id":86,"q":"NPCI has been pivotal to the emergence of the digital payment ecosystem in India. NPCI stands for:","options":["National Payments Corporation of India","National Public Corporation of India","National Payments Cell of India","Nature Public Corporation of India"],"sourcePage":5,"ans":0},{"id":87,"q":"Which of the following is not a component of VUCAFU?","options":["Uncertainty","Ambiguity","Clarity","Volatility"],"sourcePage":5,"ans":2},{"id":88,"q":"Who considered co-ordination as a permeating function of management passing through the managerial functions of planning, organizing, staffing, leading and controlling?","options":["George Terry and Theo Haimann","Henry Fayol","Haynes and Massie","Hicks and Gullet"],"sourcePage":5,"ans":0},{"id":89,"q":"Which is inherent in managerial job and embodied in all the functions of management?","options":["Planning","Organising","Control","Co-ordination"],"sourcePage":5,"ans":3},{"id":90,"q":"According to Mary Parker Follett which one is not the principle for achieving effective coordination?","options":["Continuity","Early beginning","Self-coordination","Managerial Audit"],"sourcePage":5,"ans":3},{"id":91,"q":"Who emphasized harmony of objectives is crucial to the success of direction?","options":["F.W.Taylor","Henry Fayol","Peter Drucker","George Terr"],"sourcePage":5,"ans":0},{"id":92,"q":"A manager has to exhibit the style of leadership depending on the :","options":["Performance","Time","Situation","Period"],"sourcePage":5,"ans":2},{"id":93,"q":"Which of the following statements is not correct?","options":["Management is a goal- oriented process","Management is a universal process","Management is a continuous process","Management is a rigid process"],"sourcePage":5,"ans":3},{"id":94,"q":"Which of the following is not a function of managers?","options":["Designing","Organizing","Leading","Planning"],"sourcePage":5,"ans":0},{"id":95,"q":"Which of the following does not corroborate the concept of ‘Management as a Science’?","options":["Cause & Effect Relationship","Test of Validity","Personal Skill","Experimentation & Observation."],"sourcePage":5,"ans":2},{"id":96,"q":"___________ involves missions and objectives.","options":["Organizing","Planning","Staffing","Coordination"],"sourcePage":5,"ans":1},{"id":97,"q":"Management is the art and science of decision making and leadership.","options":["Harold Koontz","Donald J. Clough","Louis Allan","Terry"],"sourcePage":5,"ans":1},{"id":98,"q":"Agency theory suggests that managers(the agents), particularly those of large , publicly-owned firms, may have different objectives from those of the:","options":["Workers","Subordinates,","Shareholders,","Employees"],"sourcePage":5,"ans":2},{"id":99,"q":"The view that sees profit maximization as the main objective is known as:","options":["Shareholder theory","Agency Theory","Stakeholder theory","Stewardship theory"],"sourcePage":5,"ans":0},{"id":100,"q":"Which one of the following represents the best effort to reduce the agency problem?","options":["paying senior managers a cash bonus each year based on the number of people employed by the company","giving senior managers bonuses consisting of shares of company share whenever the company improves its production efficiency","increasing the salary of the company president every time the company opens a new store","providing company cars to all managers employed by the firm for more than one year"],"sourcePage":6,"ans":1},{"id":101,"q":"Agency Theory’ developed by :","options":["Alchian and Demsetz","Jensen and Meckling","Jensen and Fama","All of the above"],"sourcePage":6,"ans":3},{"id":102,"q":"Who had said that leader’s stewardship choice can motivate and facilitate reciprocal stewardship behavior from the employee?","options":["Pearson and Marler","Alchian and Demsetz","Davis, Schoorman and Doanldson","Jensen and Meckling"],"sourcePage":6,"ans":0},{"id":103,"q":"According to Davis, Schoorman and Donaldson (1997), the managers being a steward of the company will try to protect and maximize _________through firm performance.","options":["shareholder’s wealth","stakeholder’s wealth","both (a) and (b)","none of the above"],"sourcePage":6,"ans":0},{"id":104,"q":"Which of the following regarding residual loss is correct?","options":["Bonding costs do not have an effect on residual loss.","Residual loss is incurred by the agent because an agency relationship exists.","A reduction in residual loss is likely to be the result of an increase in monitoring costs","Under agency theory, residual loss can be reduced to zero by good governance."],"sourcePage":6,"ans":2},{"id":105,"q":"Which of the following regarding agency theory is correct?","options":["Agency theory only applies to large entities.","Agents are assumed to be in a position of power.","Agents act in the best interest of the principal.","Agency theory defines the relationship between agents and directors."],"sourcePage":6,"ans":1},{"id":106,"q":"Which of the following is not an agency cost?","options":["Residual loss.","Bonding costs.","Concurrent loss","Monitoring costs."],"sourcePage":6,"ans":2},{"id":107,"q":"_____ is defined as the process of obtaining and maintaining the capable and competent people to fill all positions from top to operative level.","options":["Staffing","Selection","Recruitment","Training"],"sourcePage":6,"ans":0},{"id":108,"q":"_____ is concerned with providing the organization with the right number of people at the right place, and at the right time so that the organization would be able to achieve its goals effectively.","options":["Recruitment","Staffing","Selection","Development"],"sourcePage":6,"ans":1},{"id":109,"q":"Selection is a process of rejection and hence it is called a _____ process :","options":["Positive","Negative","Either (a) or (b)","None of the above"],"sourcePage":6,"ans":1},{"id":110,"q":"T-group training is also known as :","options":["Classroom Training","Apprenticeship Training","Internship Training","Sensitivity Training"],"sourcePage":6,"ans":3},{"id":111,"q":"Training conducted away from the actual work setting is called:","options":["On-the-Job Training","Off-the-Job training","Step-by-Step Training","Job-Instruction Training"],"sourcePage":6,"ans":1},{"id":112,"q":"Which of the following are the methods of off-the-job training?","options":["Role playing","Case studies","Lectures, classroom instruction","All of the above"],"sourcePage":6,"ans":3},{"id":113,"q":"External sources of recruitment include:","options":["Employment Exchanges","Advertisements","Employee walk-ins","All of the above"],"sourcePage":6,"ans":3},{"id":114,"q":"_____ refers to the introduction of a person to the job and the organization.","options":["Induction","Placement","Orientation","None of the above"],"sourcePage":7,"ans":0},{"id":115,"q":"Which activity brings the job-seeker and employer in contact with one another?","options":["Recruitment","Selection","Induction","Placement"],"sourcePage":7,"ans":0},{"id":116,"q":"Who contends that “Training is an act of increasing the knowledge and skill of an employee for doing a particular job”?","options":["Edwin Flippo","Michael J. Jucius","O. Jeff Harris","Andrew Carnegie"],"sourcePage":7,"ans":0},{"id":117,"q":"The premises over which a firm has no control are known as","options":["Controllable premises","Semi-Controllable premises","Uncontrollable premises","None of the above"],"sourcePage":7,"ans":2}];
+const SUBJECT = "Fundamentals of Business Economics and Management";
+
+const $=id=>document.getElementById(id);
+const state={pool:[],pos:0,selected:{},instant:true,random:true,timer:false,seconds:0,left:0,handle:null,score:0};
+
+function shuffle(a){return a.slice().sort(()=>Math.random()-0.5)}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function load(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}}
+const bookmarks=new Set(load("cma_bookmarks_"+SUBJECT,[]));
+const wrong=new Set(load("cma_wrong_"+SUBJECT,[]));
+
+function show(id){["setup","quiz","result"].forEach(x=>$(x).classList.remove("active"));$(id).classList.add("active")}
+function fmt(sec){sec=Math.max(0,sec);return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0")}
+
+function startQuiz(){
+  clearInterval(state.handle);
+  const count=Number($("count").value);
+  let pool=state.random?shuffle(QUESTIONS):QUESTIONS.slice();
+  if(count!==9999) pool=pool.slice(0,count);
+  state.pool=pool;state.pos=0;state.selected={};state.score=0;
+  state.instant=$("instant").checked;state.random=$("random").checked;
+  state.timer=$("timer").checked;
+  state.seconds=Number($("minutes").value)*60;
+  state.left=state.seconds;
+  if(state.timer) startTimer(); else $("timerBox").textContent="";
+  show("quiz");render();
+}
+function startTimer(){
+  $("timerBox").textContent=fmt(state.left);
+  state.handle=setInterval(()=>{
+    state.left--; $("timerBox").textContent=fmt(state.left);
+    $("timerBox").classList.toggle("urgent",state.left<=60);
+    if(state.left<=0){clearInterval(state.handle);finishQuiz(true)}
+  },1000);
+}
+function current(){return state.pool[state.pos]}
+function render(){
+  const q=current(); if(!q)return;
+  $("progressText").textContent=(state.pos+1)+" / "+state.pool.length;
+  $("fill").style.width=((state.pos+1)/state.pool.length*100)+"%";
+  $("qnum").textContent="Question "+q.id;
+  $("qtext").textContent=q.q;
+  $("options").innerHTML="";
+  q.options.forEach((opt,i)=>{
+    const lab=document.createElement("label");lab.className="option";
+    const inp=document.createElement("input");inp.type="radio";inp.name="answer";inp.value=i;
+    if(state.selected[q.id]===i) inp.checked=true;
+    inp.addEventListener("change",()=>selectAnswer(i));
+    lab.append(inp,document.createTextNode(" "+String.fromCharCode(65+i)+". "+opt));
+    $("options").appendChild(lab);
+  });
+  $("feedback").className="feedback";
+  $("feedback").textContent="";
+  $("prev").disabled=state.pos===0;
+  $("next").textContent=state.pos===state.pool.length-1?"Finish":"Next";
+  $("bookmark").textContent=bookmarks.has(q.id)?"★ Bookmarked":"☆ Bookmark";
+  $("bookmark").onclick=()=>{bookmarks.has(q.id)?bookmarks.delete(q.id):bookmarks.add(q.id);save("cma_bookmarks_"+SUBJECT,[...bookmarks]);render()};
+  if(state.selected[q.id]!==undefined && state.instant) showFeedback();
+}
+function selectAnswer(i){
+  const q=current();state.selected[q.id]=i;
+  if(state.instant) showFeedback();
+}
+function showFeedback(){
+  const q=current(), chosen=state.selected[q.id];
+  if(chosen===undefined)return;
+  document.querySelectorAll(".option").forEach((el,i)=>{
+    el.classList.toggle("correct",i===q.ans);
+    el.classList.toggle("wrong",i===chosen && chosen!==q.ans);
+  });
+  $("feedback").className="feedback show "+(chosen===q.ans?"good":"bad");
+  $("feedback").textContent=chosen===q.ans?"Correct answer.":"Incorrect. Correct answer: "+String.fromCharCode(65+q.ans)+". "+q.options[q.ans];
+}
+function next(){
+  if(state.pos<state.pool.length-1){state.pos++;render()}else finishQuiz(false)
+}
+function prev(){if(state.pos>0){state.pos--;render()}}
+function finishQuiz(timeout){
+  clearInterval(state.handle);
+  let score=0,answered=0;
+  state.pool.forEach(q=>{
+    if(state.selected[q.id]!==undefined){answered++;if(state.selected[q.id]===q.ans)score++;}
+    if(state.selected[q.id]!==undefined && state.selected[q.id]!==q.ans)wrong.add(q.id);
+  });
+  save("cma_wrong_"+SUBJECT,[...wrong]);
+  state.score=score;
+  $("score").textContent=score+" / "+state.pool.length;
+  $("answered").textContent=answered;
+  $("accuracy").textContent=answered?Math.round(score/answered*100)+"%":"0%";
+  $("timeoutNote").textContent=timeout?"Time ended. Your attempted answers have been submitted.":"";
+  $("review").innerHTML="";
+  state.pool.forEach((q,i)=>{
+    const chosen=state.selected[q.id];
+    const div=document.createElement("div");div.className="review-item";
+    const ans=chosen===undefined?"Not answered":String.fromCharCode(65+chosen)+". "+q.options[chosen];
+    const correct=String.fromCharCode(65+q.ans)+". "+q.options[q.ans];
+    div.innerHTML="<strong>Q"+q.id+".</strong> "+escapeHtml(q.q)+"<br><span class='small'>Your answer: "+escapeHtml(ans)+"<br>Correct: "+escapeHtml(correct)+"</span>";
+    $("review").appendChild(div);
+  });
+  show("result");window.scrollTo(0,0);
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function restart(){clearInterval(state.handle);show("setup");window.scrollTo(0,0)}
+function setup(){
+  $("bankSize").textContent=QUESTIONS.length+" questions loaded";
+  $("count").innerHTML="";
+  [10,20,50,100].forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n+" questions";$("count").appendChild(o)});
+  const all=document.createElement("option");all.value=9999;all.textContent="All "+QUESTIONS.length+" questions";$("count").appendChild(all);
+  $("count").value="20";
+  $("minutes").value="60";
+}
+$("start").onclick=startQuiz;$("next").onclick=next;$("prev").onclick=prev;$("finishNow").onclick=()=>finishQuiz(false);$("restart").onclick=restart;
+window.addEventListener("beforeunload",()=>clearInterval(state.handle));
+setup();
+
+</script>
+<script id="cma-access-gate-script">
+(function(){
+"use strict";
+const firebaseConfig={
+  apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",
+  authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",
+  projectId:"cma-mcq-portal-cf33f",
+  storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",
+  messagingSenderId:"208738737302",
+  appId:"1:208738737302:web:3754a55033f67a8ffef6b7",
+  measurementId:"G-TXD74QQE8F"
+};
+const ADMIN_EMAIL="rohit.fcg123@gmail.com";
+const GROUP="foundation";
+const GROUP_LABEL="CMA Foundation";
+const ACCESS_GROUP="foundation";
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(),db=firebase.firestore();
+const provider=new firebase.auth.GoogleAuthProvider();
+provider.setCustomParameters({prompt:"select_account"});
+const persistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>{console.error(e);});
+const authStateReady=Promise.all([
+  persistenceReady,
+  new Promise(resolve=>{
+    let done=false;
+    const unsub=auth.onAuthStateChanged(()=>{if(!done){done=true;unsub();resolve();}});
+  })
+]);
+
+const emailEl=document.getElementById("cmaSessionEmail");
+const loginBtn=document.getElementById("cmaLoginBtn");
+const logoutBtn=document.getElementById("cmaLogoutBtn");
+const overlay=document.getElementById("cmaAuthOverlay");
+const googleBtn=document.getElementById("cmaGoogleLogin");
+const closeBtn=document.getElementById("cmaCloseAuth");
+const msg=document.getElementById("cmaAuthMsg");
+const notice=document.getElementById("cmaAccessNotice");
+let authReady=false, pendingAction=null, bypassClick=false, actionBusy=false;
+
+function norm(v){return(v||"").toString().trim().toLowerCase();}
+function showNotice(t){notice.textContent=t||"";notice.style.display=t?"block":"none";if(t)setTimeout(()=>{notice.style.display="none";},5000);}
+function openLogin(action){pendingAction=action||null;location.href="index.html";}
+function closeLogin(){overlay.style.display="none";msg.textContent="";pendingAction=null;}
+closeBtn.onclick=closeLogin;
+overlay.addEventListener("click",e=>{if(e.target===overlay)closeLogin();});
+loginBtn.onclick=()=>{location.href="index.html";};
+logoutBtn.onclick=async()=>{try{await auth.signOut();}catch(e){showNotice("Logout failed. Please try again.");}};
+
+googleBtn.onclick=()=>{location.href="index.html";};
+auth.getRedirectResult().catch(e=>{if(e)console.error("Redirect result:",e);}).finally(()=>{authReady=true;});
+
+function dateExpired(v){return !!v && String(v)<new Date().toISOString().slice(0,10);}
+
+let __siteSettingsCache=null;
+async function getSiteSettings(){
+  if(__siteSettingsCache) return __siteSettingsCache;
+  const defaults={freeAccessMode:"attemptLimit",freeAttemptLimit:5,freePoolSize:30,siteWideFree:false};
+  try{
+    const snap=await db.collection("settings").doc("access").get();
+    __siteSettingsCache=snap.exists?Object.assign({},defaults,snap.data()):defaults;
+  }catch(e){console.warn("Could not load access settings, using defaults.",e);__siteSettingsCache=defaults;}
+  return __siteSettingsCache;
+}
+
+let __origSourceQuestions=null;
+function applyFreePoolCap(poolSize){
+  if(!__origSourceQuestions) __origSourceQuestions=window.sourceQuestions;
+  window.sourceQuestions=function(){
+    let qs=__origSourceQuestions();
+    if(source()==="bank") qs=qs.slice().sort((a,b)=>a.id-b.id).slice(0,poolSize);
+    return qs;
+  };
+}
+function clearFreePoolCap(){
+  if(__origSourceQuestions) window.sourceQuestions=__origSourceQuestions;
+}
+
+async function getAccessState(user){
+  const email=norm(user.email);
+  if(!email) return {allowed:false,reason:"No Google email was returned."};
+  if(email===ADMIN_EMAIL) return {allowed:true,paid:true,admin:true,freeUsed:0,freeRemaining:999999,data:{role:"admin"},settings:{},features:{mcqBank:true,pyq:true,reattemptWrong:true,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:true},maxQuestions:999999,maxAttempts:999999};
+  const defaults={freeAccessMode:"fixedPool",freePoolSize:20,freeAttemptLimit:5,freeTestMinutes:60,freeQuestionSeconds:60,siteWideFree:false,features:{mcqBank:true,pyq:false,reattemptWrong:false,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:false}};
+  let settings=defaults;
+  try{const snap=await db.collection("settings").doc("access").get(); if(snap.exists) settings=Object.assign({},defaults,snap.data(),{features:Object.assign({},defaults.features,snap.data().features||{})});}catch(e){console.warn("Access settings unavailable; using defaults",e)}
+  let data={};
+  try{const snap=await db.collection("access").doc(email).get();if(snap.exists)data=snap.data()||{};}catch(e){console.warn("Access record unavailable",e)}
+  const ov=data.overrides||{};
+  const feature=(key, fallback)=> ov[key]!==undefined ? !!ov[key] : (settings.features&&settings.features[key]!==undefined ? !!settings.features[key] : fallback);
+  if(String(data.status||"active").toLowerCase()==="inactive") return {allowed:false,reason:"Your account is currently inactive.",settings,data,features:{}};
+  const today=new Date().toISOString().slice(0,10), expiry=String(data.expiryDate||""), expired=!!expiry&&expiry<today;
+  const groups=Array.isArray(data.groups)?data.groups:[];
+  const paid=groups.includes(ACCESS_GROUP)&&!expired;
+  const allFeatures={mcqBank:feature("mcqBank",true),pyq:feature("pyq",false),reattemptWrong:feature("reattemptWrong",false),bookmark:feature("bookmark",true),chapterTopic:feature("chapterTopic",true),answerReveal:feature("answerReveal",true),overallTimer:feature("overallTimer",true),questionTimer:feature("questionTimer",false)};
+  const maxQuestions=Number(ov.freeQuestionLimit ?? settings.freeQuestionLimit ?? settings.freePoolSize ?? 20)||20;
+  const maxAttempts=Number(ov.freeAttemptLimit ?? settings.freeAttemptLimit ?? 5)||0;
+  const freeTestMinutes=Number(ov.freeTestMinutes ?? settings.freeTestMinutes ?? 60)||60;
+  const freeQuestionSeconds=Number(ov.freeQuestionSeconds ?? settings.freeQuestionSeconds ?? 60)||60;
+  const src=(typeof source==='function'?source():"").toLowerCase();
+  if(src==="pyq"&&!allFeatures.pyq) return {allowed:false,paid,reason:"Previous Year Papers are currently locked for this account. Please purchase/upgrade access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
+  if(src==="bank"&&!allFeatures.mcqBank) return {allowed:false,paid,reason:"MCQ Bank is currently locked for this account.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
+  const wrongMode=(typeof arguments[1]==='string'&&arguments[1]==='wrong');
+  const adminLike=paid||settings.siteWideFree||data.fullAccess===true||data.freeFullAccess===true;
+  if(!adminLike && src==="pyq") return {allowed:false,paid:false,reason:"Previous Year Papers require premium access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
+  if(!adminLike && src==="bank" && settings.freeAccessMode==="fixedPool") return {allowed:true,paid:false,fixedPool:true,poolSize:Math.max(1,Number(ov.freeQuestionLimit??settings.freePoolSize??20)||20),freeUsed:0,freeRemaining:999999,data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
+  if(!adminLike){
+    const attemptsSnap=await db.collection("attempts").where("uid","==",user.uid).get();
+    const freeUsed=attemptsSnap.size, freeRemaining=Math.max(0,maxAttempts-freeUsed);
+    if(freeRemaining<=0) return {allowed:false,paid:false,freeUsed,freeRemaining,data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds,reason:"Your free attempts are finished. Please purchase access."};
+    return {allowed:true,paid:false,freeUsed,freeRemaining,data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
+  }
+  return {allowed:true,paid:true,freeUsed:0,freeRemaining:999999,data,settings,features:allFeatures,maxQuestions:999999,maxAttempts:999999,freeTestMinutes,freeQuestionSeconds};
+}
+async function recordAttempt(user,mode){
+  await db.collection("attempts").add({
+    uid:user.uid,
+    email:norm(user.email),
+    group:GROUP,
+    groupName:GROUP_LABEL,
+    subject:document.title||location.pathname,
+    mode:mode||"practice",
+    startedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+function isStartAction(btn){
+  if(!btn || btn.tagName!=="BUTTON") return false;
+  const onclick=(btn.getAttribute("onclick")||"").toLowerCase();
+  const id=(btn.id||"").toLowerCase();
+  const text=(btn.textContent||"").trim().toLowerCase();
+  if(/startnewround|starttest|startfull|startround|startspecialround|startquiz|beginround/.test(onclick)) return true;
+  if(["startbtn","start"].includes(id)) return true;
+  if(/^start\b/.test(text) || /^▶\s*start\b/.test(text) || text.includes("full bank")) return true;
+  if(text.includes("reattempt wrong") || text.includes("practice bookmarks")) return true;
+  return false;
+}
+
+async function continueAction(btn){
+  if(actionBusy)return;
+  actionBusy=true;
+  try{
+    await authStateReady;
+    const user=auth.currentUser;
+    if(!user){
+      location.href="index.html";
+      return;
+    }
+    const state=await getAccessState(user);
+    const selectedCount=(()=>{
+      const ids=["questions","count","qCount","questionCount","maxQuestions"]; if(typeof state!=="undefined"&&state&&Number.isFinite(Number(state.count)))return Number(state.count);
+      for(const id of ids){const el=document.getElementById(id);if(el){const n=Number(el.value??el.textContent);if(Number.isFinite(n)&&n>0)return n;}}
+      return null;
+    })();
+    if(state.allowed && !state.paid && selectedCount && selectedCount>Number(state.maxQuestions||999999)){
+      showNotice("Free access allows only "+state.maxQuestions+" questions. Please reduce the question count or purchase full access.");
+      return;
+    }
+    if(state.allowed && !state.features.reattemptWrong && /wrong/i.test(btn.textContent||"")){
+      showNotice("Reattempt Wrong Answers is not included in your current access."); return;
+    }
+    if(state.allowed && !state.features.bookmark && /bookmark/i.test(btn.textContent||"")){
+      showNotice("Bookmarks are not included in your current access."); return;
+    }
+    if(!state.allowed){showNotice(state.reason||"Access is not available.");return;}
+    if(state.fixedPool) applyFreePoolCap(state.poolSize); else clearFreePoolCap();
+    await recordAttempt(user, (btn.textContent||"").trim().slice(0,80));
+    bypassClick=true;
+    btn.click();
+    setTimeout(()=>{bypassClick=false;},0);
+  }catch(e){
+    console.error("Access/attempt check failed:",e);
+    showNotice("Could not verify your access right now. Please try again.");
+  }finally{actionBusy=false;}
+}
+
+document.addEventListener("click",function(e){
+  const btn=e.target.closest("button");
+  if(!isStartAction(btn) || bypassClick)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  continueAction(btn);
+},true);
+
+auth.onAuthStateChanged(async user=>{
+  if(user){
+    emailEl.textContent=user.email||"";
+    loginBtn.style.display="none";
+    logoutBtn.style.display="inline-block";
+    if(overlay.style.display==="flex" && pendingAction){
+      const action=pendingAction;pendingAction=null;closeLogin();
+      action();
+    }else if(overlay.style.display==="flex") closeLogin();
+  }else{
+    emailEl.textContent="";
+    loginBtn.style.display="inline-block";
+    logoutBtn.style.display="none";
+  }
+});
+})();
+</script>
+<script id="cma-central-access-controller">
+window.CMA_ACCESS_VERSION="2026.09.23.2";
+(function(){
+  function isFeatureClick(btn){
+    const t=((btn&&btn.textContent)||'').toLowerCase(), id=((btn&&btn.id)||'').toLowerCase();
+    if(t.includes('reattempt wrong')||id.includes('wrong')) return 'reattemptWrong';
+    if(t.includes('bookmark')||id.includes('bookmark')) return 'bookmark';
+    if(t.includes('reveal')||id.includes('show answer')||id.includes('reveal')) return 'answerReveal';
+    if(id.includes('chapter')||t.includes('chapter')||id.includes('topic')||t.includes('topic')) return 'chapterTopic';
+    return null;
+  }
+  document.addEventListener('click',async function(e){
+    const btn=e.target.closest('button,a,select'); const feature=isFeatureClick(btn); if(!feature)return;
+    try{
+      const u=firebase.auth().currentUser;if(!u)return;
+      const snap=await firebase.firestore().collection('access').doc((u.email||'').trim().toLowerCase()).get();
+      const data=snap.exists?snap.data()||{}:{};
+      const setSnap=await firebase.firestore().collection('settings').doc('access').get();
+      const settings=setSnap.exists?setSnap.data()||{}:{};
+      const f=settings.features||settings.freeFeatures||{};const ov=data.overrides||{};
+      const allowed=ov[feature]!==undefined?!!ov[feature]:(f[feature]!==undefined?!!f[feature]:true);
+      if(!allowed){e.preventDefault();e.stopImmediatePropagation();if(typeof cmaShowAccessPopup==='function')cmaShowAccessPopup(feature+' is not included in your current access. Please buy a subscription to continue.');}
+    }catch(err){console.warn('Central feature check failed',err)}
+  },true);
+})();
+</script>
+<script src="js/popup-manager.js"></script>
+<script src="js/access-controller.js"></script>
+</body>
+</html>
