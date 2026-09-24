@@ -138,7 +138,7 @@ class _OffersPageState extends State<OffersPage> {
       const SizedBox(height:8),
       TextFormField(initialValue:(x['discountName']??'').toString(),decoration:const InputDecoration(labelText:'Offer Name',border:OutlineInputBorder()),onChanged:(v)=>pricing[p]!['discountName']=v),
       const SizedBox(height:5),Text('Final price: ₹'+finalPrice(p).toStringAsFixed(2),style:const TextStyle(fontWeight:FontWeight.bold)),
-    ]));
+    ])));
   }
 }
 
