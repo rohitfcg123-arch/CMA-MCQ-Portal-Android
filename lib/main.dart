@@ -54,20 +54,75 @@ class _AuthScreenState extends State<AuthScreen>{
   setState(()=>busy=true);try{final u=FirebaseAuth.instance.currentUser;if(u==null){showMsg('Please register again.',error:true);return;}await u.reload();if(!FirebaseAuth.instance.currentUser!.emailVerified)showMsg('Email is not verified yet. Open the latest link.',error:true);}
   catch(_){showMsg('Could not check verification.',error:true);}finally{if(mounted)setState(()=>busy=false);}
  }
- @override Widget build(BuildContext c)=>Scaffold(backgroundColor:const Color(0xFFFAF6EE),body:SafeArea(child:Center(child:SingleChildScrollView(padding:const EdgeInsets.all(22),child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:430),child:Card(child:Padding(padding:const EdgeInsets.all(24),child:Form(key:f,child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-  const CircleAvatar(radius:28,backgroundColor:Color(0xFF0D3B3E),child:Text('C',style:TextStyle(color:Color(0xFFEAD39B),fontSize:22,fontWeight:FontWeight.bold))),const SizedBox(height:16),
-  Text(reg?'Create your account':'Sign in to continue',style:const TextStyle(fontSize:23,fontWeight:FontWeight.w800,color:Color(0xFF082627))),const SizedBox(height:6),
-  Text(reg?'Register inside the app. We will verify your email.':'Use your verified email and password.',style:const TextStyle(color:Color(0xFF65716F))),const SizedBox(height:20),
-  if(reg)...[TextFormField(controller:name,decoration:const InputDecoration(labelText:'Name',border:OutlineInputBorder()),validator:(v)=>req(v,'Name')),const SizedBox(height:12),TextFormField(controller:phone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'Phone number',border:OutlineInputBorder()),validator:(v)=>req(v,'Phone number')),const SizedBox(height:12)],
-  TextFormField(controller:email,keyboardType:TextInputType.emailAddress,decoration:const InputDecoration(labelText:'Email',border:OutlineInputBorder()),validator:(v)=>req(v,'Email')),const SizedBox(height:12),
-  TextFormField(controller:pass,obscureText:hide,decoration:InputDecoration(labelText:'Password',border:const OutlineInputBorder(),suffixIcon:IconButton(onPressed:()=>setState(()=>hide=!hide),icon:Icon(hide?Icons.visibility:Icons.visibility_off))),validator:(v)=>v==null||v.length<6?'Password must be at least 6 characters':null),
-  if(reg)...[const SizedBox(height:12),TextFormField(controller:confirm,obscureText:hide,decoration:const InputDecoration(labelText:'Confirm password',border:OutlineInputBorder()),validator:(v)=>v!=pass.text?'Passwords do not match':null)],
-  const SizedBox(height:16),if(message.isNotEmpty)Container(padding:const EdgeInsets.all(10),margin:const EdgeInsets.only(bottom:12),decoration:BoxDecoration(color:isError?const Color(0xFFFDECEA):const Color(0xFFE6EFED),borderRadius:BorderRadius.circular(9)),child:Text(message)),
-  FilledButton(onPressed:busy?null:submit,child:Padding(padding:const EdgeInsets.all(12),child:Text(reg?'Create account':'Login'))),
-  if(reg&&FirebaseAuth.instance.currentUser!=null&&!FirebaseAuth.instance.currentUser!.emailVerified)TextButton(onPressed:busy?null:verify,child:const Text('I have verified my email')),
-  TextButton(onPressed:busy?null:()=>setState((){reg=!reg;message='';isError=false;}),child:Text(reg?'Already have an account? Login':'New user? Create an account'))
-]))))))));
+ @override
+Widget build(BuildContext c) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFFAF6EE),
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(22),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: f,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const CircleAvatar(radius: 28, backgroundColor: Color(0xFF0D3B3E),
+                        child: Text('C', style: TextStyle(color: Color(0xFFEAD39B), fontSize: 22, fontWeight: FontWeight.bold))),
+                      const SizedBox(height: 16),
+                      Text(reg ? 'Create your account' : 'Sign in to continue',
+                        style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: Color(0xFF082627))),
+                      const SizedBox(height: 6),
+                      Text(reg ? 'Register inside the app. We will verify your email.' : 'Use your verified email and password.',
+                        style: const TextStyle(color: Color(0xFF65716F))),
+                      const SizedBox(height: 20),
+                      if (reg) ...[
+                        TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()), validator: (v) => req(v, 'Name')),
+                        const SizedBox(height: 12),
+                        TextFormField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone number', border: OutlineInputBorder()), validator: (v) => req(v, 'Phone number')),
+                        const SizedBox(height: 12),
+                      ],
+                      TextFormField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()), validator: (v) => req(v, 'Email')),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: pass, obscureText: hide,
+                        decoration: InputDecoration(labelText: 'Password', border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(onPressed: () => setState(() => hide = !hide), icon: Icon(hide ? Icons.visibility : Icons.visibility_off))),
+                        validator: (v) => v == null || v.length < 6 ? 'Password must be at least 6 characters' : null,
+                      ),
+                      if (reg) ...[
+                        const SizedBox(height: 12),
+                        TextFormField(controller: confirm, obscureText: hide, decoration: const InputDecoration(labelText: 'Confirm password', border: OutlineInputBorder()),
+                          validator: (v) => v != pass.text ? 'Passwords do not match' : null),
+                      ],
+                      const SizedBox(height: 16),
+                      if (message.isNotEmpty)
+                        Container(padding: const EdgeInsets.all(10), margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(color: isError ? const Color(0xFFFDECEA) : const Color(0xFFE6EFED), borderRadius: BorderRadius.circular(9)),
+                          child: Text(message)),
+                      FilledButton(onPressed: busy ? null : submit,
+                        child: Padding(padding: const EdgeInsets.all(12), child: Text(reg ? 'Create account' : 'Login'))),
+                      if (reg && FirebaseAuth.instance.currentUser != null && !FirebaseAuth.instance.currentUser!.emailVerified)
+                        TextButton(onPressed: busy ? null : verify, child: const Text('I have verified my email')),
+                      TextButton(onPressed: busy ? null : () => setState(() { reg = !reg; message = ''; isError = false; }),
+                        child: Text(reg ? 'Already have an account? Login' : 'New user? Create an account')),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
+
 }
 class Portal extends StatefulWidget{const Portal({super.key});@override State<Portal> createState()=>_PortalState();}
 class _PortalState extends State<Portal>{
