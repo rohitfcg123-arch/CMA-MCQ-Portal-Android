@@ -13,7 +13,7 @@ main{max-width:1180px;margin:auto;padding:28px 20px 65px}.hero{position:relative
 </style><style id="cma-test-reference">#cmaTestReference{position:fixed;right:10px;bottom:10px;z-index:9999;background:rgba(13,59,62,.92);color:#ead39b;border:1px solid rgba(234,211,155,.55);padding:5px 9px;border-radius:999px;font:800 10px/1.2 Inter,'Segoe UI',Arial,sans-serif;letter-spacing:.04em;box-shadow:0 4px 14px rgba(0,0,0,.16)}</style></head><body>
 <header class="topbar"><div class="topbar-inner"><div><div class="brand">CMA<span>.</span> MCQ Portal</div><span class="brand-sub">MCQ Practice · Test Preparation</span></div><div class="session"><a class="btn btn-gold" href="payment.html">💳 Buy Subscription</a><span id="email"></span><button class="btn btn-light" id="loginBtn">Login</button><button class="btn btn-gold hidden" id="logoutBtn">Logout</button></div></div></header>
 <main>
-<section class="hero"><span class="eyebrow">CMA STUDY PLATFORM</span><h1>Study. Practice. Improve.</h1><p>Choose your CMA level and subject. Your progress, attempts and access are saved securely with your Google account.</p><div class="hero-actions"><span class="hero-pill" id="freePill">✓ 5 free attempts</span><span class="hero-pill">✓ Group-wise paid access</span><span class="hero-pill">✓ MCQ Bank + PYQ</span></div></section>
+<section class="hero"><span class="eyebrow">CMA STUDY PLATFORM</span><h1>Study. Practice. Improve.</h1><p>Choose your CMA level and subject. Your progress, attempts and access are saved securely with your account.</p><div class="hero-actions"><span class="hero-pill" id="freePill">✓ 5 free attempts</span><span class="hero-pill">✓ Group-wise paid access</span><span class="hero-pill">✓ MCQ Bank + PYQ</span></div></section>
 <div class="dashboard"><div class="info-card"><h3>How it works</h3><p>Browse the subjects freely. Login is requested only when you open protected study content. Once signed in, your session is remembered so you can move between subjects without signing in again.</p></div><div class="access-card"><div class="access-title">Your Access</div><div class="access-sub" id="accessSub">Login to see your active groups and attempt usage.</div><div id="accessTags" class="access-tags"></div><div id="accessMeta" class="access-meta"></div></div></div>
 <div class="offer-box" id="publicOffer"><div class="offer-copy"><strong>🔥 Subscription Offers</strong><div class="offer-price"><span class="old" id="homeOld">₹99</span><span class="new" id="homeNew">₹99</span><span class="off" id="homeOff"></span></div></div><a href="payment.html" class="btn btn-gold">View Plans</a></div>
 <div style="display:flex;justify-content:center;margin:8px 0 18px"><a href="payment.html" class="btn btn-gold" style="text-decoration:none;padding:12px 20px">💳 Buy / Renew Subscription</a></div>
@@ -25,7 +25,7 @@ main{max-width:1180px;margin:auto;padding:28px 20px 65px}.hero{position:relative
 
 <section class="support"><div><h3>Need help or want to share feedback?</h3><p>Found an issue, wrong answer, or have a suggestion? We want to hear it.</p></div><div class="support-actions"><a href="mailto:taxxpath@gmail.com?subject=CMA%20MCQ%20Portal%20Support">📧 Email</a><a href="https://wa.me/917003872845" target="_blank" rel="noopener">💬 WhatsApp</a></div></section>
 </main><footer>© 2026 CMA MCQ Portal</footer>
-<div id="overlay"><div class="modal"><button class="close" id="close">×</button><div class="modal-logo">C</div><h2>Sign in to continue</h2><p>Your Google account is used to save attempts, bookmarks and examination access.</p><button class="google" id="google"><span>G</span> Continue with Google</button><div id="authMsg"></div></div></div>
+<div id="overlay"><div class="modal"><button class="close" id="close">×</button><div class="modal-logo">C</div><h2>Sign in to continue</h2><p>Your account is used to save attempts, bookmarks and examination access.</p><button class="google" id="google"><span>G</span> Continue with Google</button><div id="authMsg"></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
@@ -69,7 +69,7 @@ async function returnToAndroidApp(user){
 }
 document.getElementById('google').onclick=async()=>{
   const b=document.getElementById('google');
-  if(CMA_ANDROID_APP){
+  if(CMA_ANDROID_APP && typeof window.__cmaNativeGoogleLogin==='function'){
     b.disabled=true;b.textContent='Opening Google…';
     const ok=await callNativeGoogleLogin();
     if(!ok){b.disabled=false;b.textContent='G  Continue with Google';}
@@ -140,4 +140,4 @@ auth.onAuthStateChanged(async user=>{
 async function loadPublicPricing(){try{const snap=await db.collection('settings').doc('access').get();const p=snap.exists&&snap.data().pricing?snap.data().pricing:null;if(!p)return;const order=['monthly','threeMonth','sixMonth'];let best=null;for(const k of order){const x=p[k]||{};const base=Number(x.price)||0;let d=x.discountType==='fixed'?Number(x.discountValue)||0:base*(Number(x.discountValue)||0)/100;d=Math.min(Math.max(d,0),base);if(d>0&&!best)best={base,final:base-d,name:x.discountName||'',pct:base?Math.round(d/base*100):0}}if(best){document.getElementById('homeOld').textContent='₹'+best.base.toLocaleString('en-IN');document.getElementById('homeNew').textContent='₹'+best.final.toLocaleString('en-IN');document.getElementById('homeOff').textContent=(best.pct?best.pct+'% OFF':'OFFER')+(best.name?' • '+best.name:'')}else{document.getElementById('homeOld').textContent='';document.getElementById('homeNew').textContent='Plans from ₹'+Number(p.monthly?.price||99).toLocaleString('en-IN');document.getElementById('homeOff').textContent=''}}catch(e){console.warn('Pricing load failed',e)}}
 loadPublicPricing();
 </script><script src="js/access-controller.js"></script>
-<div id="cmaTestReference" title="Temporary correction reference">TEST-01 • Google Login Fix</div></body></html>
+<div id="cmaTestReference" title="Temporary correction reference">TEST-02 • Native Firebase Email Login</div></body></html>
