@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 const String portalUrl =
-    'https://rohitfcg123-arch.github.io/snackssangam.github.io/index.html';
+    'https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';
 
 const String webClientId =
     '208738737302-qpv57rh3voh02dtpqs369175ahieb3q7.apps.googleusercontent.com';
