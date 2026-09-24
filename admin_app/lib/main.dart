@@ -747,7 +747,7 @@ class StaffPage extends StatelessWidget {
           final expiry = DateTime.now().add(Duration(days: validityDays));
           try {
             await FirebaseFirestore.instance.collection('staffAccess').doc(mail).set({
-              'email': mail, 'role': role, 'accessLevel': level, 'status': 'Pending Approval', 'requestedBy': superAdminEmail,
+              'email': mail, 'role': role, 'accessLevel': level, 'status': 'Approved', 'requestedBy': superAdminEmail,
               'requestedAt': FieldValue.serverTimestamp(), 'expiresAt': Timestamp.fromDate(expiry), 'validityDays': validityDays,
               'permissions': _defaultPermissions(role, level), 'mailStatus': sendEmail ? 'Queued' : 'Not requested',
               'mailSubject': 'CMA MCQ Portal — Staff Access Invitation',
@@ -759,10 +759,10 @@ class StaffPage extends StatelessWidget {
                   'to': mail,
                   'message': {
                     'subject': 'CMA MCQ Portal — Staff Access Invitation',
-                    'text': 'Hello,\n\nYou have been invited to access the CMA MCQ Portal as $role with $level permissions.\nAccess validity: $validityDays days.\nExpiry: ' + expiry.toLocal().toString().split('.').first + '.\n\nPlease use the staff portal to complete registration and wait for approval.\n\nRegards,\nCMA MCQ Portal Admin',
-                    'html': '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#22302f"><h2>CMA MCQ Portal — Staff Access Invitation</h2><p>Hello,</p><p>You have been invited as <b>$role</b> with <b>$level</b> access for <b>$validityDays days</b>.</p><p>Please complete registration in the staff portal. Access remains subject to Super Admin approval.</p></div>'
+                    'text': 'Hello,\n\nYou have been invited to access the CMA MCQ Portal as $role with $level permissions.\nAccess validity: $validityDays days.\nExpiry: ' + expiry.toLocal().toString().split('.').first + '.\n\nPlease open the CMA MCQ Staff/Admin app and complete registration using this email address. Your staff access has already been approved by the Super Admin.\n\nRegards,\nCMA MCQ Portal Admin',
+                    'html': '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#22302f"><h2>CMA MCQ Portal — Staff Access Invitation</h2><p>Hello,</p><p>You have been invited as <b>$role</b> with <b>$level</b> access for <b>$validityDays days</b>.</p><p>Please open the CMA MCQ Staff/Admin app and complete registration using this email address. Your staff access has already been approved by the Super Admin.</p></div>'
                   },
-                  'template': 'staff_access_invitation',
+                  'template': 'staff_access_invitation', 'accessStatus': 'Approved',
                   'role': role, 'accessLevel': level, 'validityDays': validityDays,
                   'expiresAt': Timestamp.fromDate(expiry), 'requestedBy': superAdminEmail,
                   'createdAt': FieldValue.serverTimestamp(), 'status': 'queued'
