@@ -1,3 +1,4 @@
+import 'offers_page.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -123,6 +124,8 @@ class Dashboard extends StatelessWidget {
           _tile(context, 'Users & Filters', Icons.people_alt, const UsersPage()),
           _tile(context, 'Activity & Last 10 Days', Icons.timeline, const ActivityPage()),
           _tile(context, 'Access Management', Icons.lock_person, const AccessPage()),
+          _tile(context, 'Offers, Pricing & Promo Codes', Icons.local_offer, const OffersPage()),
+          _tile(context, 'Payment Verification', Icons.payments, const PaymentsPage()),
           _tile(context, 'Admin / Staff Management', Icons.manage_accounts, const StaffPage()),
           _tile(context, 'Reports & Downloads', Icons.download, const ReportsPage()),
         ]);
