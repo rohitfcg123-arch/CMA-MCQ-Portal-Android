@@ -33,7 +33,7 @@ class _AuthScreenState extends State<AuthScreen>{
  @override void dispose(){name.dispose();phone.dispose();email.dispose();pass.dispose();confirm.dispose();super.dispose();}
  String? req(String? v,String n)=>(v==null||v.trim().isEmpty)?n+' is required':null;
  void showMsg(String s,{bool error=false}){if(mounted)setState((){message=s;isError=error;});}
- String authError(String c){switch(c){case'email-already-in-use':return'This email is already registered.';case'invalid-email':return'Enter a valid email.';case'weak-password':return'Password must be at least 6 characters.';case'invalid-credential':case'wrong-password':case'user-not-found':return'Incorrect email or password.';default:return'Authentication failed: '+c;}}
+ String authError(String c){switch(c){case'email-already-in-use':return'This email is already registered. If you did not create it here, use Forgot password to recover access.';case'invalid-email':return'Enter a valid email.';case'weak-password':return'Password must be at least 6 characters.';case'invalid-credential':case'wrong-password':case'user-not-found':return'Incorrect email or password.';default:return'Authentication failed: '+c;}}
  Future<void> submit()async{
   if(!f.currentState!.validate())return;setState(()=>busy=true);
   try{final a=FirebaseAuth.instance;
@@ -53,6 +53,24 @@ class _AuthScreenState extends State<AuthScreen>{
  Future<void> verify()async{
   setState(()=>busy=true);try{final u=FirebaseAuth.instance.currentUser;if(u==null){showMsg('Please register again.',error:true);return;}await u.reload();if(!FirebaseAuth.instance.currentUser!.emailVerified)showMsg('Email is not verified yet. Open the latest link.',error:true);}
   catch(_){showMsg('Could not check verification.',error:true);}finally{if(mounted)setState(()=>busy=false);}
+ }
+ Future<void> forgotPassword() async {
+  final value = email.text.trim();
+  if (value.isEmpty) {
+    showMsg('Enter your email address first, then tap Forgot password.', error: true);
+    return;
+  }
+  setState(() => busy = true);
+  try {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: value);
+    showMsg('Password reset email sent to '+value+'. Check Inbox, Spam and Promotions.');
+  } on FirebaseAuthException catch (e) {
+    showMsg(authError(e.code), error: true);
+  } catch (_) {
+    showMsg('Could not send the reset email. Please try again.', error: true);
+  } finally {
+    if (mounted) setState(() => busy = false);
+  }
  }
  @override
 Widget build(BuildContext c) {
@@ -105,6 +123,14 @@ Widget build(BuildContext c) {
                         Container(padding: const EdgeInsets.all(10), margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(color: isError ? const Color(0xFFFDECEA) : const Color(0xFFE6EFED), borderRadius: BorderRadius.circular(9)),
                           child: Text(message)),
+                      if (!reg)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: busy ? null : forgotPassword,
+                            child: const Text('Forgot password?'),
+                          ),
+                        ),
                       FilledButton(onPressed: busy ? null : submit,
                         child: Padding(padding: const EdgeInsets.all(12), child: Text(reg ? 'Create account' : 'Login'))),
                       if (reg && FirebaseAuth.instance.currentUser != null && !FirebaseAuth.instance.currentUser!.emailVerified)
