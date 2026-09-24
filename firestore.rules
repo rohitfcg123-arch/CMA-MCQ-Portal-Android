@@ -57,6 +57,19 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Staff / employee access
+    // Super Admin manages staff records; a staff member can read only their own record.
+    match /staffAccess/{email} {
+      allow read: if isAdmin() || isOwnEmail(email);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Outbound email queue for a configured server-side mail worker.
+    match /mailQueue/{mailId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
     match /admins/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow write: if isAdmin();
