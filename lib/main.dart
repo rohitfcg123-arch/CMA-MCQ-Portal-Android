@@ -95,7 +95,7 @@ class _AuthScreenState extends State<AuthScreen>{
  Future<void> _saveLogin(){
   return secureStorage.write(key:savedEmailKey,value:email.text.trim().toLowerCase()).then((_)=>secureStorage.write(key:savedPasswordKey,value:pass.text));
  }
- Future<void> _clearSavedLogin() async {
+ Future<void> _autoReauthFromWeb() async {\n  try {\n    final e=await secureStorage.read(key:savedEmailKey);\n    final p=await secureStorage.read(key:savedPasswordKey);\n    if(e!=null&&p!=null&&e.isNotEmpty&&p.isNotEmpty){\n      final cred=await FirebaseAuth.instance.signInWithEmailAndPassword(email:e,password:p);\n      await cred.user!.reload();\n      if(!FirebaseAuth.instance.currentUser!.emailVerified){\n        await FirebaseAuth.instance.signOut();\n        return;\n      }\n      nativeBridgePassword=p;\n      return;\n    }\n  }catch(_){ }\n  await FirebaseAuth.instance.signOut();\n  nativeBridgePassword=null;\n}\n Future<void> _clearSavedLogin() async {
   try{
    await secureStorage.delete(key:savedEmailKey);
    await secureStorage.delete(key:savedPasswordKey);
@@ -222,7 +222,7 @@ class _PortalState extends State<Portal>{
  static const fix=r'''(function(){try{var m=document.querySelector('meta[name="viewport"]');if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);}m.content='width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover';document.body.style.margin='0';document.body.style.overflowX='hidden';}catch(e){}})();''';
  Future<String> bridge()async{
   final u=FirebaseAuth.instance.currentUser!;final token=await u.getIdToken(true);
-  return '(function(){try{var e='+jsonEncode(u.email??'')+',p='+jsonEncode(nativeBridgePassword??'')+';window.__cmaNativeFirebaseIdToken='+jsonEncode(token)+';window.__cmaNativeUser={email:e,displayName:'+jsonEncode(u.displayName??'')+',uid:'+jsonEncode(u.uid)+'};if(e&&p&&window.firebase&&firebase.auth){firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){return firebase.auth().signInWithEmailAndPassword(e,p);}).then(function(){window.__cmaNativeWebAuthReady=true;window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}).catch(function(err){console.error("TEST-02 web auth bridge",err);window.dispatchEvent(new Event("cmaNativeFirebaseReady"));});}else{window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}}catch(e){console.error(e);}})();';
+  return '(function(){try{var e='+jsonEncode(u.email??'')+',p='+jsonEncode(bridgePassword??'')+';window.__cmaNativeFirebaseIdToken='+jsonEncode(token)+';window.__cmaNativeUser={email:e,displayName:'+jsonEncode(u.displayName??'')+',uid:'+jsonEncode(u.uid)+'};if(e&&p&&window.firebase&&firebase.auth){firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){return firebase.auth().signInWithEmailAndPassword(e,p);}).then(function(){window.__cmaNativeWebAuthReady=true;window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}).catch(function(err){console.error("TEST-02 web auth bridge",err);window.dispatchEvent(new Event("cmaNativeFirebaseReady"));});}else{window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}}catch(e){console.error(e);}})();';
  }
  @override void initState(){super.initState();w=WebViewController()..setJavaScriptMode(JavaScriptMode.unrestricted)..addJavaScriptChannel('CmaAuth',onMessageReceived:(msg)async{
   if(msg.message=='logout'){
