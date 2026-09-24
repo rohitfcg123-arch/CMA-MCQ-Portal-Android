@@ -50,7 +50,7 @@ service cloud.firestore {
 
     match /subscriptions/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isAdmin();
+      allow write: if isAdmin() || isOwner(uid);
     }
 
     match /approvedUsers/{email} {
