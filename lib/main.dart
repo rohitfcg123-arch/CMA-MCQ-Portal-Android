@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'firebase_options.dart';
 
-const portalUrl='https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';\nString? nativeBridgePassword;
+const portalUrl='https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';
+String? nativeBridgePassword;
 
 Future<void> main() async {
  WidgetsFlutterBinding.ensureInitialized();
