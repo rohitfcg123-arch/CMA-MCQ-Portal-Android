@@ -1,4 +1,4 @@
-name: Build APK
+name: Build CMA MCQ Portal Android
 # TEST-02 native Firebase email-auth build
 
 on:
@@ -37,13 +37,15 @@ jobs:
             --org com.taxpath \
             --project-name cma_mcq_portal
 
-      - name: Configure Android Firebase build
+      - name: Configure Android release build
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path("android/app/build.gradle.kts")
           s = p.read_text()
           s = s.replace("minSdk = flutter.minSdkVersion", "minSdk = 23")
+          s = s.replace("compileSdk = flutter.compileSdkVersion", "compileSdk = 36")
+          s = s.replace("targetSdk = flutter.targetSdkVersion", "targetSdk = 36")
           p.write_text(s)
           PY
 
@@ -144,13 +146,23 @@ jobs:
       - name: Build APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: flutter build appbundle --release
+
+      - name: Upload Play Store App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: CMA-MCQ-Portal-AAB
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Build APK for direct testing
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: flutter build apk --release
 
-      - name: Upload APK
+      - name: Upload APK for testing
         uses: actions/upload-artifact@v4
         with:
           name: CMA-MCQ-Portal-APK
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
-
-# TEST-02 native Firebase authentication workflow.
