@@ -20,3 +20,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+# Pin the Android implementation to avoid the Credential Manager account-picker hang
+# reported in google_sign_in_android 7.2.11 on physical Android devices.
+dependency_overrides:
+  google_sign_in_android: 7.2.7
