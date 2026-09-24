@@ -310,7 +310,7 @@ class StaffPage extends StatelessWidget {
                     IconButton(
                       tooltip: 'Approve',
                       icon: const Icon(Icons.check_circle),
-                      onPressed: () => _setStatus(d.id, 'Approved - Awaiting User Acceptance'),
+                      onPressed: () => _setStatus(d.id, 'Approved'),
                     ),
                     IconButton(
                       tooltip: 'Reject',
@@ -321,7 +321,7 @@ class StaffPage extends StatelessWidget {
                 : PopupMenuButton<String>(
                     onSelected: (v) => _setStatus(d.id, v),
                     itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'Approved - Awaiting User Acceptance', child: Text('Approve')),
+                      PopupMenuItem(value: 'Approved', child: Text('Approve')),
                       PopupMenuItem(value: 'Suspended', child: Text('Suspend')),
                       PopupMenuItem(value: 'Revoked', child: Text('Revoke')),
                     ],
