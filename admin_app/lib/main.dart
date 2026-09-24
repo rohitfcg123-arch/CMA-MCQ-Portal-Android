@@ -236,24 +236,123 @@ class AccessPage extends StatelessWidget {
 
 class StaffPage extends StatelessWidget {
   const StaffPage({super.key});
-  @override Widget build(BuildContext context) => Scaffold(
+  @override
+  Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Admin / Staff Management')),
-    floatingActionButton: FloatingActionButton.extended(onPressed:()=>_request(context),label:const Text('Request / Invite'),icon:const Icon(Icons.person_add)),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: () => _request(context),
+      label: const Text('Request / Invite'),
+      icon: const Icon(Icons.person_add),
+    ),
     body: StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
-      stream:FirebaseFirestore.instance.collection('staffAccess').snapshots(),
-      builder:(_,s)=>ListView(children:(s.data?.docs??[]).map((d){final x=d.data();return Card(child:ListTile(title:Text((x['email']??'').toString()),subtitle:Text('Role: ${x['role']??'Employee'}\nStatus: ${x['status']??'Pending'}\nLevel: ${x['accessLevel']??'Read'}'),trailing:Text((x['status']??'Pending').toString()));}).toList())),
+      stream: FirebaseFirestore.instance.collection('staffAccess').snapshots(),
+      builder: (_, s) => ListView(
+        children: (s.data?.docs ?? []).map((d) {
+          final x = d.data();
+          final status = (x['status'] ?? 'Pending').toString();
+          return Card(
+            child: ListTile(
+              title: Text((x['email'] ?? '').toString()),
+              subtitle: Text('Role: ${x['role'] ?? 'Employee'}\nStatus: $status\nLevel: ${x['accessLevel'] ?? 'Read'}'),
+              isThreeLine: true,
+              trailing: status == 'Pending Approval'
+                ? Wrap(children: [
+                    IconButton(
+                      tooltip: 'Approve',
+                      icon: const Icon(Icons.check_circle),
+                      onPressed: () => _setStatus(d.id, 'Approved - Awaiting User Acceptance'),
+                    ),
+                    IconButton(
+                      tooltip: 'Reject',
+                      icon: const Icon(Icons.cancel),
+                      onPressed: () => _setStatus(d.id, 'Rejected'),
+                    ),
+                  ])
+                : PopupMenuButton<String>(
+                    onSelected: (v) => _setStatus(d.id, v),
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'Approved - Awaiting User Acceptance', child: Text('Approve')),
+                      PopupMenuItem(value: 'Suspended', child: Text('Suspend')),
+                      PopupMenuItem(value: 'Revoked', child: Text('Revoke')),
+                    ],
+                  ),
+            ),
+          );
+        }).toList(),
+      ),
+    ),
   );
+
+  Future<void> _setStatus(String id, String status) async {
+    await FirebaseFirestore.instance.collection('staffAccess').doc(id).set({
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'updatedBy': adminEmail,
+    }, SetOptions(merge: true));
+  }
+
   Future<void> _request(BuildContext c) async {
-    final e=TextEditingController(); String role='Employee', level='Read';
-    await showDialog(context:c,builder:(_)=>StatefulBuilder(builder:(c,set)=>AlertDialog(
-      title:const Text('Invite / Access Request'),
-      content:Column(mainAxisSize:MainAxisSize.min,children:[
-        TextField(controller:e,keyboardType:TextInputType.emailAddress,decoration:const InputDecoration(labelText:'Email')),
-        DropdownButtonFormField<String>(value:role,items:['Admin','Manager','Employee'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v)=>set(()=>role=v!),decoration:const InputDecoration(labelText:'Role')),
-        DropdownButtonFormField<String>(value:level,items:['Read','Read & Write','Limited'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v)=>set(()=>level=v!),decoration:const InputDecoration(labelText:'Access level')),
-      ]),
-      actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Cancel')),FilledButton(onPressed:()async{final email=e.text.trim().toLowerCase();if(email.isEmpty)return;await FirebaseFirestore.instance.collection('staffAccess').doc(email).set({'email':email,'role':role,'accessLevel':level,'status':'Pending Approval','requestedBy':adminEmail,'requestedAt':FieldValue.serverTimestamp()},SetOptions(merge:true));if(c.mounted)Navigator.pop(c);},child:const Text('Send Request'))],
-    )));
+    final e = TextEditingController();
+    String role = 'Employee', level = 'Read';
+    await showDialog(
+      context: c,
+      builder: (_) => StatefulBuilder(
+        builder: (c, set) => AlertDialog(
+          title: const Text('Invite / Access Request'),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(controller: e, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email')),
+            DropdownButtonFormField<String>(
+              value: role,
+              items: ['Admin','Manager','Employee'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+              onChanged: (v) => set(() => role = v!),
+              decoration: const InputDecoration(labelText: 'Role'),
+            ),
+            DropdownButtonFormField<String>(
+              value: level,
+              items: ['Read','Read & Write','Limited'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+              onChanged: (v) => set(() => level = v!),
+              decoration: const InputDecoration(labelText: 'Access level'),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () async {
+                final email = e.text.trim().toLowerCase();
+                if (email.isEmpty) return;
+                await FirebaseFirestore.instance.collection('staffAccess').doc(email).set({
+                  'email': email,
+                  'role': role,
+                  'accessLevel': level,
+                  'status': 'Pending Approval',
+                  'requestedBy': adminEmail,
+                  'requestedAt': FieldValue.serverTimestamp(),
+                  'permissions': _defaultPermissions(role, level),
+                }, SetOptions(merge: true));
+                if (c.mounted) Navigator.pop(c);
+              },
+              child: const Text('Send Request'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Map<String, dynamic> _defaultPermissions(String role, String level) {
+    if (level == 'Limited') {
+      return {'users.read': true, 'activity.read': true, 'reports.read': false, 'payments.read': false, 'access.write': false, 'staff.write': false, 'settings.write': false};
+    }
+    final write = level == 'Read & Write';
+    return {
+      'users.read': true, 'users.write': write,
+      'activity.read': true,
+      'reports.read': true, 'reports.excel': true, 'reports.pdf': true, 'reports.csv': true,
+      'payments.read': role != 'Employee',
+      'access.read': role != 'Employee', 'access.write': write && role != 'Employee',
+      'staff.read': role == 'Admin', 'staff.write': false,
+      'settings.read': role == 'Admin', 'settings.write': false,
+    };
   }
 }
 
