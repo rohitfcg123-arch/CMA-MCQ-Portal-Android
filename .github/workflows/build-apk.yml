@@ -1,5 +1,5 @@
 name: Build APK
-# Google OAuth release-signing verification build
+# TEST-02 native Firebase email-auth build
 
 on:
   push:
@@ -37,44 +37,13 @@ jobs:
             --org com.taxpath \
             --project-name cma_mcq_portal
 
-      - name: Configure Android callback for browser login
+      - name: Configure Android Firebase build
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
-          p = Path("android/app/src/main/AndroidManifest.xml")
+          p = Path("android/app/build.gradle.kts")
           s = p.read_text()
-
-          callback_activity = '''
-              <activity
-                  android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
-                  android:exported="true"
-                  android:taskAffinity="">
-                  <intent-filter android:label="flutter_web_auth_2">
-                      <action android:name="android.intent.action.VIEW" />
-                      <category android:name="android.intent.category.DEFAULT" />
-                      <category android:name="android.intent.category.BROWSABLE" />
-                      <data android:scheme="cma-mcq-portal" />
-                  </intent-filter>
-              </activity>'''
-
-          if 'com.linusu.flutter_web_auth_2.CallbackActivity' not in s:
-              marker = "</application>"
-              if marker not in s:
-                  raise RuntimeError("Android application block not found")
-              s = s.replace(marker, callback_activity + "\n" + marker, 1)
-
-          # flutter_web_auth_2 5.x recommends an empty task affinity for all
-          # exported auth-related activities, including MainActivity.
-          main_marker = 'android:name=".MainActivity"'
-          if main_marker in s:
-              import re
-              pattern = r'(<activity\\b[^>]*android:name="\\.MainActivity"[^>]*)(>)'
-              match = re.search(pattern, s, flags=re.S)
-              if match and 'android:taskAffinity=' not in match.group(1):
-                  replacement = match.group(1) + ' android:taskAffinity=""' + match.group(2)
-                  s = s[:match.start()] + replacement + s[match.end():]
-
+          s = s.replace("minSdk = flutter.minSdkVersion", "minSdk = 23")
           p.write_text(s)
           PY
 
@@ -184,4 +153,4 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
 
-# Google Sign-In bridge workflow made idempotent.
+# TEST-02 native Firebase authentication workflow.
