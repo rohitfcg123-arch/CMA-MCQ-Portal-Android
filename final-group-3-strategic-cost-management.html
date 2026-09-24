@@ -1382,7 +1382,8 @@ async function getAccessState(user){
   const today=new Date().toISOString().slice(0,10), expiry=String(data.expiryDate||""), expired=!!expiry&&expiry<today;
   const groups=Array.isArray(data.groups)?data.groups:[];
   const paid=groups.includes(ACCESS_GROUP)&&!expired;
-  const allFeatures={mcqBank:feature("mcqBank",true),pyq:feature("pyq",false),reattemptWrong:feature("reattemptWrong",false),bookmark:feature("bookmark",true),chapterTopic:feature("chapterTopic",true),answerReveal:feature("answerReveal",true),overallTimer:feature("overallTimer",true),questionTimer:feature("questionTimer",false)};
+  const adminLike=paid||settings.siteWideFree||data.fullAccess===true||data.freeFullAccess===true||data.universalFull===true||data.universalFree===true||String(data.accessType||"").toLowerCase()==="all";
+  const allFeatures=adminLike ? {mcqBank:true,pyq:true,reattemptWrong:true,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:true} : {mcqBank:feature("mcqBank",true),pyq:feature("pyq",false),reattemptWrong:feature("reattemptWrong",false),bookmark:feature("bookmark",true),chapterTopic:feature("chapterTopic",true),answerReveal:feature("answerReveal",true),overallTimer:feature("overallTimer",true),questionTimer:feature("questionTimer",false)};
   const maxQuestions=Number(ov.freeQuestionLimit ?? settings.freeQuestionLimit ?? settings.freePoolSize ?? 20)||20;
   const maxAttempts=Number(ov.freeAttemptLimit ?? settings.freeAttemptLimit ?? 5)||0;
   const freeTestMinutes=Number(ov.freeTestMinutes ?? settings.freeTestMinutes ?? 60)||60;
@@ -1391,7 +1392,7 @@ async function getAccessState(user){
   if(src==="pyq"&&!allFeatures.pyq) return {allowed:false,paid,reason:"Previous Year Papers are currently locked for this account. Please purchase/upgrade access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   if(src==="bank"&&!allFeatures.mcqBank) return {allowed:false,paid,reason:"MCQ Bank is currently locked for this account.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   const wrongMode=(typeof arguments[1]==='string'&&arguments[1]==='wrong');
-  const adminLike=paid||settings.siteWideFree||data.fullAccess===true||data.freeFullAccess===true;
+
   if(!adminLike && src==="pyq") return {allowed:false,paid:false,reason:"Previous Year Papers require premium access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   if(!adminLike && src==="bank" && settings.freeAccessMode==="fixedPool") return {allowed:true,paid:false,fixedPool:true,poolSize:Math.max(1,Number(ov.freeQuestionLimit??settings.freePoolSize??20)||20),freeUsed:0,freeRemaining:999999,data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   if(!adminLike){
