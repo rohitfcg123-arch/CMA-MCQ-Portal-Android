@@ -1,4 +1,5 @@
 name: Build APK
+# Google OAuth release-signing verification build
 
 on:
   push:
