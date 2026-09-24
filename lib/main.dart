@@ -261,9 +261,8 @@ class _PortalWebViewState extends State<PortalWebView> {
             if (uri.scheme == 'http' || uri.scheme == 'https') {
               return NavigationDecision.navigate;
             }
-            try {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            } catch (_) {}
+            // Non-HTTP links are handled outside the WebView (including the
+            // flutter_web_auth_2 callback). Do not try to launch them here.
             return NavigationDecision.prevent;
           },
         ),
