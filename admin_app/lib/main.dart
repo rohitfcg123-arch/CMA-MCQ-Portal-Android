@@ -778,7 +778,7 @@ class StaffPage extends StatelessWidget {
           } catch (e) {
             if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save employee access: $e')));
           }
-        }),,
+        }),
       ],
     )));
   }
