@@ -78,7 +78,9 @@ class _PortalWebViewState extends State<PortalWebView> {
     window.__cmaNativeGoogleLogin = function () {
       if (window.NativeGoogleSignIn) {
         window.NativeGoogleSignIn.postMessage('signin');
+        return true;
       }
+      return false;
     };
 
     window.__cmaNativeGoogleToken = function (idToken) {
@@ -87,10 +89,21 @@ class _PortalWebViewState extends State<PortalWebView> {
         var credential = provider.credential(idToken);
         firebase.auth().signInWithCredential(credential)
           .then(function () {
+            var pending = window.__cmaPendingNativePath;
+            if (pending && pending !== location.href) {
+              window.__cmaPendingNativePath = '';
+              location.href = pending;
+              return;
+            }
             var button = document.getElementById('google');
             if (button) {
               button.disabled = false;
               button.textContent = 'G  Continue with Google';
+            }
+            var paymentButton = document.getElementById('googleBtn');
+            if (paymentButton) {
+              paymentButton.disabled = false;
+              paymentButton.textContent = 'Continue with Google';
             }
           })
           .catch(function (e) {
@@ -119,12 +132,25 @@ class _PortalWebViewState extends State<PortalWebView> {
       };
     }
 
-    var googleLogin = document.getElementById('googleLogin');
-    if (googleLogin) {
-      googleLogin.onclick = function () {
+    var paymentButton = document.getElementById('googleBtn');
+    if (paymentButton) {
+      paymentButton.onclick = function () {
         window.__cmaNativeGoogleLogin();
       };
     }
+
+    document.addEventListener('click', function (event) {
+      var el = event.target;
+      while (el && el !== document && el.tagName !== 'A' && el.tagName !== 'BUTTON') {
+        el = el.parentElement;
+      }
+      if (!el || el === document) return;
+      if (el.id === 'google' || el.id === 'googleBtn' || el.id === 'googleLogin') {
+        event.preventDefault();
+        event.stopPropagation();
+        window.__cmaNativeGoogleLogin();
+      }
+    }, true);
   } catch (e) {
     console.error('Native Google bridge setup failed', e);
   }
