@@ -154,6 +154,7 @@ class _PortalWebViewState extends State<PortalWebView> {
         window.__cmaNativeGoogleLogin();
       }
     }, true);
+    window.dispatchEvent(new Event('cmaNativeBridgeReady'));
   } catch (e) {
     console.error('Native Google bridge setup failed', e);
   }
@@ -259,8 +260,9 @@ class _PortalWebViewState extends State<PortalWebView> {
 
     setState(() => _googleBusy = true);
     try {
-      final GoogleSignInAccount account =
-          await _googleSignIn.authenticate();
+      GoogleSignInAccount? account =
+          await _googleSignIn.attemptLightweightAuthentication();
+      account ??= await _googleSignIn.authenticate();
       final idToken = account.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
         throw Exception(
