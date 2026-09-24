@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 
 const portalUrl='https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';
 String? nativeBridgePassword;
+String portalEntryUrl=portalUrl;
 const secureStorage=FlutterSecureStorage();
 const savedEmailKey='saved_login_email';
 const savedPasswordKey='saved_login_password';
@@ -28,13 +29,13 @@ class AuthGate extends StatelessWidget{
  const AuthGate({super.key});
  @override Widget build(BuildContext c)=>StreamBuilder<User?>(stream:FirebaseAuth.instance.userChanges(),builder:(c,s){
   if(s.connectionState==ConnectionState.waiting)return const Scaffold(body:Center(child:CircularProgressIndicator()));
-  final u=s.data;if(u==null)return const AuthScreen();return u.emailVerified?const Portal():const AuthScreen();
+  final u=s.data;if(u==null)return const AuthScreen();return u.emailVerified?Portal(startUrl:portalEntryUrl):const AuthScreen();
  });
 }
 class AuthScreen extends StatefulWidget{const AuthScreen({super.key});@override State<AuthScreen> createState()=>_AuthScreenState();}
 class _AuthScreenState extends State<AuthScreen>{
  final f=GlobalKey<FormState>();final name=TextEditingController(),phone=TextEditingController(),email=TextEditingController(),pass=TextEditingController(),confirm=TextEditingController();
- bool reg=false,busy=false,hide=true,isError=false,savePassword=false,hasSavedPassword=false;String message='';
+ bool reg=false,busy=false,hide=true,isError=false,savePassword=true,hasSavedPassword=false;String message='';
  @override void dispose(){name.dispose();phone.dispose();email.dispose();pass.dispose();confirm.dispose();super.dispose();}
  String? req(String? v,String n)=>(v==null||v.trim().isEmpty)?n+' is required':null;
  void showMsg(String s,{bool error=false}){if(mounted)setState((){message=s;isError=error;});}
@@ -216,13 +217,21 @@ Widget build(BuildContext c) {
 }
 
 }
-class Portal extends StatefulWidget{const Portal({super.key});@override State<Portal> createState()=>_PortalState();}
+class Portal extends StatefulWidget{final String startUrl;const Portal({super.key,this.startUrl=portalUrl});@override State<Portal> createState()=>_PortalState();}
 class _PortalState extends State<Portal>{
  late final WebViewController w;bool loading=true,error=false;
  Future<void> _autoReauthFromWeb() async {
   try {
    final e=await secureStorage.read(key:savedEmailKey);
    final p=await secureStorage.read(key:savedPasswordKey);
+   if(FirebaseAuth.instance.currentUser!=null&&FirebaseAuth.instance.currentUser!.emailVerified){
+    final savedCurrent=await secureStorage.read(key:savedPasswordKey);
+    if(savedCurrent!=null&&savedCurrent.isNotEmpty){
+     nativeBridgePassword=savedCurrent;
+     if(mounted){try{await w.runJavaScript(await bridge());}catch(_){}}
+     return;
+    }
+   }
    if(e!=null&&p!=null&&e.isNotEmpty&&p.isNotEmpty){
     final cred=await FirebaseAuth.instance.signInWithEmailAndPassword(email:e,password:p);
     await cred.user!.reload();
@@ -245,7 +254,29 @@ class _PortalState extends State<Portal>{
   return '(function(){try{var e='+jsonEncode(u.email??'')+',p='+jsonEncode(bridgePassword??'')+';window.__cmaNativeFirebaseIdToken='+jsonEncode(token)+';window.__cmaNativeUser={email:e,displayName:'+jsonEncode(u.displayName??'')+',uid:'+jsonEncode(u.uid)+'};if(e&&p&&window.firebase&&firebase.auth){firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){return firebase.auth().signInWithEmailAndPassword(e,p);}).then(function(){window.__cmaNativeWebAuthReady=true;window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}).catch(function(err){console.error("TEST-02 web auth bridge",err);window.dispatchEvent(new Event("cmaNativeFirebaseReady"));});}else{window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}}catch(e){console.error(e);}})();';
  }
  @override void initState(){super.initState();w=WebViewController()..setJavaScriptMode(JavaScriptMode.unrestricted)..addJavaScriptChannel('CmaAuth',onMessageReceived:(msg)async{
-  if(msg.message=='logout'){
+  final msgText=msg.message;
+  if(msgText=='logout'){
+    portalEntryUrl=portalUrl;
+    await FirebaseAuth.instance.signOut();
+    nativeBridgePassword=null;
+  }else if(msgText=='reauth'){
+    await _autoReauthFromWeb();
+  }else if(msgText.startsWith('login|')){
+    final target=msgText.substring(6);
+    final targetUri=Uri.tryParse(target);
+    if(targetUri!=null&&targetUri.host=='rohitfcg123-arch.github.io'){
+      portalEntryUrl=targetUri.toString();
+    }else{
+      portalEntryUrl=portalUrl;
+    }
+    final current=FirebaseAuth.instance.currentUser;
+    if(current!=null&&current.emailVerified){
+      final saved=await secureStorage.read(key:savedPasswordKey);
+      if(saved!=null&&saved.isNotEmpty){
+        nativeBridgePassword=saved;
+        try{await w.runJavaScript(await bridge());return;}catch(_){}
+      }
+    }
     await FirebaseAuth.instance.signOut();
     nativeBridgePassword=null;
   }
@@ -283,7 +314,7 @@ class _PortalState extends State<Portal>{
     }
     if(u.scheme=='http'||u.scheme=='https')return NavigationDecision.navigate;
     return NavigationDecision.prevent;
-  }))..loadRequest(Uri.parse(portalUrl));}
+  }))..loadRequest(Uri.parse(widget.startUrl));}
  Future<void> reload()async{setState((){loading=true;error=false;});await w.loadRequest(Uri.parse(portalUrl));}
  @override Widget build(BuildContext c)=>PopScope(canPop:false,onPopInvokedWithResult:(didPop,_)async{if(didPop)return;if(await w.canGoBack())await w.goBack();else if(mounted)Navigator.of(c).pop();},child:Scaffold(body:SafeArea(child:Stack(children:[WebViewWidget(controller:w),if(loading)const Align(alignment:Alignment.topCenter,child:LinearProgressIndicator(minHeight:2)),if(error)Center(child:FilledButton(onPressed:reload,child:const Text('Retry')))]))));
 }
