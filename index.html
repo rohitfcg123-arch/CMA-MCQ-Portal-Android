@@ -31,9 +31,10 @@ main{max-width:1180px;margin:auto;padding:28px 20px 65px}.hero{position:relative
 const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const auth=firebase.auth(),db=firebase.firestore(),provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:"select_account"});const persistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>{console.error(e);});
 const overlay=document.getElementById('overlay'),msg=document.getElementById('authMsg'),loginBtn=document.getElementById('loginBtn'),logoutBtn=document.getElementById('logoutBtn'),emailEl=document.getElementById('email');let pendingHref=null,ready=false;
-function openLogin(href){pendingHref=href||null;overlay.style.display='flex';msg.textContent='';msg.className='';setTimeout(()=>document.getElementById('google').focus(),50)}function closeLogin(){overlay.style.display='none';pendingHref=null;msg.textContent='';msg.className=''}
+function openLogin(href){pendingHref=href||null;try{window.__cmaPendingNativePath=pendingHref||'';}catch(e){}overlay.style.display='flex';msg.textContent='';msg.className='';setTimeout(()=>document.getElementById('google').focus(),50)}function closeLogin(){overlay.style.display='none';pendingHref=null;msg.textContent='';msg.className=''}
 document.getElementById('close').onclick=closeLogin;overlay.onclick=e=>{if(e.target===overlay)closeLogin()};loginBtn.onclick=()=>openLogin(null);logoutBtn.onclick=()=>auth.signOut();
 document.getElementById('google').onclick=async()=>{
+  if(CMA_ANDROID_APP && window.__cmaNativeGoogleLogin){window.__cmaNativeGoogleLogin();return}
   if(!ready){msg.textContent='Please wait a moment and try again.';return}
   const b=document.getElementById('google');b.disabled=true;b.textContent='Signing in…';
   try{
