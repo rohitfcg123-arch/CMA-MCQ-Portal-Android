@@ -276,7 +276,6 @@ class Dashboard extends StatelessWidget {
               if (_can('reports.read')) _action(context,'Reports','Excel, PDF & CSV',Icons.file_download_outlined,const ReportsPage()),
               if (_can('payments.read')) _action(context,'Payments','Verify subscriptions',Icons.payments_outlined,const PaymentsPage()),
               if (_can('staff.read')) _action(context,'Staff Management','Roles & permissions',Icons.manage_accounts_outlined,const StaffPage()),
-              if (_can('settings.read')) _action(context,'Settings','Portal settings',Icons.settings_outlined,const SettingsPage()),
             ],
           ),
           const SizedBox(height:14),
