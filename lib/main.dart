@@ -21,7 +21,7 @@ class App extends StatelessWidget{
 }
 class AuthGate extends StatelessWidget{
  const AuthGate({super.key});
- @override Widget build(BuildContext c)=>StreamBuilder<User?>(stream:FirebaseAuth.instance.authStateChanges(),builder:(c,s){
+ @override Widget build(BuildContext c)=>StreamBuilder<User?>(stream:FirebaseAuth.instance.userChanges(),builder:(c,s){
   if(s.connectionState==ConnectionState.waiting)return const Scaffold(body:Center(child:CircularProgressIndicator()));
   final u=s.data;if(u==null)return const AuthScreen();return u.emailVerified?const Portal():const AuthScreen();
  });
@@ -42,7 +42,7 @@ class _AuthScreenState extends State<AuthScreen>{
     await u.updateDisplayName(name.text.trim());
     await FirebaseFirestore.instance.collection('portalUsers').doc(u.uid).set({'uid':u.uid,'email':email.text.trim().toLowerCase(),'displayName':name.text.trim(),'phone':phone.text.trim(),'provider':'password','createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp()},SetOptions(merge:true));
     await u.sendEmailVerification();
-    showMsg('Verification link sent to '+email.text.trim()+'. Open it, then return and tap “I have verified”.');
+    showMsg('Verification email sent to '+email.text.trim()+'. Check Inbox, Spam and Promotions. After opening the link, return here and tap “I have verified”.');
    }else{
     final c=await a.signInWithEmailAndPassword(email:email.text.trim(),password:pass.text);await c.user!.reload();
     if(!a.currentUser!.emailVerified){await c.user!.sendEmailVerification();await a.signOut();showMsg('Your email is not verified. A new verification link has been sent.',error:true);}else{nativeBridgePassword=pass.text;}
@@ -75,10 +75,10 @@ Widget build(BuildContext c) {
                       const CircleAvatar(radius: 28, backgroundColor: Color(0xFF0D3B3E),
                         child: Text('C', style: TextStyle(color: Color(0xFFEAD39B), fontSize: 22, fontWeight: FontWeight.bold))),
                       const SizedBox(height: 16),
-                      Text(reg ? 'Create your account' : 'Sign in to continue',
+                      Text(reg ? 'Create your account' : 'CMA MCQ Portal',
                         style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: Color(0xFF082627))),
                       const SizedBox(height: 6),
-                      Text(reg ? 'Register inside the app. We will verify your email.' : 'Use your verified email and password.',
+                      Text(reg ? 'Register inside the app. We will verify your email.' : 'Login securely with your verified email and password.',
                         style: const TextStyle(color: Color(0xFF65716F))),
                       const SizedBox(height: 20),
                       if (reg) ...[
