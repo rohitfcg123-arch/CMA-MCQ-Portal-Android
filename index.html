@@ -31,6 +31,9 @@ main{max-width:1180px;margin:auto;padding:28px 20px 65px}.hero{position:relative
 const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const auth=firebase.auth(),db=firebase.firestore(),provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:"select_account"});const persistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>{console.error(e);});
 const overlay=document.getElementById('overlay'),msg=document.getElementById('authMsg'),loginBtn=document.getElementById('loginBtn'),logoutBtn=document.getElementById('logoutBtn'),emailEl=document.getElementById('email');let pendingHref=null,ready=false;
+let cmaHeartbeatTimer=null;
+function startCmaHeartbeat(user){if(cmaHeartbeatTimer)clearInterval(cmaHeartbeatTimer);if(!user)return;const beat=()=>{if(document.visibilityState!=='visible')return;track(user)};beat();cmaHeartbeatTimer=setInterval(beat,60000);}
+document.addEventListener('visibilitychange',()=>{if(auth.currentUser&&document.visibilityState==='visible')track(auth.currentUser);});
 function openLogin(href){pendingHref=href||null;if(CMA_ANDROID_APP&&window.CmaAuth){window.CmaAuth.postMessage('login|'+(pendingHref||location.href));return;}try{window.__cmaPendingNativePath=pendingHref||'';}catch(e){}overlay.style.display='flex';msg.textContent='';msg.className='';setTimeout(()=>document.getElementById('google').focus(),50)}function closeLogin(){overlay.style.display='none';pendingHref=null;msg.textContent='';msg.className=''}
 document.getElementById('close').onclick=closeLogin;overlay.onclick=e=>{if(e.target===overlay)closeLogin()};loginBtn.onclick=()=>openLogin(null);logoutBtn.onclick=()=>{if(CMA_ANDROID_APP&&window.CmaAuth){window.CmaAuth.postMessage('logout');return;}auth.signOut();};
 const CMA_ANDROID_APP=/CMA-MCQ-Portal-Android/i.test(navigator.userAgent);
@@ -111,12 +114,14 @@ document.querySelectorAll('.protected-link').forEach(a=>a.addEventListener('clic
   if(!auth.currentUser){e.preventDefault();openLogin(a.href)}
 }));
 auth.onAuthStateChanged(async user=>{
-  emailEl.textContent=user?(user.email||''):'';
+  if(!user&&cmaHeartbeatTimer){clearInterval(cmaHeartbeatTimer);cmaHeartbeatTimer=null;}
+  emailEl.textContent=user?(user.email||''):'',
   loginBtn.classList.toggle('hidden',!!user);
   logoutBtn.classList.toggle('hidden',!user);
   await loadAccess(user);
   if(user){
     track(user);
+    startCmaHeartbeat(user);
     if(appLoginMode) await returnToAndroidApp(user);
   }
 });
