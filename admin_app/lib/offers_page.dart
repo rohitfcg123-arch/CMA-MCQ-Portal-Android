@@ -111,6 +111,26 @@ class _OffersPageState extends State<OffersPage> {
       start=parseDate(x['startDate']??'');expiry=parseDate(x['expiryDate']??'');});
   }
 
+  Widget _discountRuleTile(Map<String,dynamic> r) {
+    final rawPlans = r['plans'];
+    final ps = rawPlans is List ? List<String>.from(rawPlans) : (rawPlans ?? '').toString().split(',').where((e)=>e.isNotEmpty).toList();
+    final gs = _groupLabel(r['group']?.toString() ?? 'all');
+    final val = (r['discountType']=='fixed' ? '₹' : '%') + (r['discountValue'] ?? 0).toString();
+    final active = r['active'] == true;
+    return Card(
+      margin: const EdgeInsets.only(top:7),
+      child: ListTile(
+        title: Text(r['name']?.toString() ?? 'Direct Discount'),
+        subtitle: Text(val + ' • ' + ps.map(label).join(' + ') + ' • ' + gs + ' • ' + (active ? 'ACTIVE' : 'INACTIVE')),
+        trailing: Wrap(children:[
+          IconButton(onPressed:()=>_editRule(r), icon:const Icon(Icons.edit)),
+          IconButton(onPressed:()=>_toggleRule(r), icon:Icon(active ? Icons.toggle_on : Icons.toggle_off)),
+          IconButton(onPressed:()=>_deleteRule(r['id'].toString()), icon:const Icon(Icons.delete_outline)),
+        ]),
+      ),
+    );
+  }
+
   @override Widget build(BuildContext context)=>Scaffold(
     appBar:AppBar(title:const Text('Offers & Promo Codes')),
     body:ListView(padding:const EdgeInsets.all(16),children:[
@@ -152,7 +172,7 @@ class _OffersPageState extends State<OffersPage> {
         const SizedBox(height:12),
         const Divider(),const SizedBox(height:5),const Text('Saved Discount Rules',style:TextStyle(fontWeight:FontWeight.bold,fontSize:16)),
         if(discountRules.isEmpty)const Padding(padding:EdgeInsets.all(10),child:Text('No direct discount rules yet.')),
-        ...discountRules.map((r){final ps=r['plans'] is List?List<String>.from(r['plans']):[r['plans'].toString()];final gs=_groupLabel(r['group']?.toString()??'all');final val=(r['discountType']=='fixed'?'₹':'%')+r['discountValue'].toString();return Card(margin:const EdgeInsets.only(top:7),child:ListTile(title:Text(r['name']?.toString()??'Direct Discount'),subtitle:Text(val+' • '+ps.map(label).join(' + ')+' • '+gs+' • '+(r['active']==true?'ACTIVE':'INACTIVE')),trailing:Wrap(children:[IconButton(onPressed:()=>_editRule(r),icon:const Icon(Icons.edit)),IconButton(onPressed:()=>_toggleRule(r),icon:Icon(r['active']==true?Icons.toggle_on:Icons.toggle_off)),IconButton(onPressed:()=>_deleteRule(r['id'].toString()),icon:const Icon(Icons.delete_outline))]))}),
+        ...discountRules.map((r) => _discountRuleTile(r)),
       ]))),
       const SizedBox(height:16),
       Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
