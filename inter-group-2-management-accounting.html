@@ -121,7 +121,11 @@ function setupEvents(){
  $('homeBtn').onclick=$('homeResult').onclick=()=>location.href='index.html';
 }
 function startRound(mode){
- clearInterval(interval);let base=[...QUESTIONS];const selectedChapter=$('chapterSelect').value;if(selectedChapter!=='all')base=base.filter(q=>String(q.chapter)===selectedChapter);const st=storage();
+ clearInterval(interval);let base=[...QUESTIONS];const selectedChapter=$('chapterSelect').value;
+ if(window.cmaQuestionSource==='pyq'){
+   if(selectedChapter!=='pyq-all') base=base.filter(q=>q.pyqTerm===selectedChapter.slice(4));
+   else base=base.filter(q=>q.chapter==='pyq');
+ }else if(selectedChapter!=='all') base=base.filter(q=>String(q.chapter)===selectedChapter);const st=storage();
  if(mode==='wrong'){const ids=new Set(st.wrong||[]);base=base.filter(q=>ids.has(q.id));if(!base.length){alert('No wrong questions available. Complete a round first.');return}}
  if(mode==='bookmarks'){base=base.filter(q=>bookmarks.has(q.id));if(!base.length){alert('No bookmarked questions available.');return}}
  if(cfg.random)shuffle(base);pool=base.slice(0,Math.min(cfg.questions,base.length));answers=pool.map(()=>null);roundResults=[];index=0;score=0;cfg.questions=pool.length;$('qCount').textContent=pool.length;show('quiz');if(cfg.timer==='round'){roundEnd=Date.now()+cfg.roundMinutes*60000;}else roundEnd=0;renderQ();
@@ -242,10 +246,10 @@ async function getAccessState(user){
   const freeTestMinutes=Number(ov.freeTestMinutes ?? settings.freeTestMinutes ?? 60)||60;
   const freeQuestionSeconds=Number(ov.freeQuestionSeconds ?? settings.freeQuestionSeconds ?? 60)||60;
   const src=(typeof source==='function'?source():"").toLowerCase();
-  if(src==="pyq"&&!allFeatures.pyq) return {allowed:false,paid,reason:"Previous Year Papers are currently locked for this account. Please purchase/upgrade access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
+  const adminLike=paid||settings.siteWideFree||data.fullAccess===true||data.freeFullAccess===true;
+  if(src==="pyq"&&!allFeatures.pyq&&!adminLike) return {allowed:false,paid,reason:"Previous Year Papers are currently locked for this account. Please purchase/upgrade access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   if(src==="bank"&&!allFeatures.mcqBank) return {allowed:false,paid,reason:"MCQ Bank is currently locked for this account.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   const wrongMode=(typeof arguments[1]==='string'&&arguments[1]==='wrong');
-  const adminLike=paid||settings.siteWideFree||data.fullAccess===true||data.freeFullAccess===true;
   if(!adminLike && src==="pyq") return {allowed:false,paid:false,reason:"Previous Year Papers require premium access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   if(!adminLike && src==="bank" && settings.freeAccessMode==="fixedPool") return {allowed:true,paid:false,fixedPool:true,poolSize:Math.max(1,Number(ov.freeQuestionLimit??settings.freePoolSize??20)||20),freeUsed:0,freeRemaining:999999,data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   if(!adminLike){
@@ -341,6 +345,33 @@ auth.onAuthStateChanged(async user=>{
     logoutBtn.style.display="none";
   }
 });
+})();
+</script>
+<script>
+(function(){
+  const bankBtn=document.getElementById('mcqBankBtn'), pyqBtn=document.getElementById('pyqBtn'), sel=document.getElementById('chapterSelect'), count=document.getElementById('chapterCount');
+  const bankOptions=[['all','All Chapters'],['1','Chapter 1 — Introduction to Management Accounting'],['2','Chapter 2 — Activity Based Costing'],['3','Chapter 3 — Marginal Costing'],['4','Chapter 4 — Applications of Marginal Costing in Short Term Decision Making'],['5','Chapter 5 — Transfer Pricing'],['6','Chapter 6 — Standard Costing and Variance Analysis'],['7','Chapter 7 — Forecasting, Budgeting and Budgetary Control'],['8','Chapter 8 — Divisional Performance Measurement'],['9','Chapter 9 — Responsibility Accounting'],['10','Chapter 10 — Decision Theory']];
+  const pyqOptions=[['pyq-all','All Previous Year Questions (75)'],['pyq:June 2026','June 2026 — 15 Questions'],['pyq:December 2025','December 2025 — 15 Questions'],['pyq:June 2025','June 2025 — 15 Questions'],['pyq:December 2024','December 2024 — 15 Questions'],['pyq:June 2024','June 2024 — 15 Questions']];
+  function renderOptions(mode){
+    const opts=mode==='pyq'?pyqOptions:bankOptions;
+    sel.innerHTML=opts.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join('');
+    sel.value=opts[0][0];
+    window.cmaQuestionSource=mode;
+    bankBtn.classList.toggle('active',mode==='bank'); pyqBtn.classList.toggle('active',mode==='pyq');
+    updateCount();
+  }
+  function updateCount(){
+    const v=sel.value, qs=window.CMA_MA_PYQ||[];
+    let total;
+    if(window.cmaQuestionSource==='pyq') total=v==='pyq-all'?qs.length:qs.filter(q=>q.pyqTerm===v.slice(4)).length;
+    else total=v==='all'?QUESTIONS.filter(q=>q.chapter!=='pyq').length:QUESTIONS.filter(q=>String(q.chapter)===v).length;
+    count.textContent=total+' questions available.';
+  }
+  window.source=function(){return window.cmaQuestionSource||'bank'};
+  bankBtn.onclick=()=>renderOptions('bank');
+  pyqBtn.onclick=()=>renderOptions('pyq');
+  sel.addEventListener('change',updateCount);
+  renderOptions('bank');
 })();
 </script>
 <script id="cma-central-access-controller">
