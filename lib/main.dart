@@ -251,10 +251,10 @@ class _PortalWebViewState extends State<PortalWebView> {
         ),
       );
       if (account == null) {
-        throw GoogleSignInException(
-          code: GoogleSignInExceptionCode.canceled,
-          description: 'Google account selection was cancelled.',
-        );
+        const message = 'Google account selection was cancelled.';
+        await _showWebAuthError(message);
+        _showMessage(message);
+        return;
       }
       final idToken = account.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
