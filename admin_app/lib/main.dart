@@ -26,7 +26,7 @@ class AdminApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     title: 'CMA Admin Portal',
-    theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF0D3B3E)),
+    theme: ThemeData(useMaterial3: true, scaffoldBackgroundColor: const Color(0xFFFAF6EE), colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D3B3E)), appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF0D3B3E), foregroundColor: Colors.white, elevation: 0), cardTheme: const CardThemeData(color: Color(0xFFFFFDF8), elevation: 2, margin: EdgeInsets.symmetric(vertical: 6))),
     home: const AuthGate(),
   );
 }
@@ -159,94 +159,147 @@ class _AdminLoginState extends State<AdminLogin> {
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
+  static const activeWindow = Duration(minutes: 2);
 
-  Future<int> _activeCount() async {
-    final results = await Future.wait([
-      FirebaseFirestore.instance.collection('portalUsers').get(),
-      FirebaseFirestore.instance.collection('access').get(),
-    ]);
-    final byEmail = <String, DateTime>{};
+  DateTime? _activeTime(Map<String, dynamic> x) => _dateValue(x['lastActive'] ?? x['lastSeen'] ?? x['lastLogin']);
+  bool _isActive(Map<String, dynamic> x) {
+    final t = _activeTime(x);
+    if (t == null) return false;
+    final age = DateTime.now().difference(t);
+    return age >= const Duration(seconds: -10) && age <= activeWindow;
+  }
 
-    void absorb(Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
-      for (final d in docs) {
-        final x = d.data();
-        final email = (x['email'] ?? '').toString().trim().toLowerCase();
-        if (email.isEmpty) continue;
-        final t = _dateValue(x['lastActive'] ?? x['lastSeen'] ?? x['lastLogin']);
-        if (t == null) continue;
-        final old = byEmail[email];
-        if (old == null || t.isAfter(old)) byEmail[email] = t;
-      }
-    }
-
-    absorb(results[0].docs);
-    absorb(results[1].docs);
-
-    final now = DateTime.now();
-    return byEmail.values.where((t) {
-      final age = now.difference(t).inMinutes;
-      return age >= -1 && age <= activeMinutes;
-    }).length;
+  void _showActiveUsers(BuildContext context, List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    final active = docs.where((d) => _isActive(d.data())).toList();
+    active.sort((a,b) => (_activeTime(b.data()) ?? DateTime(1970)).compareTo(_activeTime(a.data()) ?? DateTime(1970)));
+    showModalBottomSheet(
+      context: context, isScrollControlled: true, backgroundColor: const Color(0xFFFFFDF8),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => SafeArea(child: SizedBox(
+        height: MediaQuery.of(context).size.height * .78,
+        child: Column(children: [
+          Padding(padding: const EdgeInsets.fromLTRB(20,18,12,10), child: Row(children: [
+            const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Active Users', style: TextStyle(fontSize:21,fontWeight:FontWeight.w800,color:Color(0xFF082627))),
+              SizedBox(height:3), Text('Students seen in the last 2 minutes',style:TextStyle(color:Color(0xFF65716F),fontSize:12)),
+            ])),
+            Container(padding:const EdgeInsets.symmetric(horizontal:12,vertical:7),decoration:BoxDecoration(color:const Color(0xFFE6EFED),borderRadius:BorderRadius.circular(20)),
+              child:Text(active.length.toString()+' LIVE',style:const TextStyle(fontWeight:FontWeight.w800,color:Color(0xFF0D3B3E)))),
+          ])),
+          const Divider(height:1),
+          Expanded(child: active.isEmpty
+            ? const Center(child: Column(mainAxisSize:MainAxisSize.min,children:[
+                Icon(Icons.people_outline,size:54,color:Color(0xFF65716F)),SizedBox(height:10),
+                Text('No student is active right now.',style:TextStyle(fontWeight:FontWeight.w700)),
+                SizedBox(height:4),Text('The list updates automatically.',style:TextStyle(fontSize:12,color:Color(0xFF65716F)))
+              ]))
+            : ListView.separated(
+                padding:const EdgeInsets.all(14),itemCount:active.length,
+                separatorBuilder:(_,__)=>const SizedBox(height:7),
+                itemBuilder:(_,i){
+                  final x=active[i].data();
+                  final name=(x['displayName']??x['name']??'Student').toString();
+                  final email=(x['email']??'').toString();
+                  final groups=x['groups'] is List?List<String>.from(x['groups']):const <String>[];
+                  final names=groups.map((g)=>({'foundation':'CMA Foundation','inter-group-1':'CMA Intermediate Group 1','inter-group-2':'CMA Intermediate Group 2','final-group-3':'CMA Final Group 3','final-group-4':'CMA Final Group 4'}[g]??g)).join(' • ');
+                  return Card(margin:EdgeInsets.zero,child:ListTile(
+                    leading:Stack(children:[
+                      CircleAvatar(backgroundColor:const Color(0xFFE6EFED),child:Text(name.isEmpty?'?':name.substring(0,1).toUpperCase(),style:const TextStyle(color:Color(0xFF0D3B3E),fontWeight:FontWeight.w900))),
+                      Positioned(right:0,bottom:0,child:Container(width:12,height:12,decoration:BoxDecoration(color:const Color(0xFF2F7042),shape:BoxShape.circle,border:Border.all(color:const Color(0xFFFFFDF8),width:2))))
+                    ]),
+                    title:Text(name,style:const TextStyle(fontWeight:FontWeight.w800)),
+                    subtitle:Text(email+(names.isEmpty?'':'\n'+names)+'\nLast heartbeat: '+_fmt(_activeTime(x)),maxLines:3,overflow:TextOverflow.ellipsis),
+                    isThreeLine:true,
+                  ));
+                },
+              )),
+        ]),
+      )),
+    );
   }
 
   @override Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('CMA Admin Dashboard'), actions: [
-      IconButton(tooltip: 'Logout', onPressed: () => FirebaseAuth.instance.signOut(), icon: const Icon(Icons.logout))
-    ]),
-    body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('portalUsers').snapshots(),
-      builder: (_, s) {
-        final docs = s.data?.docs ?? [];
-        int inactive10 = 0;
-        for (final d in docs) {
-          final t = _dateValue(d.data()['lastActive'] ?? d.data()['lastSeen'] ?? d.data()['lastLogin']);
-          if (t == null || DateTime.now().difference(t).inMinutes > 10 * 24 * 60) inactive10++;
-        }
-        return FutureBuilder<int>(
-          future: _activeCount(),
-          builder: (_, activeSnap) {
-            final active = activeSnap.data ?? 0;
-            return ListView(padding: const EdgeInsets.all(16), children: [
-              Wrap(spacing: 12, runSpacing: 12, children: [
-                _metric('Registered Users', docs.length, Icons.people),
-                _metric('Active Now', active, Icons.online_prediction),
-                _metric('Inactive >10 Days', inactive10, Icons.person_off),
-              ]),
-              const SizedBox(height: 18),
-              _tile(context, 'Users & Filters', Icons.people_alt, const UsersPage()),
-              _tile(context, 'Activity & Last 10 Days', Icons.timeline, const ActivityPage()),
-              _tile(context, 'Access Management', Icons.lock_person, const AccessPage()),
-              _tile(context, 'Offers, Pricing & Promo Codes', Icons.local_offer, const OffersPage()),
-              _tile(context, 'Payment Verification', Icons.payments, const PaymentsPage()),
-              _tile(context, 'Admin / Staff Management', Icons.manage_accounts, const StaffPage()),
-              _tile(context, 'Reports & Downloads', Icons.download, const ReportsPage()),
-            ]);
-          },
-        );
+    appBar: AppBar(
+      title: const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text('CMA MCQ Portal',style:TextStyle(fontWeight:FontWeight.w800)),
+        Text('Admin Control Center',style:TextStyle(fontSize:10,letterSpacing:1.2,color:Color(0xFFEAD39B)))
+      ]),
+      actions:[IconButton(tooltip:'Logout',onPressed:()=>FirebaseAuth.instance.signOut(),icon:const Icon(Icons.logout)),const SizedBox(width:6)],
+    ),
+    body: StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
+      stream:FirebaseFirestore.instance.collection('portalUsers').snapshots(),
+      builder:(_,s){
+        final docs=s.data?.docs??[];
+        final activeDocs=docs.where((d)=>_isActive(d.data())).toList();
+        final recent10=docs.where((d){final t=_activeTime(d.data());return t!=null&&DateTime.now().difference(t).inDays<=10;}).length;
+        return ListView(padding:const EdgeInsets.fromLTRB(16,14,16,34),children:[
+          Container(
+            padding:const EdgeInsets.fromLTRB(20,20,20,18),
+            decoration:BoxDecoration(
+              gradient:const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xFF0D3B3E),Color(0xFF082627)]),
+              borderRadius:BorderRadius.circular(22),
+              boxShadow:const[BoxShadow(color:Color(0x18082627),blurRadius:20,offset:Offset(0,8))]),
+            child:Row(children:[
+              const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Text('ADMIN CONTROL CENTER',style:TextStyle(color:Color(0xFFEAD39B),fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.4)),
+                SizedBox(height:6),Text('Control your CMA portal',style:TextStyle(color:Colors.white,fontSize:23,fontWeight:FontWeight.w900)),
+                SizedBox(height:5),Text('Manage students, access, payments, offers and staff from one place.',style:TextStyle(color:Color(0xFFD7E3E1),fontSize:12))
+              ])),
+              Container(width:54,height:54,decoration:BoxDecoration(color:Color(0x1FEAD39B),borderRadius:BorderRadius.circular(16),border:Border.all(color:Color(0x55EAD39B))),child:const Icon(Icons.admin_panel_settings,color:Color(0xFFEAD39B),size:30))
+            ]),
+          ),
+          const SizedBox(height:14),
+          Wrap(spacing:10,runSpacing:10,children:[
+            _metric('Registered Users',docs.length,Icons.people_alt_outlined),
+            _metricClickable(context,'Active Now',activeDocs.length,Icons.online_prediction,docs),
+            _metric('Active in 10 Days',recent10,Icons.timeline),
+          ]),
+          const SizedBox(height:18),
+          const Padding(padding:EdgeInsets.only(left:3,bottom:8),child:Text('Quick Access',style:TextStyle(fontSize:17,fontWeight:FontWeight.w900,color:Color(0xFF082627)))),
+          GridView.count(
+            crossAxisCount:MediaQuery.of(context).size.width>720?4:2,
+            shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisSpacing:10,mainAxisSpacing:10,
+            childAspectRatio:MediaQuery.of(context).size.width>720?1.75:1.25,
+            children:[
+              _action(context,'Users & Filters','Students, groups & status',Icons.people_alt_outlined,const UsersPage()),
+              _action(context,'Activity','Live & last 10 days',Icons.timeline,const ActivityPage()),
+              _action(context,'Access Management','Free, paid & groups',Icons.lock_person_outlined,const AccessPage()),
+              _action(context,'Offers & Promo','Pricing & promo codes',Icons.local_offer_outlined,const OffersPage()),
+              _action(context,'Payments','Verify subscriptions',Icons.payments_outlined,const PaymentsPage()),
+              _action(context,'Staff Management','Roles & permissions',Icons.manage_accounts_outlined,const StaffPage()),
+              _action(context,'Reports','Excel, PDF & CSV',Icons.file_download_outlined,const ReportsPage()),
+            ],
+          ),
+          const SizedBox(height:14),
+          Card(child:ListTile(
+            leading:const CircleAvatar(backgroundColor:Color(0xFFE6EFED),child:Icon(Icons.bolt,color:Color(0xFF0D3B3E))),
+            title:const Text('Live activity',style:TextStyle(fontWeight:FontWeight.w800)),
+            subtitle:Text(activeDocs.isEmpty?'No students detected in the last 2 minutes.':activeDocs.length.toString()+' student'+(activeDocs.length==1?'':'s')+' currently active. Tap Active Now to see who.'),
+            trailing:const Icon(Icons.chevron_right),onTap:()=>_showActiveUsers(context,docs),
+          )),
+        ]);
       },
     ),
   );
 
-  Widget _metric(String title, int value, IconData icon) => SizedBox(
-    width: 180,
-    child: Card(child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon), const SizedBox(height: 8),
-        Text('$value', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-        Text(title)
-      ]),
-    )),
-  );
+  Widget _metric(String title,int value,IconData icon)=>SizedBox(width:180,child:Card(margin:EdgeInsets.zero,child:Padding(
+    padding:const EdgeInsets.all(15),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      Icon(icon,color:const Color(0xFF0D3B3E)),const SizedBox(height:7),
+      Text(value.toString(),style:const TextStyle(fontSize:27,fontWeight:FontWeight.w900,color:Color(0xFF082627))),
+      Text(title,style:const TextStyle(fontSize:12,color:Color(0xFF65716F),fontWeight:FontWeight.w600))
+    ])));
 
-  Widget _tile(BuildContext c, String title, IconData icon, Widget page) => Card(
-    child: ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => page)),
-    ),
-  );
+  Widget _metricClickable(BuildContext context,String title,int value,IconData icon,List<QueryDocumentSnapshot<Map<String,dynamic>>> docs)=>GestureDetector(
+    onTap:()=>_showActiveUsers(context,docs),
+    child:Stack(children:[_metric(title,value,icon),Positioned(top:8,right:8,child:Container(padding:const EdgeInsets.all(5),decoration:BoxDecoration(color:const Color(0xFFEAD39B),borderRadius:BorderRadius.circular(8)),child:const Icon(Icons.open_in_new,size:13,color:Color(0xFF082627))))]));
+
+  Widget _action(BuildContext c,String title,String subtitle,IconData icon,Widget page)=>Card(margin:EdgeInsets.zero,child:InkWell(
+    borderRadius:BorderRadius.circular(14),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>page)),
+    child:Padding(padding:const EdgeInsets.all(13),child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[
+      Container(width:38,height:38,decoration:BoxDecoration(color:const Color(0xFFE6EFED),borderRadius:BorderRadius.circular(11)),child:Icon(icon,color:const Color(0xFF0D3B3E),size:21)),
+      const SizedBox(height:9),Text(title,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:13,color:Color(0xFF0D3B3E))),
+      const SizedBox(height:2),Text(subtitle,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:10.5,color:Color(0xFF65716F)))
+    ]))));
 }
 
 class UsersPage extends StatefulWidget {
