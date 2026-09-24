@@ -88,7 +88,7 @@ class _AdminLoginState extends State<AdminLogin> {
         if (widget.error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(widget.error!, style: const TextStyle(color: Colors.red))),
         const SizedBox(height: 16),
         SizedBox(width: double.infinity, child: FilledButton(onPressed: busy ? null : login, child: Text(busy ? 'Signing in…' : 'Login'))),
-      ])),
+      ]))),
     )),
   );
 }
