@@ -131,8 +131,31 @@ Widget build(BuildContext c) {
                             child: const Text('Forgot password?'),
                           ),
                         ),
-                      FilledButton(onPressed: busy ? null : submit,
-                        child: Padding(padding: const EdgeInsets.all(12), child: Text(reg ? 'Create account' : 'Login'))),
+                      FilledButton(
+                        onPressed: busy ? null : submit,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (busy) ...[
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.4,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Text('Please wait...'),
+                              ] else
+                                Text(reg ? 'Create account' : 'Login'),
+                            ],
+                          ),
+                        ),
+                      ),
                       if (reg && FirebaseAuth.instance.currentUser != null && !FirebaseAuth.instance.currentUser!.emailVerified)
                         TextButton(onPressed: busy ? null : verify, child: const Text('I have verified my email')),
                       TextButton(onPressed: busy ? null : () => setState(() { reg = !reg; message = ''; isError = false; }),
