@@ -170,9 +170,27 @@ class _PortalWebViewState extends State<PortalWebView> {
         serverClientId: webClientId,
       );
       _googleInitialized = true;
+      debugPrint('Google Sign-In initialized successfully.');
     } catch (e) {
+      _googleInitialized = false;
       debugPrint('Google Sign-In initialization failed: $e');
+      _showWebAuthError('Google setup error: $e');
     }
+  }
+
+  Future<void> _showWebAuthError(String message) async {
+    final safe = jsonEncode(message);
+    try {
+      await _controller.runJavaScript('''
+        (function () {
+          var msg = document.getElementById('authMsg');
+          if (msg) {
+            msg.textContent = $safe;
+            msg.className = 'error';
+          }
+        })();
+      ''');
+    } catch (_) {}
   }
 
   void _initializeWebView() {
@@ -242,17 +260,43 @@ class _PortalWebViewState extends State<PortalWebView> {
           await _googleSignIn.authenticate();
       final idToken = account.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
-        throw Exception('Google did not return an ID token.');
+        throw Exception(
+          'Google returned no ID token. Check the Android OAuth client, '
+          'package name and release SHA-1 in Firebase.',
+        );
       }
+
       final tokenForJs = jsonEncode(idToken);
-      await _controller.runJavaScript(
-        'window.__cmaNativeGoogleToken($tokenForJs);',
+      await _controller.runJavaScript('''
+        (function () {
+          if (typeof window.__cmaNativeGoogleToken === 'function') {
+            window.__cmaNativeGoogleToken($tokenForJs);
+          } else {
+            var msg = document.getElementById('authMsg');
+            if (msg) {
+              msg.textContent =
+                'Login bridge is not ready. Please reload the app.';
+              msg.className = 'error';
+            }
+          }
+        })();
+      ''');
+    } on GoogleSignInException catch (e) {
+      debugPrint(
+        'Native Google Sign-In failed: code=${e.code}, '
+        'description=${e.description}, details=${e.details}',
       );
+      final message = e.code == GoogleSignInExceptionCode.canceled
+          ? 'Google sign-in was cancelled.'
+          : 'Google sign-in configuration failed: '
+              '${e.description ?? e.code.name}. '
+              'Check Android package + SHA-1 in Firebase.';
+      await _showWebAuthError(message);
+      _showMessage(message);
     } catch (e) {
       debugPrint('Native Google Sign-In failed: $e');
-      final message = e.toString().toLowerCase().contains('cancel')
-          ? 'Google sign-in was cancelled.'
-          : 'Google sign-in failed. Please try again.';
+      final message = 'Google sign-in failed: $e';
+      await _showWebAuthError(message);
       _showMessage(message);
     } finally {
       if (mounted) setState(() => _googleBusy = false);
