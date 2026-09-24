@@ -159,45 +159,94 @@ class _AdminLoginState extends State<AdminLogin> {
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
-  Stream<QuerySnapshot<Map<String,dynamic>>> get users => FirebaseFirestore.instance.collection('portalUsers').snapshots();
+
+  Future<int> _activeCount() async {
+    final results = await Future.wait([
+      FirebaseFirestore.instance.collection('portalUsers').get(),
+      FirebaseFirestore.instance.collection('access').get(),
+    ]);
+    final byEmail = <String, DateTime>{};
+
+    void absorb(Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+      for (final d in docs) {
+        final x = d.data();
+        final email = (x['email'] ?? '').toString().trim().toLowerCase();
+        if (email.isEmpty) continue;
+        final t = _dateValue(x['lastActive'] ?? x['lastSeen'] ?? x['lastLogin']);
+        if (t == null) continue;
+        final old = byEmail[email];
+        if (old == null || t.isAfter(old)) byEmail[email] = t;
+      }
+    }
+
+    absorb(results[0].docs);
+    absorb(results[1].docs);
+
+    final now = DateTime.now();
+    return byEmail.values.where((t) {
+      final age = now.difference(t).inMinutes;
+      return age >= -1 && age <= activeMinutes;
+    }).length;
+  }
+
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('CMA Admin Dashboard'), actions: [
       IconButton(tooltip: 'Logout', onPressed: () => FirebaseAuth.instance.signOut(), icon: const Icon(Icons.logout))
     ]),
-    body: StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
-      stream: users,
+    body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('portalUsers').snapshots(),
       builder: (_, s) {
         final docs = s.data?.docs ?? [];
-        final now = DateTime.now();
-        int active = 0, inactive10 = 0;
+        int inactive10 = 0;
         for (final d in docs) {
-          final t = _dateValue(d.data()['lastActive'] ?? d.data()['lastLogin']);
-          if (t != null) {
-            final age = now.difference(t).inMinutes;
-            if (age <= activeMinutes) active++;
-            if (age > 10 * 24 * 60) inactive10++;
-          }
+          final t = _dateValue(d.data()['lastActive'] ?? d.data()['lastSeen'] ?? d.data()['lastLogin']);
+          if (t == null || DateTime.now().difference(t).inMinutes > 10 * 24 * 60) inactive10++;
         }
-        return ListView(padding: const EdgeInsets.all(16), children: [
-          Wrap(spacing: 12, runSpacing: 12, children: [
-            _metric('Registered Users', docs.length, Icons.people),
-            _metric('Active Now', active, Icons.online_prediction),
-            _metric('Inactive >10 Days', inactive10, Icons.person_off),
-          ]),
-          const SizedBox(height: 18),
-          _tile(context, 'Users & Filters', Icons.people_alt, const UsersPage()),
-          _tile(context, 'Activity & Last 10 Days', Icons.timeline, const ActivityPage()),
-          _tile(context, 'Access Management', Icons.lock_person, const AccessPage()),
-          _tile(context, 'Offers, Pricing & Promo Codes', Icons.local_offer, const OffersPage()),
-          _tile(context, 'Payment Verification', Icons.payments, const PaymentsPage()),
-          _tile(context, 'Admin / Staff Management', Icons.manage_accounts, const StaffPage()),
-          _tile(context, 'Reports & Downloads', Icons.download, const ReportsPage()),
-        ]);
+        return FutureBuilder<int>(
+          future: _activeCount(),
+          builder: (_, activeSnap) {
+            final active = activeSnap.data ?? 0;
+            return ListView(padding: const EdgeInsets.all(16), children: [
+              Wrap(spacing: 12, runSpacing: 12, children: [
+                _metric('Registered Users', docs.length, Icons.people),
+                _metric('Active Now', active, Icons.online_prediction),
+                _metric('Inactive >10 Days', inactive10, Icons.person_off),
+              ]),
+              const SizedBox(height: 18),
+              _tile(context, 'Users & Filters', Icons.people_alt, const UsersPage()),
+              _tile(context, 'Activity & Last 10 Days', Icons.timeline, const ActivityPage()),
+              _tile(context, 'Access Management', Icons.lock_person, const AccessPage()),
+              _tile(context, 'Offers, Pricing & Promo Codes', Icons.local_offer, const OffersPage()),
+              _tile(context, 'Payment Verification', Icons.payments, const PaymentsPage()),
+              _tile(context, 'Admin / Staff Management', Icons.manage_accounts, const StaffPage()),
+              _tile(context, 'Reports & Downloads', Icons.download, const ReportsPage()),
+            ]);
+          },
+        );
       },
     ),
   );
-  Widget _metric(String title, int value, IconData icon) => SizedBox(width: 180, child: Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon), const SizedBox(height: 8), Text('$value', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)), Text(title)]))));
-  Widget _tile(BuildContext c, String title, IconData icon, Widget page) => Card(child: ListTile(leading: Icon(icon), title: Text(title), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => page))));
+
+  Widget _metric(String title, int value, IconData icon) => SizedBox(
+    width: 180,
+    child: Card(child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(icon), const SizedBox(height: 8),
+        Text('$value', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+        Text(title)
+      ]),
+    )),
+  );
+
+  Widget _tile(BuildContext c, String title, IconData icon, Widget page) => Card(
+    child: ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => page)),
+    ),
+  );
 }
 
 class UsersPage extends StatefulWidget {
@@ -275,29 +324,158 @@ class ActivityPage extends StatelessWidget {
   Widget _section(String title,List<QueryDocumentSnapshot<Map<String,dynamic>>> docs)=>Card(child:ExpansionTile(title:Text(title),children:docs.map((d){final x=d.data();return ListTile(title:Text((x['displayName']??'Unknown').toString()),subtitle:Text('${x['email']??''}\nLast active: ${_fmt(_dateValue(x['lastActive']??x['lastLogin']))}'));}).toList()));
 }
 
-class AccessPage extends StatelessWidget {
+class AccessPage extends StatefulWidget {
   const AccessPage({super.key});
-  @override Widget build(BuildContext context) => Scaffold(
+  @override State<AccessPage> createState() => _AccessPageState();
+}
+
+class _AccessPageState extends State<AccessPage> {
+  static const groupOptions = <Map<String, String>>[
+    {'key': 'foundation', 'label': 'CMA Foundation'},
+    {'key': 'inter-group-1', 'label': 'CMA Intermediate Group 1'},
+    {'key': 'inter-group-2', 'label': 'CMA Intermediate Group 2'},
+    {'key': 'final-group-3', 'label': 'CMA Final Group 3'},
+    {'key': 'final-group-4', 'label': 'CMA Final Group 4'},
+  ];
+
+  Future<void> _setGlobalFree(bool enabled) async {
+    await FirebaseFirestore.instance.collection('settings').doc('access').set({
+      'siteWideFree': enabled,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'updatedBy': superAdminEmail,
+    }, SetOptions(merge: true));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(enabled
+        ? 'Full app access is now FREE for EVERY student.'
+        : 'Global free access turned OFF. Normal access rules are active again.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Access Management')),
-    body: StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('portalUsers').snapshots(),
-      builder: (_,s)=>ListView(children:(s.data?.docs??[]).map((d){
-        final x=d.data(); return ListTile(title:Text((x['displayName']??'Unknown').toString()),subtitle:Text((x['email']??'').toString()),trailing:TextButton(onPressed:()=>_edit(context,d.id,x),child:const Text('Permissions')));
-      }).toList()),
-    ),
+    body: Column(children: [
+      StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance.collection('settings').doc('access').snapshots(),
+        builder: (_, s) {
+          final globalFree = s.data?.data()?['siteWideFree'] == true;
+          return Card(
+            margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Global Free Access', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text(globalFree
+                  ? 'ON — every student gets full app access without payment.'
+                  : 'OFF — students follow their individual/free/paid access rules.'),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(globalFree ? 'App FREE for EVERYONE' : 'Keep normal access rules'),
+                  subtitle: Text(globalFree ? 'Turn OFF to restore payment and free-limit rules.' : 'Turn ON to make the complete app free for all students.'),
+                  value: globalFree,
+                  onChanged: _setGlobalFree,
+                ),
+              ]),
+            ),
+          );
+        },
+      ),
+      Expanded(
+        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance.collection('access').snapshots(),
+          builder: (_, s) => ListView(
+            padding: const EdgeInsets.only(bottom: 20),
+            children: (s.data?.docs ?? []).map((d) {
+              final x = d.data();
+              final name = (x['name'] ?? x['displayName'] ?? 'Unknown').toString();
+              return Card(
+                child: ListTile(
+                  title: Text(name),
+                  subtitle: Text('\${x['email'] ?? d.id}\nAccess: \${x['universalFree'] == true ? 'Universal Free (individual)' : ((x['groups'] as List?)?.isNotEmpty == true ? 'Group access' : 'No group access')}'),
+                  isThreeLine: true,
+                  trailing: TextButton(
+                    onPressed: () => _edit(context, d.id, x),
+                    child: const Text('Permissions'),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    ]),
   );
-  Future<void> _edit(BuildContext c,String uid,Map<String,dynamic> x) async {
-    bool universal=x['universalFree']==true;
-    final groups=List<String>.from(x['groups']??const []);
-    await showDialog(context:c,builder:(_)=>StatefulBuilder(builder:(c,set)=>AlertDialog(
-      title:Text('Access: ${x['email']??uid}'),
-      content:SizedBox(width:400,child:SingleChildScrollView(child:Column(children:[
-        SwitchListTile(title:const Text('Universal Free Access'),value:universal,onChanged:(v)=>set(()=>universal=v)),
-        for(final g in ['Foundation','Group 1','Group 2']) CheckboxListTile(title:Text(g),value:groups.contains(g),onChanged:(v)=>set(()=>v==true?groups.add(g):groups.remove(g))),
-        CheckboxListTile(title:const Text('All Groups'),value:groups.contains('All Groups'),onChanged:(v)=>set(()=>v==true?groups.add('All Groups'):groups.remove('All Groups'))),
-      ]))),
-      actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Cancel')),FilledButton(onPressed:()async{await FirebaseFirestore.instance.collection('portalUsers').doc(uid).set({'universalFree':universal,'groups':groups,'accessType':universal?'Universal Free':groups.isEmpty?'No Access':groups.contains('All Groups')?'All Groups':'Custom Access','accessUpdatedAt':FieldValue.serverTimestamp(),'accessUpdatedBy':superAdminEmail},SetOptions(merge:true));if(c.mounted)Navigator.pop(c);},child:const Text('Save Access'))],
-    )));
+
+  Future<void> _edit(BuildContext c, String uid, Map<String, dynamic> x) async {
+    bool universal = x['universalFree'] == true;
+    final groups = <String>{...(x['groups'] is List ? List<String>.from(x['groups']) : const <String>[])};
+
+    await showDialog(
+      context: c,
+      builder: (_) => StatefulBuilder(
+        builder: (c, set) => AlertDialog(
+          title: Text('Access: \${x['email'] ?? uid}'),
+          content: SizedBox(
+            width: 430,
+            child: SingleChildScrollView(
+              child: Column(children: [
+                SwitchListTile(
+                  title: const Text('Universal Free Access'),
+                  subtitle: const Text('FREE access to the complete app for this ONE student only.'),
+                  value: universal,
+                  onChanged: (v) => set(() => universal = v),
+                ),
+                const Divider(),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Group Access', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                for (final g in groupOptions)
+                  CheckboxListTile(
+                    title: Text(g['label']!),
+                    value: groups.contains(g['key']),
+                    onChanged: universal ? null : (v) => set(() => v == true ? groups.add(g['key']!) : groups.remove(g['key']!)),
+                  ),
+              ]),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () async {
+                final groupList = groups.toList();
+                final email = (x['email'] ?? uid).toString().trim().toLowerCase();
+                await FirebaseFirestore.instance.collection('access').doc(uid).set({
+                  'email': email,
+                  'name': x['name'] ?? x['displayName'] ?? '',
+                  'universalFree': universal,
+                  'groups': groupList,
+                  'accessType': universal ? 'all' : (groupList.isEmpty ? 'partial' : 'partial'),
+                  'status': 'active',
+                  'accessUpdatedAt': FieldValue.serverTimestamp(),
+                  'accessUpdatedBy': superAdminEmail,
+                }, SetOptions(merge: true));
+                final matches = await FirebaseFirestore.instance.collection('portalUsers').where('email', isEqualTo: email).limit(1).get();
+                if (matches.docs.isNotEmpty) {
+                  await matches.docs.first.reference.set({
+                    'universalFree': universal,
+                    'groups': groupList,
+                    'accessType': universal ? 'Universal Free' : (groupList.isEmpty ? 'No Access' : 'Custom Access'),
+                    'accessUpdatedAt': FieldValue.serverTimestamp(),
+                    'accessUpdatedBy': superAdminEmail,
+                  }, SetOptions(merge: true));
+                }
+                if (c.mounted) Navigator.pop(c);
+              },
+              child: const Text('Save Access'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -480,6 +658,6 @@ class _ReportsPageState extends State<ReportsPage> {
   ]));
 }
 
-DateTime? _dateValue(dynamic v){if(v is Timestamp)return v.toDate();if(v is DateTime)return v;return null;}
+DateTime? _dateValue(dynamic v){if(v is Timestamp)return v.toDate();if(v is DateTime)return v;if(v is String){return DateTime.tryParse(v); }return null;}
 String _fmt(DateTime? d)=>d==null?'-':'${d.day.toString().padLeft(2,'0')}/${d.month.toString().padLeft(2,'0')}/${d.year} ${d.hour.toString().padLeft(2,'0')}:${d.minute.toString().padLeft(2,'0')}';
 DateTime? _parseFmt(String s){try{final a=s.split(' ');final d=a.first.split('/');final t=a.length>1?a[1].split(':'):['0','0'];return DateTime(int.parse(d[2]),int.parse(d[1]),int.parse(d[0]),int.parse(t[0]),int.parse(t[1]));}catch(_){return null;}}
