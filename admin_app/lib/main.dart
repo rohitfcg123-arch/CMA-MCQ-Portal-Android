@@ -11,7 +11,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import 'firebase_options.dart';
 
-const adminEmail = 'rohit.fcg123@gmail.com';
+const superAdminEmail = 'rohit.fcg123@gmail.com';
 const activeMinutes = 10;
 
 Future<void> main() async {
@@ -40,11 +40,21 @@ class AuthGate extends StatelessWidget {
       if (s.connectionState == ConnectionState.waiting) return const Scaffold(body: Center(child: CircularProgressIndicator()));
       final u = s.data;
       if (u == null) return const AdminLogin();
-      if ((u.email ?? '').toLowerCase() != adminEmail) {
-        FirebaseAuth.instance.signOut();
-        return const AdminLogin(error: 'This account is not authorised as the Super Admin.');
-      }
-      return const Dashboard();
+      final email = (u.email ?? '').trim().toLowerCase();
+      if (email == superAdminEmail) return const Dashboard();
+      return FutureBuilder<DocumentSnapshot<Map<String,dynamic>>>(
+        future: FirebaseFirestore.instance.collection('staffAccess').doc(email).get(),
+        builder: (_, staff) {
+          if (staff.connectionState != ConnectionState.done) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          final data = staff.data?.data();
+          final status = (data?['status'] ?? 'Pending Approval').toString();
+          if (data == null || status != 'Approved') {
+            FirebaseAuth.instance.signOut();
+            return AdminLogin(error: status == 'Pending Approval' ? 'Account created. Waiting for admin approval.' : 'Staff access is not approved.');
+          }
+          return const Dashboard();
+        },
+      );
     },
   );
 }
@@ -55,24 +65,57 @@ class AdminLogin extends StatefulWidget {
   @override State<AdminLogin> createState() => _AdminLoginState();
 }
 class _AdminLoginState extends State<AdminLogin> {
-  final email = TextEditingController(text: adminEmail);
+  final email = TextEditingController();
   final password = TextEditingController();
   bool busy = false, hide = true;
+
   Future<void> login() async {
+    final e = email.text.trim().toLowerCase();
+    if (e.isEmpty || password.text.isEmpty) return;
     setState(() => busy = true);
     try {
-      final c = await FirebaseAuth.instance.signInWithEmailAndPassword(email: email.text.trim(), password: password.text);
-      if ((c.user?.email ?? '').toLowerCase() != adminEmail) {
-        await FirebaseAuth.instance.signOut();
-        throw FirebaseAuthException(code: 'unauthorised');
-      }
-    } on FirebaseAuthException catch (e) {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: e, password: password.text);
+    } on FirebaseAuthException catch (ex) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.code == 'unauthorised' ? 'Only the authorised Rohit FCG account can use this app.' : 'Login failed: ${e.code}')));
+      String msg = 'Login failed: ${ex.code}';
+      if (ex.code == 'invalid-credential' || ex.code == 'wrong-password' || ex.code == 'user-not-found') msg = 'Invalid email or password.';
+      if (ex.code == 'too-many-requests') msg = 'Too many attempts. Try again later.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       if (mounted) setState(() => busy = false);
     }
   }
+
+  Future<void> register() async {
+    final e = email.text.trim().toLowerCase();
+    if (e.isEmpty || password.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter email and a password of at least 6 characters.')));
+      return;
+    }
+    setState(() => busy = true);
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(email: e, password: password.text);
+      await FirebaseFirestore.instance.collection('staffAccess').doc(e).set({
+        'email': e,
+        'role': 'Employee',
+        'accessLevel': 'Read',
+        'status': 'Pending Approval',
+        'requestedBy': e,
+        'requestedAt': FieldValue.serverTimestamp(),
+        'permissions': StaffPage._defaultPermissions('Employee', 'Read'),
+      }, SetOptions(merge: true));
+      await FirebaseAuth.instance.signOut();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account created. Ask the Super Admin to approve your access.')));
+    } on FirebaseAuthException catch (ex) {
+      if (!mounted) return;
+      final msg = ex.code == 'email-already-in-use' ? 'This email already has an account. Use Login.' : 'Registration failed: ${ex.code}';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
   @override Widget build(BuildContext context) => Scaffold(
     body: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 420), child: Card(
       margin: const EdgeInsets.all(24), child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -80,14 +123,18 @@ class _AdminLoginState extends State<AdminLogin> {
         const SizedBox(height: 12),
         const Text('CMA Admin Portal', style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
-        const Text('Super Admin access only'),
+        const Text('Super Admin / Staff Login'),
         const SizedBox(height: 20),
-        TextField(controller: email, enabled: false, decoration: const InputDecoration(labelText: 'Admin email', border: OutlineInputBorder())),
+        TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
         const SizedBox(height: 12),
         TextField(controller: password, obscureText: hide, decoration: InputDecoration(labelText: 'Password', border: const OutlineInputBorder(), suffixIcon: IconButton(onPressed: () => setState(() => hide = !hide), icon: Icon(hide ? Icons.visibility : Icons.visibility_off)))),
         if (widget.error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(widget.error!, style: const TextStyle(color: Colors.red))),
         const SizedBox(height: 16),
         SizedBox(width: double.infinity, child: FilledButton(onPressed: busy ? null : login, child: Text(busy ? 'Signing in…' : 'Login'))),
+        const SizedBox(height: 8),
+        TextButton(onPressed: busy ? null : register, child: const Text('Create Staff Account')),
+        const SizedBox(height: 4),
+        const Text('Staff accounts require Super Admin approval.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
       ]))),
     )),
   );
@@ -232,7 +279,7 @@ class AccessPage extends StatelessWidget {
         for(final g in ['Foundation','Group 1','Group 2']) CheckboxListTile(title:Text(g),value:groups.contains(g),onChanged:(v)=>set(()=>v==true?groups.add(g):groups.remove(g))),
         CheckboxListTile(title:const Text('All Groups'),value:groups.contains('All Groups'),onChanged:(v)=>set(()=>v==true?groups.add('All Groups'):groups.remove('All Groups'))),
       ]))),
-      actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Cancel')),FilledButton(onPressed:()async{await FirebaseFirestore.instance.collection('portalUsers').doc(uid).set({'universalFree':universal,'groups':groups,'accessType':universal?'Universal Free':groups.isEmpty?'No Access':groups.contains('All Groups')?'All Groups':'Custom Access','accessUpdatedAt':FieldValue.serverTimestamp(),'accessUpdatedBy':adminEmail},SetOptions(merge:true));if(c.mounted)Navigator.pop(c);},child:const Text('Save Access'))],
+      actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Cancel')),FilledButton(onPressed:()async{await FirebaseFirestore.instance.collection('portalUsers').doc(uid).set({'universalFree':universal,'groups':groups,'accessType':universal?'Universal Free':groups.isEmpty?'No Access':groups.contains('All Groups')?'All Groups':'Custom Access','accessUpdatedAt':FieldValue.serverTimestamp(),'accessUpdatedBy':superAdminEmail},SetOptions(merge:true));if(c.mounted)Navigator.pop(c);},child:const Text('Save Access'))],
     )));
   }
 }
@@ -290,7 +337,7 @@ class StaffPage extends StatelessWidget {
     await FirebaseFirestore.instance.collection('staffAccess').doc(id).set({
       'status': status,
       'updatedAt': FieldValue.serverTimestamp(),
-      'updatedBy': adminEmail,
+      'updatedBy': superAdminEmail,
     }, SetOptions(merge: true));
   }
 
@@ -328,7 +375,7 @@ class StaffPage extends StatelessWidget {
                   'role': role,
                   'accessLevel': level,
                   'status': 'Pending Approval',
-                  'requestedBy': adminEmail,
+                  'requestedBy': superAdminEmail,
                   'requestedAt': FieldValue.serverTimestamp(),
                   'permissions': _defaultPermissions(role, level),
                 }, SetOptions(merge: true));
