@@ -209,14 +209,14 @@ Widget build(BuildContext c) {
                           final u = Uri.parse('https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/delete-account.html');
                           await launchUrl(u, mode: LaunchMode.externalApplication);
                         },
+                        child: const Text('Delete account / data'),
+                      ),
                       TextButton(
                         onPressed: busy ? null : () async {
                           final u = Uri.parse('https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/privacy-policy.html');
                           await launchUrl(u, mode: LaunchMode.externalApplication);
                         },
                         child: const Text('Privacy Policy'),
-                      ),
-                        child: const Text('Delete account / data'),
                       ),
                     ],
                   ),
