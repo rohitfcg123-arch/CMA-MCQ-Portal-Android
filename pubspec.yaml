@@ -1,5 +1,5 @@
 name: cma_mcq_portal
-description: CMA MCQ Portal Android wrapper with browser-based Google Sign-In.
+description: CMA MCQ Portal Android wrapper with native Firebase email authentication.
 publish_to: "none"
 version: 1.0.0+1
 
@@ -9,7 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_web_auth_2: ^5.1.0
+  firebase_core: ^4.2.0
+  firebase_auth: ^6.1.3
+  cloud_firestore: ^6.0.3
   webview_flutter: ^4.13.0
 
 dev_dependencies:
