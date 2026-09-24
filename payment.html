@@ -20,14 +20,7 @@ $('applyPromo').onclick=async()=>{const code=$('promoCode').value.trim().toUpper
 function setSignedIn(u){currentUser=u;if(u){$('loginStatus').textContent='Signed in successfully.';$('userEmail').textContent=u.email||'';$('userEmail').style.display='block';$('googleBtn').style.display='none';$('logoutBtn').style.display='block';$('payBtn').disabled=false;$('utr').disabled=false;$('submitBtn').disabled=false;$('homeBtn').disabled=false}else{$('loginStatus').textContent='You are not signed in.';$('userEmail').style.display='none';$('googleBtn').style.display='block';$('logoutBtn').style.display='none';$('payBtn').disabled=true;$('utr').disabled=true;$('submitBtn').disabled=true;$('homeBtn').disabled=true}}
 const CMA_ANDROID_APP=/CMA-MCQ-Portal-Android/i.test(navigator.userAgent);
 async function callNativeFirebaseLogin(){
-  for(let i=0;i<30;i++){
-    if(typeof window.__cmaNativeGoogleLogin==='function'){
-      const ok=window.__cmaNativeGoogleLogin();
-      if(ok!==false)return true;
-    }
-    await new Promise(r=>setTimeout(r,100));
-  }
-  $('message').textContent='Firebase login bridge is not ready. Please reload the app.';
+  if(CMA_ANDROID_APP&&window.CmaAuth){window.CmaAuth.postMessage('reauth');return true;}
   return false;
 }
 const appLoginParams=new URLSearchParams(location.search);
@@ -48,22 +41,22 @@ async function returnToAndroidApp(user){
     return false;
   }
 }
-async function cmaGoogleSignIn(provider){
-  if(CMA_ANDROID_APP){
-    return await callNativeGoogleLogin();
-  }
+async function cmaFirebaseSignIn(provider){
+  if(CMA_ANDROID_APP&&window.CmaAuth){window.CmaAuth.postMessage('reauth');return true;}
   return await auth.signInWithPopup(provider);
 }
 $('googleBtn').onclick=async()=>{
   const b=$('googleBtn');
-  if(CMA_ANDROID_APP){
-    b.disabled=true;b.textContent='Opening website…';
-    const ok=await callNativeGoogleLogin();
-    if(!ok){b.disabled=false;b.textContent='Continue with Google';}
+  if(CMA_ANDROID_APP&&window.CmaAuth){
+    b.disabled=true;b.textContent='Opening Firebase login…';
+    window.CmaAuth.postMessage('reauth');
+    setTimeout(()=>{b.disabled=false;b.textContent='Continue with Firebase Login';},1500);
     return;
   }
-  try{await cmaGoogleSignIn(provider);}catch(e){$('message').textContent=e.message}
-};$('logoutBtn').onclick=()=>auth.signOut();auth.getRedirectResult().catch(console.error);
+  try{await cmaFirebaseSignIn(provider);}catch(e){$('message').textContent=e.message}
+};
+$('logoutBtn').onclick=()=>auth.signOut();
+auth.getRedirectResult().catch(console.error);
 auth.onAuthStateChanged(user=>{
   setSignedIn(user);
   if(user && appLoginMode) returnToAndroidApp(user);
