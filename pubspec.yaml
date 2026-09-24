@@ -1,5 +1,5 @@
 name: cma_mcq_portal
-description: CMA MCQ Portal Android wrapper with native Google Sign-In.
+description: CMA MCQ Portal Android wrapper with browser-based Google Sign-In.
 publish_to: "none"
 version: 1.0.0+1
 
@@ -9,8 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  url_launcher: ^6.3.2
-  app_links: ^6.4.1
+  flutter_web_auth_2: ^5.0.0
   webview_flutter: ^4.13.0
 
 dev_dependencies:
@@ -20,8 +19,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-# Use the current Android implementation. Older 7.2.x builds had
-# Credential Manager/account-picker issues on some physical devices.
-dependency_overrides:
-  google_sign_in_android: 6.2.1
