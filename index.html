@@ -130,4 +130,90 @@ auth.onAuthStateChanged(async user=>{
 async function loadPublicPricing(){try{const snap=await db.collection('settings').doc('access').get();const p=snap.exists&&snap.data().pricing?snap.data().pricing:null;if(!p)return;const order=['monthly','threeMonth','sixMonth'];let best=null;for(const k of order){const x=p[k]||{};const base=Number(x.price)||0;let d=x.discountType==='fixed'?Number(x.discountValue)||0:base*(Number(x.discountValue)||0)/100;d=Math.min(Math.max(d,0),base);if(d>0&&!best)best={base,final:base-d,name:x.discountName||'',pct:base?Math.round(d/base*100):0}}if(best){document.getElementById('homeOld').textContent='₹'+best.base.toLocaleString('en-IN');document.getElementById('homeNew').textContent='₹'+best.final.toLocaleString('en-IN');document.getElementById('homeOff').textContent=(best.pct?best.pct+'% OFF':'OFFER')+(best.name?' • '+best.name:'')}else{document.getElementById('homeOld').textContent='';document.getElementById('homeNew').textContent='Plans from ₹'+Number(p.monthly?.price||99).toLocaleString('en-IN');document.getElementById('homeOff').textContent=''}}catch(e){console.warn('Pricing load failed',e)}}
 loadPublicPricing();
 </script><script src="js/access-controller.js"></script>
-<script id="pull-refresh-script">(function(){const ind=document.getElementById('pullRefreshIndicator');if(!ind)return;let startY=0,pulling=false,triggered=false;const threshold=72;function atTop(){return (window.scrollY||document.documentElement.scrollTop||document.body.scrollTop||0)<=0}function setPull(d){const p=Math.min(Math.max(d/threshold,0),1);ind.style.transform='translate(-50%,'+(-54+p*68)+'px)';ind.style.opacity=String(Math.min(.95,p+.05))}window.addEventListener('touchstart',e=>{if(e.touches.length===1&&atTop()){startY=e.touches[0].clientY;pulling=true;triggered=false;document.body.classList.add('cma-pulling')}},{passive:true});window.addEventListener('touchmove',e=>{if(!pulling||triggered||e.touches.length!==1)return;const d=e.touches[0].clientY-startY;if(d>0){setPull(d);if(d>=threshold){triggered=true;ind.classList.add('refreshing');ind.style.opacity='1';setTimeout(()=>location.reload(),120)}}else{ind.style.opacity='0'}},{passive:true});window.addEventListener('touchend',()=>{if(!pulling)return;pulling=false;document.body.classList.remove('cma-pulling');if(!triggered){ind.style.opacity='0';ind.style.transform='translate(-50%,-54px)'}});window.addEventListener('touchcancel',()=>{pulling=false;document.body.classList.remove('cma-pulling');if(!triggered){ind.style.opacity='0';ind.style.transform='translate(-50%,-54px)'}});})();</script></body></html>
+<script id="pull-refresh-script">(function(){const ind=document.getElementById('pullRefreshIndicator');if(!ind)return;let startY=0,pulling=false,triggered=false;const threshold=72;function atTop(){return (window.scrollY||document.documentElement.scrollTop||document.body.scrollTop||0)<=0}function setPull(d){const p=Math.min(Math.max(d/threshold,0),1);ind.style.transform='translate(-50%,'+(-54+p*68)+'px)';ind.style.opacity=String(Math.min(.95,p+.05))}window.addEventListener('touchstart',e=>{if(e.touches.length===1&&atTop()){startY=e.touches[0].clientY;pulling=true;triggered=false;document.body.classList.add('cma-pulling')}},{passive:true});window.addEventListener('touchmove',e=>{if(!pulling||triggered||e.touches.length!==1)return;const d=e.touches[0].clientY-startY;if(d>0){setPull(d);if(d>=threshold){triggered=true;ind.classList.add('refreshing');ind.style.opacity='1';setTimeout(()=>location.reload(),120)}}else{ind.style.opacity='0'}},{passive:true});window.addEventListener('touchend',()=>{if(!pulling)return;pulling=false;document.body.classList.remove('cma-pulling');if(!triggered){ind.style.opacity='0';ind.style.transform='translate(-50%,-54px)'}});window.addEventListener('touchcancel',()=>{pulling=false;document.body.classList.remove('cma-pulling');if(!triggered){ind.style.opacity='0';ind.style.transform='translate(-50%,-54px)'}});})();</script>
+<style id="cma-settings-style">
+#cmaSettingsBtn{position:fixed;right:16px;bottom:18px;z-index:180;border:0;border-radius:50%;width:52px;height:52px;background:var(--teal);color:#fff;font-size:23px;box-shadow:0 10px 28px rgba(8,38,39,.25)}
+#cmaSettingsPanel{display:none;position:fixed;inset:0;background:rgba(8,38,39,.62);backdrop-filter:blur(4px);z-index:250;align-items:center;justify-content:center;padding:16px}
+.cma-settings-card{width:min(520px,100%);max-height:88vh;overflow:auto;background:var(--paper);border:1px solid var(--border);border-radius:22px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.25)}
+.cma-settings-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.cma-settings-head h2{margin:0;color:var(--teal-dark)}
+.cma-setting-section{margin-top:15px;padding:15px;border:1px solid var(--border);border-radius:15px;background:#fff}
+.cma-setting-section h3{margin:0 0 7px;color:var(--teal);font-size:15px}.cma-setting-section p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.55}
+.cma-setting-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.cma-danger{background:#b3261e!important;color:#fff!important;border-color:#b3261e!important}
+</style>
+<button id="cmaSettingsBtn" aria-label="Settings" title="Settings">⚙️</button>
+<div id="cmaSettingsPanel">
+ <div class="cma-settings-card">
+  <div class="cma-settings-head"><div><span class="eyebrow">ACCOUNT</span><h2>Settings</h2></div><button class="btn" id="cmaSettingsClose">×</button></div>
+  <div class="cma-setting-section"><h3>👤 My Details</h3><p id="cmaMyDetails">Login to view your account details.</p></div>
+  <div class="cma-setting-section"><h3>🔐 My Access</h3><p id="cmaMyAccess">Login to view your active access and plan.</p></div>
+  <div class="cma-setting-section"><h3>⚙️ Account</h3><p>Manage your session and privacy choices.</p><div class="cma-setting-actions">
+   <button class="btn btn-light" id="cmaPrivacyBtn">Privacy Policy</button>
+   <button class="btn btn-gold" id="cmaLogoutBtn">Logout</button>
+  </div></div>
+  <div class="cma-setting-section"><h3>🗑️ Delete Account & Data</h3><p>This permanently deletes your Firebase account and the CMA MCQ Portal data associated with it, including profile, attempts, login/activity records and payment records that belong to this account. This action cannot be undone.</p>
+   <div class="cma-setting-actions"><button class="btn cma-danger" id="cmaDeleteBtn">Delete my account & data</button></div>
+  </div>
+ </div>
+</div>
+<script>
+(function(){
+ const settingsBtn=document.getElementById('cmaSettingsBtn'),panel=document.getElementById('cmaSettingsPanel');
+ const closeBtn=document.getElementById('cmaSettingsClose'),details=document.getElementById('cmaMyDetails'),access=document.getElementById('cmaMyAccess');
+ const close=()=>panel.style.display='none';
+ settingsBtn.onclick=async()=>{panel.style.display='flex';await cmaRefreshSettings();};
+ closeBtn.onclick=close;panel.addEventListener('click',e=>{if(e.target===panel)close();});
+ document.getElementById('cmaPrivacyBtn').onclick=()=>window.open('privacy-policy.html','_blank');
+ document.getElementById('cmaLogoutBtn').onclick=async()=>{try{await auth.signOut();close();}catch(e){alert('Could not log out. Please try again.');}};
+ async function cmaRefreshSettings(){
+  const u=auth.currentUser;
+  if(!u){details.textContent='Not signed in.';access.textContent='Login to view your active access and plan.';return;}
+  details.textContent=(u.displayName||'User')+' • '+(u.email||'')+' • Email verified: '+(u.emailVerified?'Yes':'No');
+  try{
+   const snap=await db.collection('access').doc((u.email||'').toLowerCase()).get();
+   const d=snap.exists?snap.data():null;
+   if(!d){access.textContent='No paid/full-access record is currently assigned. Your free access rules apply.';return;}
+   const groups=Array.isArray(d.groups)?d.groups.join(', '):'—';
+   const expiry=d.expiryDate||'No expiry';
+   access.textContent='Plan: '+(d.plan||d.accessType||'Standard')+' • Groups: '+groups+' • Expiry: '+expiry+(d.universalFull?' • Full Access':'');
+  }catch(e){access.textContent='Could not load access details right now.';}
+ }
+ async function deleteQueryDocs(path,field,value){
+  const snap=await db.collection(path).where(field,'==',value).get();
+  if(snap.empty)return;
+  const batch=db.batch();snap.docs.forEach(d=>batch.delete(d.ref));await batch.commit();
+ }
+ async function deleteMyAccount(){
+  const u=auth.currentUser;
+  if(!u){alert('Please log in first.');return;}
+  const email=(u.email||'').toLowerCase(),uid=u.uid;
+  if(!confirm('Delete your CMA MCQ Portal account and all associated data permanently? This cannot be undone.'))return;
+  const typed=prompt('Type DELETE to confirm.');
+  if(typed!=='DELETE'){alert('Deletion cancelled.');return;}
+  const btn=document.getElementById('cmaDeleteBtn');btn.disabled=true;btn.textContent='Deleting…';
+  try{
+   await deleteQueryDocs('attempts','uid',uid);
+   await deleteQueryDocs('loginEvents','uid',uid);
+   await deleteQueryDocs('portalVisits','visitorId',uid);
+   await deleteQueryDocs('payments','email',email);
+   await deleteQueryDocs('subscriptions','uid',uid);
+   await deleteQueryDocs('users','uid',uid);
+   await db.collection('portalUsers').doc(uid).delete().catch(()=>{});
+   await db.collection('access').doc(email).delete().catch(()=>{});
+   await u.delete();
+   localStorage.clear();sessionStorage.clear();
+   alert('Your CMA MCQ Portal account and associated data have been deleted.');
+   window.location.href='index.html';
+  }catch(e){
+   console.error('CMA account deletion',e);
+   if(e&&e.code==='auth/requires-recent-login'){
+    alert('For security, please log in again and then immediately repeat account deletion.');
+   }else{
+    alert('Deletion could not be completed. No partial deletion should be considered complete. Please contact support if this continues.');
+   }
+   btn.disabled=false;btn.textContent='Delete my account & data';
+  }
+ }
+ document.getElementById('cmaDeleteBtn').onclick=deleteMyAccount;
+ window.cmaRefreshSettings=cmaRefreshSettings;
+})();
+</script></body></html>
