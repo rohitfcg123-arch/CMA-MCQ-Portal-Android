@@ -95,7 +95,7 @@ class _AuthScreenState extends State<AuthScreen>{
  Future<void> _saveLogin(){
   return secureStorage.write(key:savedEmailKey,value:email.text.trim().toLowerCase()).then((_)=>secureStorage.write(key:savedPasswordKey,value:pass.text));
  }
- Future<void> _autoReauthFromWeb() async {\n  try {\n    final e=await secureStorage.read(key:savedEmailKey);\n    final p=await secureStorage.read(key:savedPasswordKey);\n    if(e!=null&&p!=null&&e.isNotEmpty&&p.isNotEmpty){\n      final cred=await FirebaseAuth.instance.signInWithEmailAndPassword(email:e,password:p);\n      await cred.user!.reload();\n      if(!FirebaseAuth.instance.currentUser!.emailVerified){\n        await FirebaseAuth.instance.signOut();\n        return;\n      }\n      nativeBridgePassword=p;\n      return;\n    }\n  }catch(_){ }\n  await FirebaseAuth.instance.signOut();\n  nativeBridgePassword=null;\n}\n Future<void> _clearSavedLogin() async {
+ Future<void> _autoReauthFromWeb() async {\n  try {\n    final e=await secureStorage.read(key:savedEmailKey);\n    final p=await secureStorage.read(key:savedPasswordKey);\n    if(e!=null&&p!=null&&e.isNotEmpty&&p.isNotEmpty){\n      final cred=await FirebaseAuth.instance.signInWithEmailAndPassword(email:e,password:p);\n      await cred.user!.reload();\n      if(!FirebaseAuth.instance.currentUser!.emailVerified){\n        await FirebaseAuth.instance.signOut();\n        return;\n      }\n      nativeBridgePassword=p;\n      if(mounted){try{await w.runJavaScript(await bridge());}catch(_){}}\n      return;\n    }\n  }catch(_){ }\n  await FirebaseAuth.instance.signOut();\n  nativeBridgePassword=null;\n}\n Future<void> _clearSavedLogin() async {
   try{
    await secureStorage.delete(key:savedEmailKey);
    await secureStorage.delete(key:savedPasswordKey);
