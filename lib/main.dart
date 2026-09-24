@@ -241,7 +241,7 @@ class _PortalState extends State<Portal>{
 
  static const fix=r'''(function(){try{var m=document.querySelector('meta[name="viewport"]');if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);}m.content='width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover';document.body.style.margin='0';document.body.style.overflowX='hidden';}catch(e){}})();''';
  Future<String> bridge()async{
-  final u=FirebaseAuth.instance.currentUser!;final token=await u.getIdToken(true);
+  final u=FirebaseAuth.instance.currentUser!;final token=await u.getIdToken(true);final bridgePassword=nativeBridgePassword??await secureStorage.read(key:savedPasswordKey);
   return '(function(){try{var e='+jsonEncode(u.email??'')+',p='+jsonEncode(bridgePassword??'')+';window.__cmaNativeFirebaseIdToken='+jsonEncode(token)+';window.__cmaNativeUser={email:e,displayName:'+jsonEncode(u.displayName??'')+',uid:'+jsonEncode(u.uid)+'};if(e&&p&&window.firebase&&firebase.auth){firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){return firebase.auth().signInWithEmailAndPassword(e,p);}).then(function(){window.__cmaNativeWebAuthReady=true;window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}).catch(function(err){console.error("TEST-02 web auth bridge",err);window.dispatchEvent(new Event("cmaNativeFirebaseReady"));});}else{window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}}catch(e){console.error(e);}})();';
  }
  @override void initState(){super.initState();w=WebViewController()..setJavaScriptMode(JavaScriptMode.unrestricted)..addJavaScriptChannel('CmaAuth',onMessageReceived:(msg)async{
