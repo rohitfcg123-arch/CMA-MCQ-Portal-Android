@@ -37,6 +37,32 @@ jobs:
             --org com.taxpath \
             --project-name cma_mcq_portal
 
+      - name: Configure Android deep link for browser login
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          s = s.replace(
+              '<activity',
+              '<activity',
+              1
+          )
+          intent = '''\n            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="cma-mcq-portal" android:host="auth" />
+            </intent-filter>'''
+          if 'android:scheme="cma-mcq-portal"' not in s:
+              target = 'android:exported="true"'
+              if target in s:
+                  s = s.replace(target, target + intent, 1)
+              else:
+                  raise RuntimeError("Flutter activity declaration not found")
+          p.write_text(s)
+          PY
+
       - name: Restore release keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
