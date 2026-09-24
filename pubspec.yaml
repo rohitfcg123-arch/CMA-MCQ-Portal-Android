@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  google_sign_in: ^7.2.0
+  google_sign_in: 6.3.0
   url_launcher: ^6.3.2
   webview_flutter: ^4.13.0
 
@@ -24,4 +24,4 @@ flutter:
 # Use the current Android implementation. Older 7.2.x builds had
 # Credential Manager/account-picker issues on some physical devices.
 dependency_overrides:
-  google_sign_in_android: 7.2.17
+  google_sign_in_android: 6.2.1
