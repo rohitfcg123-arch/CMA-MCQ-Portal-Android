@@ -56,7 +56,8 @@ class AuthGate extends StatelessWidget {
             FirebaseAuth.instance.signOut();
             return AdminLogin(error: expired ? 'Your staff access has expired. Contact the Super Admin.' : (status == 'Pending Approval' ? 'Account created. Waiting for admin approval.' : 'Staff access is not approved.'));
           }
-          return const Dashboard();
+          final permissions = <String, dynamic>{...(data?['permissions'] is Map ? Map<String, dynamic>.from(data?['permissions']) : const <String, dynamic>{})};
+          return Dashboard(staffPermissions: permissions);
         },
       );
     },
@@ -163,7 +164,10 @@ class _AdminLoginState extends State<AdminLogin> {
 }
 
 class Dashboard extends StatelessWidget {
-  const Dashboard({super.key});
+  final Map<String, dynamic>? staffPermissions;
+  const Dashboard({super.key, this.staffPermissions});
+
+  bool _can(String key) => staffPermissions == null || staffPermissions![key] == true;
   static const activeWindow = Duration(minutes: 2);
 
   DateTime? _activeTime(Map<String, dynamic> x) => _dateValue(x['lastActive'] ?? x['lastSeen'] ?? x['lastLogin']);
@@ -266,13 +270,13 @@ class Dashboard extends StatelessWidget {
             shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisSpacing:10,mainAxisSpacing:10,
             childAspectRatio:MediaQuery.of(context).size.width>720?1.75:1.25,
             children:[
-              _action(context,'Users & Filters','Students, groups & status',Icons.people_alt_outlined,const UsersPage()),
-              _action(context,'Activity','Live & last 10 days',Icons.timeline,const ActivityPage()),
-              _action(context,'Access Management','Free, paid & groups',Icons.lock_person_outlined,const AccessPage()),
-              _action(context,'Offers & Promo','Pricing & promo codes',Icons.local_offer_outlined,const OffersPage()),
-              _action(context,'Payments','Verify subscriptions',Icons.payments_outlined,const PaymentsPage()),
-              _action(context,'Staff Management','Roles & permissions',Icons.manage_accounts_outlined,const StaffPage()),
-              _action(context,'Reports','Excel, PDF & CSV',Icons.file_download_outlined,const ReportsPage()),
+              if (_can('users.read')) _action(context,'Users & Filters','Students, groups & status',Icons.people_alt_outlined,const UsersPage()),
+              if (_can('activity.read')) _action(context,'Activity','Live & last 10 days',Icons.timeline,const ActivityPage()),
+              if (_can('access.read')) _action(context,'Access Management','Free, paid & groups',Icons.lock_person_outlined,const AccessPage()),
+              if (_can('reports.read')) _action(context,'Reports','Excel, PDF & CSV',Icons.file_download_outlined,const ReportsPage()),
+              if (_can('payments.read')) _action(context,'Payments','Verify subscriptions',Icons.payments_outlined,const PaymentsPage()),
+              if (_can('staff.read')) _action(context,'Staff Management','Roles & permissions',Icons.manage_accounts_outlined,const StaffPage()),
+              if (_can('settings.read')) _action(context,'Settings','Portal settings',Icons.settings_outlined,const SettingsPage()),
             ],
           ),
           const SizedBox(height:14),
