@@ -5,10 +5,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'firebase_options.dart';
 
 const portalUrl='https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';
 String? nativeBridgePassword;
+const secureStorage=FlutterSecureStorage();
+const savedEmailKey='saved_login_email';
+const savedPasswordKey='saved_login_password';
 
 Future<void> main() async {
  WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +34,7 @@ class AuthGate extends StatelessWidget{
 class AuthScreen extends StatefulWidget{const AuthScreen({super.key});@override State<AuthScreen> createState()=>_AuthScreenState();}
 class _AuthScreenState extends State<AuthScreen>{
  final f=GlobalKey<FormState>();final name=TextEditingController(),phone=TextEditingController(),email=TextEditingController(),pass=TextEditingController(),confirm=TextEditingController();
- bool reg=false,busy=false,hide=true,isError=false;String message='';
+ bool reg=false,busy=false,hide=true,isError=false,savePassword=false,hasSavedPassword=false;String message='';
  @override void dispose(){name.dispose();phone.dispose();email.dispose();pass.dispose();confirm.dispose();super.dispose();}
  String? req(String? v,String n)=>(v==null||v.trim().isEmpty)?n+' is required':null;
  void showMsg(String s,{bool error=false}){if(mounted)setState((){message=s;isError=error;});}
@@ -46,7 +50,7 @@ class _AuthScreenState extends State<AuthScreen>{
     showMsg('Verification email sent to '+email.text.trim()+'. Check Inbox, Spam and Promotions. After opening the link, return here and tap “I have verified”.');
    }else{
     final c=await a.signInWithEmailAndPassword(email:email.text.trim(),password:pass.text);await c.user!.reload();
-    if(!a.currentUser!.emailVerified){await c.user!.sendEmailVerification();await a.signOut();showMsg('Your email is not verified. A new verification link has been sent.',error:true);}else{nativeBridgePassword=pass.text;}
+    if(!a.currentUser!.emailVerified){await c.user!.sendEmailVerification();await a.signOut();showMsg('Your email is not verified. A new verification link has been sent.',error:true);}else{nativeBridgePassword=pass.text;if(savePassword)await _saveLogin();else await _clearSavedLogin();}
    }
   }on FirebaseAuthException catch(e){showMsg(authError(e.code),error:true);}catch(_){showMsg('Something went wrong. Please try again.',error:true);}
   finally{if(mounted)setState(()=>busy=false);}
@@ -72,6 +76,31 @@ class _AuthScreenState extends State<AuthScreen>{
   } finally {
     if (mounted) setState(() => busy = false);
   }
+ }
+ @override
+ void initState(){
+  super.initState();
+  _loadSavedLogin();
+ }
+ Future<void> _loadSavedLogin() async {
+  try{
+   final e=await secureStorage.read(key:savedEmailKey);
+   final p=await secureStorage.read(key:savedPasswordKey);
+   if(e!=null&&p!=null&&e.isNotEmpty&&p.isNotEmpty&&mounted){
+    email.text=e;pass.text=p;
+    setState(()=>hasSavedPassword=true);
+   }
+  }catch(_){}
+ }
+ Future<void> _saveLogin(){
+  return secureStorage.write(key:savedEmailKey,value:email.text.trim().toLowerCase()).then((_)=>secureStorage.write(key:savedPasswordKey,value:pass.text));
+ }
+ Future<void> _clearSavedLogin() async {
+  try{
+   await secureStorage.delete(key:savedEmailKey);
+   await secureStorage.delete(key:savedPasswordKey);
+  }catch(_){}
+  if(mounted)setState(()=>hasSavedPassword=false);
  }
  @override
 Widget build(BuildContext c) {
@@ -132,6 +161,19 @@ Widget build(BuildContext c) {
                             child: const Text('Forgot password?'),
                           ),
                         ),
+                      if (!reg) ...[
+                        Row(
+                          children: [
+                            Checkbox(value: savePassword, onChanged: busy ? null : (v) => setState(() => savePassword = v ?? false)),
+                            const Expanded(child: Text('Save password securely on this device')),
+                          ],
+                        ),
+                        if (hasSavedPassword)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text('Saved password is filled in. Tap Login to use it.', style: TextStyle(color: Color(0xFF18794E), fontSize: 12)),
+                          ),
+                      ],
                       FilledButton(
                         onPressed: busy ? null : submit,
                         child: Padding(
@@ -182,7 +224,12 @@ class _PortalState extends State<Portal>{
   final u=FirebaseAuth.instance.currentUser!;final token=await u.getIdToken(true);
   return '(function(){try{var e='+jsonEncode(u.email??'')+',p='+jsonEncode(nativeBridgePassword??'')+';window.__cmaNativeFirebaseIdToken='+jsonEncode(token)+';window.__cmaNativeUser={email:e,displayName:'+jsonEncode(u.displayName??'')+',uid:'+jsonEncode(u.uid)+'};if(e&&p&&window.firebase&&firebase.auth){firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){return firebase.auth().signInWithEmailAndPassword(e,p);}).then(function(){window.__cmaNativeWebAuthReady=true;window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}).catch(function(err){console.error("TEST-02 web auth bridge",err);window.dispatchEvent(new Event("cmaNativeFirebaseReady"));});}else{window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}}catch(e){console.error(e);}})();';
  }
- @override void initState(){super.initState();w=WebViewController()..setJavaScriptMode(JavaScriptMode.unrestricted)..setUserAgent('CMA-MCQ-Portal-Android/4.0')..setBackgroundColor(const Color(0xFFFAF6EE))..setNavigationDelegate(NavigationDelegate(
+ @override void initState(){super.initState();w=WebViewController()..setJavaScriptMode(JavaScriptMode.unrestricted)..addJavaScriptChannel('CmaAuth',onMessageReceived:(msg)async{
+  if(msg.message=='logout'){
+    await FirebaseAuth.instance.signOut();
+    nativeBridgePassword=null;
+  }
+})..setUserAgent('CMA-MCQ-Portal-Android/4.0')..setBackgroundColor(const Color(0xFFFAF6EE))..setNavigationDelegate(NavigationDelegate(
   onPageStarted:(_){if(mounted)setState((){loading=true;error=false;});},
   onPageFinished:(url)async{await w.runJavaScript(fix);final u=Uri.tryParse(url);if(u?.host=='rohitfcg123-arch.github.io')await w.runJavaScript(await bridge());if(mounted)setState(()=>loading=false);},
   onWebResourceError:(e){if((e.isForMainFrame??false)&&mounted)setState((){loading=false;error=true;});},
