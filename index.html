@@ -33,29 +33,36 @@ if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const auth=fireb
 const overlay=document.getElementById('overlay'),msg=document.getElementById('authMsg'),loginBtn=document.getElementById('loginBtn'),logoutBtn=document.getElementById('logoutBtn'),emailEl=document.getElementById('email');let pendingHref=null,ready=false;
 function openLogin(href){pendingHref=href||null;try{window.__cmaPendingNativePath=pendingHref||'';}catch(e){}overlay.style.display='flex';msg.textContent='';msg.className='';setTimeout(()=>document.getElementById('google').focus(),50)}function closeLogin(){overlay.style.display='none';pendingHref=null;msg.textContent='';msg.className=''}
 document.getElementById('close').onclick=closeLogin;overlay.onclick=e=>{if(e.target===overlay)closeLogin()};loginBtn.onclick=()=>openLogin(null);logoutBtn.onclick=()=>auth.signOut();
+const CMA_ANDROID_APP=/CMA-MCQ-Portal-Android/i.test(navigator.userAgent);
+async function callNativeGoogleLogin(){
+  for(let i=0;i<30;i++){
+    if(typeof window.__cmaNativeGoogleLogin==='function'){
+      const ok=window.__cmaNativeGoogleLogin();
+      if(ok!==false)return true;
+    }
+    await new Promise(r=>setTimeout(r,100));
+  }
+  msg.textContent='Android Google Sign-In bridge is not ready. Please reload the app.';
+  msg.className='error';
+  return false;
+}
 document.getElementById('google').onclick=async()=>{
-  if(CMA_ANDROID_APP && window.__cmaNativeGoogleLogin){window.__cmaNativeGoogleLogin();return}
+  const b=document.getElementById('google');
+  if(CMA_ANDROID_APP){
+    b.disabled=true;b.textContent='Opening Google…';
+    const ok=await callNativeGoogleLogin();
+    if(!ok){b.disabled=false;b.textContent='G  Continue with Google';}
+    return;
+  }
   if(!ready){msg.textContent='Please wait a moment and try again.';return}
-  const b=document.getElementById('google');b.disabled=true;b.textContent='Signing in…';
+  b.disabled=true;b.textContent='Signing in…';
   try{
     await persistenceReady;
-const CMA_ANDROID_APP=/CMA-MCQ-Portal-Android/i.test(navigator.userAgent);
-async function cmaGoogleSignIn(provider){
-  if(CMA_ANDROID_APP){
-    try{sessionStorage.setItem('cma_pending_path',location.href);}catch(e){}
-    await auth.signInWithRedirect(provider);
-    return null;
-  }
-  return await auth.signInWithPopup(provider);
-}
-    const result=await cmaGoogleSignIn(provider);
+    const result=await auth.signInWithPopup(provider);
     const user=result&&result.user;
     const h=pendingHref;
     closeLogin();
-    if(user && h){
-      await user.getIdToken();
-      location.href=h;
-    }
+    if(user && h){await user.getIdToken();location.href=h;}
   }catch(e){
     console.error(e);
     msg.textContent='Google sign-in failed: '+(e&&e.code?e.code:'unknown-error');
