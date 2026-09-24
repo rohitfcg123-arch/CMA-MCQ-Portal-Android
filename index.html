@@ -42,9 +42,27 @@ async function callNativeGoogleLogin(){
     }
     await new Promise(r=>setTimeout(r,100));
   }
-  msg.textContent='Android Google Sign-In bridge is not ready. Please reload the app.';
+  msg.textContent='Android login bridge is not ready. Please reload the app.';
   msg.className='error';
   return false;
+}
+const appLoginParams=new URLSearchParams(location.search);
+const appLoginMode=appLoginParams.get('app_login')==='1';
+const appReturnUri=appLoginParams.get('return_uri')||'';
+let appReturnSent=false;
+async function returnToAndroidApp(user){
+  if(!appLoginMode || !appReturnUri || appReturnSent || !user) return false;
+  try{
+    appReturnSent=true;
+    const token=await user.getIdToken(true);
+    const sep=appReturnUri.includes('?')?'&':'?';
+    location.href=appReturnUri+sep+'id_token='+encodeURIComponent(token);
+    return true;
+  }catch(e){
+    appReturnSent=false;
+    console.error('Could not return login to Android app',e);
+    return false;
+  }
 }
 document.getElementById('google').onclick=async()=>{
   const b=document.getElementById('google');
@@ -101,7 +119,10 @@ auth.onAuthStateChanged(async user=>{
   loginBtn.classList.toggle('hidden',!!user);
   logoutBtn.classList.toggle('hidden',!user);
   await loadAccess(user);
-  if(user) track(user);
+  if(user){
+    track(user);
+    if(appLoginMode) await returnToAndroidApp(user);
+  }
 });
 (async()=>{try{const visitorKey='cma_portal_visitor_id';let id=localStorage.getItem(visitorKey);if(!id){id=crypto.randomUUID?crypto.randomUUID():'v_'+Date.now()+'_'+Math.random().toString(36).slice(2);localStorage.setItem(visitorKey,id)}await db.collection('portalVisits').add({visitorId:id,visitAt:firebase.firestore.FieldValue.serverTimestamp(),path:location.pathname,referrer:document.referrer||'',userAgent:navigator.userAgent||''})}catch(e){console.warn('Visit tracking failed',e)}})();
 
