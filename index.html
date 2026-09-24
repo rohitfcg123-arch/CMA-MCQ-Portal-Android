@@ -132,7 +132,7 @@ loadPublicPricing();
 </script><script src="js/access-controller.js"></script>
 <script id="pull-refresh-script">(function(){const ind=document.getElementById('pullRefreshIndicator');if(!ind)return;let startY=0,pulling=false,triggered=false;const threshold=72;function atTop(){return (window.scrollY||document.documentElement.scrollTop||document.body.scrollTop||0)<=0}function setPull(d){const p=Math.min(Math.max(d/threshold,0),1);ind.style.transform='translate(-50%,'+(-54+p*68)+'px)';ind.style.opacity=String(Math.min(.95,p+.05))}window.addEventListener('touchstart',e=>{if(e.touches.length===1&&atTop()){startY=e.touches[0].clientY;pulling=true;triggered=false;document.body.classList.add('cma-pulling')}},{passive:true});window.addEventListener('touchmove',e=>{if(!pulling||triggered||e.touches.length!==1)return;const d=e.touches[0].clientY-startY;if(d>0){setPull(d);if(d>=threshold){triggered=true;ind.classList.add('refreshing');ind.style.opacity='1';setTimeout(()=>location.reload(),120)}}else{ind.style.opacity='0'}},{passive:true});window.addEventListener('touchend',()=>{if(!pulling)return;pulling=false;document.body.classList.remove('cma-pulling');if(!triggered){ind.style.opacity='0';ind.style.transform='translate(-50%,-54px)'}});window.addEventListener('touchcancel',()=>{pulling=false;document.body.classList.remove('cma-pulling');if(!triggered){ind.style.opacity='0';ind.style.transform='translate(-50%,-54px)'}});})();</script>
 <style id="cma-settings-style">
-#cmaSettingsBtn{position:fixed;right:16px;bottom:18px;z-index:180;border:0;border-radius:50%;width:52px;height:52px;background:var(--teal);color:#fff;font-size:23px;box-shadow:0 10px 28px rgba(8,38,39,.25)}
+#cmaSettingsBtn{position:fixed;left:16px;bottom:18px;z-index:180;border:0;border-radius:50%;width:52px;height:52px;background:var(--teal);color:#fff;font-size:23px;box-shadow:0 10px 28px rgba(8,38,39,.25)}
 #cmaSettingsPanel{display:none;position:fixed;inset:0;background:rgba(8,38,39,.62);backdrop-filter:blur(4px);z-index:250;align-items:center;justify-content:center;padding:16px}
 .cma-settings-card{width:min(520px,100%);max-height:88vh;overflow:auto;background:var(--paper);border:1px solid var(--border);border-radius:22px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.25)}
 .cma-settings-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.cma-settings-head h2{margin:0;color:var(--teal-dark)}
@@ -140,14 +140,14 @@ loadPublicPricing();
 .cma-setting-section h3{margin:0 0 7px;color:var(--teal);font-size:15px}.cma-setting-section p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.55}
 .cma-setting-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.cma-danger{background:#b3261e!important;color:#fff!important;border-color:#b3261e!important}
 </style>
-<button id="cmaSettingsBtn" aria-label="Settings" title="Settings">⚙️</button>
+<button id="cmaSettingsBtn" aria-label="My Account" title="My Account">☰</button>
 <div id="cmaSettingsPanel">
  <div class="cma-settings-card">
   <div class="cma-settings-head"><div><span class="eyebrow">ACCOUNT</span><h2>Settings</h2></div><button class="btn" id="cmaSettingsClose">×</button></div>
-  <div class="cma-setting-section"><h3>👤 My Details</h3><p id="cmaMyDetails">Login to view your account details.</p></div>
-  <div class="cma-setting-section"><h3>🔐 My Access</h3><p id="cmaMyAccess">Login to view your active access and plan.</p></div>
+  <div class="cma-setting-section"><h3>👤 My Details</h3><p id="cmaMyDetails">Login to view your account details.</p><div class="cma-setting-actions"><button class="btn" id="cmaDetailsBtn">View My Details</button></div></div>
+  <div class="cma-setting-section"><h3>🔐 My Access</h3><p id="cmaMyAccess">Login to view your active access and plan.</p><div class="cma-setting-actions"><button class="btn" id="cmaAccessBtn">Refresh My Access</button></div></div>
   <div class="cma-setting-section"><h3>⚙️ Account</h3><p>Manage your session and privacy choices.</p><div class="cma-setting-actions">
-   <button class="btn btn-light" id="cmaPrivacyBtn">Privacy Policy</button>
+   <button class="btn btn-light" id="cmaPrivacyBtn">Privacy Policy</button><button class="btn" id="cmaDeletePageBtn">Data Deletion Info</button>
    <button class="btn btn-gold" id="cmaLogoutBtn">Logout</button>
   </div></div>
   <div class="cma-setting-section"><h3>🗑️ Delete Account & Data</h3><p>This permanently deletes your Firebase account and the CMA MCQ Portal data associated with it, including profile, attempts, login/activity records and payment records that belong to this account. This action cannot be undone.</p>
@@ -163,6 +163,9 @@ loadPublicPricing();
  settingsBtn.onclick=async()=>{panel.style.display='flex';await cmaRefreshSettings();};
  closeBtn.onclick=close;panel.addEventListener('click',e=>{if(e.target===panel)close();});
  document.getElementById('cmaPrivacyBtn').onclick=()=>window.open('privacy-policy.html','_blank');
+ document.getElementById('cmaDeletePageBtn').onclick=()=>window.open('delete-account.html','_blank');
+ document.getElementById('cmaDetailsBtn').onclick=async()=>{await cmaRefreshSettings();alert(details.textContent);};
+ document.getElementById('cmaAccessBtn').onclick=async()=>{await cmaRefreshSettings();alert(access.textContent);};
  document.getElementById('cmaLogoutBtn').onclick=async()=>{try{await auth.signOut();close();}catch(e){alert('Could not log out. Please try again.');}};
  async function cmaRefreshSettings(){
   const u=auth.currentUser;
