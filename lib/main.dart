@@ -95,6 +95,9 @@ class _PortalWebViewState extends State<PortalWebView> {
               location.href = pending;
               return;
             }
+            if (typeof closeLogin === 'function') {
+              closeLogin();
+            }
             var button = document.getElementById('google');
             if (button) {
               button.disabled = false;
