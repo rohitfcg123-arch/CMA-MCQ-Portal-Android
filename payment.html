@@ -10,11 +10,53 @@
 <div class="payment-area"><button id="payBtn" class="pay" disabled>💳 Pay ₹99 via UPI</button><label for="utr">4. UTR / Transaction ID</label><input id="utr" placeholder="Enter UTR / Transaction ID" disabled><button id="submitBtn" class="pay" disabled>Submit Payment Details</button><button id="homeBtn" class="home" disabled>Continue to CMA Portal →</button><div id="message" class="message"></div></div></section></div>
 <section class="info"><h2>💬 Need Help?</h2><p>Payment is manually verified before access is activated.</p><div class="contact"><a href="mailto:taxxpath@gmail.com">📧 taxxpath@gmail.com</a><a href="https://wa.me/917003872845">💬 70038 72845</a></div></section></main><footer>© 2026 <strong>CMA MCQ Portal</strong></footer>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script><script>
-const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const auth=firebase.auth(),db=firebase.firestore(),provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});const $=id=>document.getElementById(id);let pricing={monthly:{price:99,discountType:'percent',discountValue:0,discountName:''},threeMonth:{price:199,discountType:'percent',discountValue:0,discountName:''},sixMonth:{price:299,discountType:'percent',discountValue:0,discountName:''}};let selectedPlan='monthly',promo=null,appliedPromo='',currentUser=null;
-function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2})}function groups(){return [...document.querySelectorAll('.grp:checked')].map(x=>x.value)}function directFor(plan){const p=pricing[plan]||{};const base=Number(p.price)||0;let d=p.discountType==='fixed'?Number(p.discountValue)||0:base*(Number(p.discountValue)||0)/100;d=Math.min(Math.max(d,0),base);return{base,discount:d,final:base-d,name:p.discountName||''}}
-function calc(){const g=groups().length||0;const d=directFor(selectedPlan);const original=d.base*g;const direct=d.discount*g;let promoBase=promo?.applyOn==='original'?original:Math.max(0,original-direct);let pd=0;if(promo){pd=promo.discountType==='fixed'?Number(promo.discountValue)||0:promoBase*(Number(promo.discountValue)||0)/100;pd=Math.min(Math.max(pd,0),promoBase)}return{groups:g,original,direct,promo:pd,payable:Math.max(0,original-direct-pd),directName:d.name}}
-function update(){const x=calc();$('groupCount').textContent=x.groups;$('originalAmount').textContent=money(x.original);$('payableAmount').textContent=money(x.payable);$('directDiscountAmount').textContent=money(x.direct);$('promoDiscountAmount').textContent=money(x.promo);const d=directFor(selectedPlan);$('directDiscountText').textContent=x.groups?(x.direct>0?(d.name||'Direct Discount')+' • '+money(x.direct)+' off':'No direct discount'): 'Select at least one group';$('payBtn').textContent='💳 Pay '+money(x.payable)+' via UPI';['monthly','threeMonth','sixMonth'].forEach(k=>{$('p_'+k).textContent=money(directFor(k).final)});}
-async function loadPricing(){try{const s=await db.collection('settings').doc('access').get();if(s.exists&&s.data().pricing)pricing=Object.assign(pricing,s.data().pricing);update()}catch(e){console.warn(e);update()}}
+const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const auth=firebase.auth(),db=firebase.firestore(),provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});const $=id=>document.getElementById(id);let pricing={monthly:{price:99,discountType:'percent',discountValue:0,discountName:''},threeMonth:{price:199,discountType:'percent',discountValue:0,discountName:''},sixMonth:{price:299,discountType:'percent',discountValue:0,discountName:''}};let selectedPlan='monthly',promo=null,appliedPromo='',currentUser=null,discountRules=[];
+function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2})}
+function groups(){return [...document.querySelectorAll('.grp:checked')].map(x=>x.value)}
+function ruleApplies(rule,plan,group){
+  if(rule.active!==true)return false;
+  const ps=Array.isArray(rule.plans)?rule.plans:(rule.plans||'').toString().split(',').filter(Boolean);
+  if(ps.length&&!ps.includes(plan))return false;
+  const rg=(rule.group||'all').toString();
+  if(rg==='all')return true;
+  if(rg==='inter-both')return group==='inter-group-1'||group==='inter-group-2';
+  return rg===group;
+}
+function ruleDiscount(base,rule){
+  const v=Number(rule.discountValue)||0;
+  const d=rule.discountType==='fixed'?v:base*v/100;
+  return Math.min(Math.max(d,0),base);
+}
+function directFor(plan,groupList){
+  const p=pricing[plan]||{};const base=Number(p.price)||0;
+  if(discountRules.some(r=>r.active===true)){
+    let discount=0;let names=[];
+    for(const g of (groupList&&groupList.length?groupList:['__none__'])){
+      const matches=discountRules.filter(r=>ruleApplies(r,plan,g));
+      if(matches.length){const best=matches.reduce((a,b)=>ruleDiscount(base,a)>=ruleDiscount(base,b)?a:b);discount+=ruleDiscount(base,best);if(best.name)names.push(best.name);}
+    }
+    return{base,discount,final:Math.max(0,base*(groupList&&groupList.length?groupList.length:1)-discount),name:[...new Set(names)].join(', ')};
+  }
+  let d=p.discountType==='fixed'?Number(p.discountValue)||0:base*(Number(p.discountValue)||0)/100;
+  d=Math.min(Math.max(d,0),base);
+  return{base,discount:d*(groupList&&groupList.length?groupList.length:1),final:base*(groupList&&groupList.length?groupList.length:1)-d*(groupList&&groupList.length?groupList.length:1),name:p.discountName||''};
+}
+function calc(){
+  const gs=groups();const d=directFor(selectedPlan,gs);const original=d.base*gs.length;const direct=d.discount;
+  let promoBase=promo?.applyOn==='original'?original:Math.max(0,original-direct);let pd=0;
+  if(promo){pd=promo.discountType==='fixed'?Number(promo.discountValue)||0:promoBase*(Number(promo.discountValue)||0)/100;pd=Math.min(Math.max(pd,0),promoBase)}
+  return{groups:gs.length,original,direct,promo:pd,payable:Math.max(0,original-direct-pd),directName:d.name};
+}
+function update(){
+  const x=calc();$('groupCount').textContent=x.groups;$('originalAmount').textContent=money(x.original);$('payableAmount').textContent=money(x.payable);$('directDiscountAmount').textContent=money(x.direct);$('promoDiscountAmount').textContent=money(x.promo);
+  $('directDiscountText').textContent=x.groups?(x.direct>0?(x.directName||'Direct Discount')+' • '+money(x.direct)+' off':'No direct discount'):'Select at least one group';
+  $('payBtn').textContent='💳 Pay '+money(x.payable)+' via UPI';
+  const gs=groups();['monthly','threeMonth','sixMonth'].forEach(k=>{$('p_'+k).textContent=money(gs.length?directFor(k,gs).final:Number(pricing[k]?.price||0));});
+}
+async function loadPricing(){
+  try{const s=await db.collection('settings').doc('access').get();if(s.exists){const d=s.data();if(d.pricing)pricing=Object.assign(pricing,d.pricing);if(Array.isArray(d.discountRules))discountRules=d.discountRules;}update()}
+  catch(e){console.warn(e);update()}
+}
 document.querySelectorAll('.plan').forEach(b=>b.onclick=()=>{selectedPlan=b.dataset.plan;document.querySelectorAll('.plan').forEach(x=>x.classList.toggle('active',x===b));promo=null;appliedPromo='';$('promoMessage').textContent='';update()});document.querySelectorAll('.grp').forEach(c=>c.onchange=update);
 $('applyPromo').onclick=async()=>{const code=$('promoCode').value.trim().toUpperCase().replace(/\s+/g,'');if(!code){promo=null;appliedPromo='';$('promoMessage').textContent='Enter a promo code.';update();return}if(!currentUser){$('promoMessage').textContent='Please sign in first.';return}try{const s=await db.collection('promoCodes').doc(code).get();if(!s.exists)throw Error('Invalid promo code.');const d=s.data();if(d.active!==true)throw Error('This promo code is inactive.');const today=new Date().toISOString().slice(0,10);if(d.startDate&&today<d.startDate)throw Error('This promo code is not active yet.');if(d.expiryDate&&today>d.expiryDate)throw Error('This promo code has expired.');if(d.maxUses&&Number(d.uses||0)>=Number(d.maxUses))throw Error('This promo code has reached its usage limit.');if((d.applicablePlans||[]).length&&!d.applicablePlans.includes(selectedPlan))throw Error('This code is not valid for the selected plan.');promo=d;appliedPromo=code;$('promoMessage').textContent=(d.discountName||code)+' applied successfully.';$('promoMessage').style.color='var(--green)';update()}catch(e){promo=null;appliedPromo='';$('promoMessage').textContent=e.message;$('promoMessage').style.color='var(--red)';update()}};
 function setSignedIn(u){currentUser=u;if(u){$('loginStatus').textContent='Signed in successfully.';$('userEmail').textContent=u.email||'';$('userEmail').style.display='block';$('googleBtn').style.display='none';$('logoutBtn').style.display='block';$('payBtn').disabled=false;$('utr').disabled=false;$('submitBtn').disabled=false;$('homeBtn').disabled=false}else{$('loginStatus').textContent='You are not signed in.';$('userEmail').style.display='none';$('googleBtn').style.display='block';$('logoutBtn').style.display='none';$('payBtn').disabled=true;$('utr').disabled=true;$('submitBtn').disabled=true;$('homeBtn').disabled=true}}
