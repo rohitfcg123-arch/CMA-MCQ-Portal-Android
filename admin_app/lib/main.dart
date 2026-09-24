@@ -86,6 +86,22 @@ class _AdminLoginState extends State<AdminLogin> {
     }
   }
 
+  Future<void> forgotPassword() async {
+    final e = email.text.trim().toLowerCase();
+    if (e.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter your email first.')));
+      return;
+    }
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: e);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password reset link sent. Check your email inbox/spam.')));
+    } on FirebaseAuthException catch (ex) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Reset failed: ${ex.code}')));
+    }
+  }
+
   Future<void> register() async {
     final e = email.text.trim().toLowerCase();
     if (e.isEmpty || password.text.length < 6) {
@@ -132,6 +148,7 @@ class _AdminLoginState extends State<AdminLogin> {
         const SizedBox(height: 16),
         SizedBox(width: double.infinity, child: FilledButton(onPressed: busy ? null : login, child: Text(busy ? 'Signing in…' : 'Login'))),
         const SizedBox(height: 8),
+        TextButton(onPressed: busy ? null : forgotPassword, child: const Text('Forgot Password?')),
         TextButton(onPressed: busy ? null : register, child: const Text('Create Staff Account')),
         const SizedBox(height: 4),
         const Text('Staff accounts require Super Admin approval.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
@@ -305,20 +322,26 @@ class StaffPage extends StatelessWidget {
               title: Text((x['email'] ?? '').toString()),
               subtitle: Text('Role: ${x['role'] ?? 'Employee'}\nStatus: $status\nLevel: ${x['accessLevel'] ?? 'Read'}'),
               isThreeLine: true,
-              trailing: status == 'Pending Approval'
-                ? Wrap(children: [
-                    IconButton(
-                      tooltip: 'Approve',
-                      icon: const Icon(Icons.check_circle),
-                      onPressed: () => _setStatus(d.id, 'Approved'),
-                    ),
-                    IconButton(
-                      tooltip: 'Reject',
-                      icon: const Icon(Icons.cancel),
-                      onPressed: () => _setStatus(d.id, 'Rejected'),
-                    ),
-                  ])
-                : PopupMenuButton<String>(
+              trailing: Wrap(children: [
+                IconButton(
+                  tooltip: 'Reset Password',
+                  icon: const Icon(Icons.lock_reset),
+                  onPressed: () => _resetPassword((x['email'] ?? '').toString(), context),
+                ),
+                if (status == 'Pending Approval')
+                  IconButton(
+                    tooltip: 'Approve',
+                    icon: const Icon(Icons.check_circle),
+                    onPressed: () => _setStatus(d.id, 'Approved'),
+                  ),
+                if (status == 'Pending Approval')
+                  IconButton(
+                    tooltip: 'Reject',
+                    icon: const Icon(Icons.cancel),
+                    onPressed: () => _setStatus(d.id, 'Rejected'),
+                  ),
+                if (status != 'Pending Approval')
+                  PopupMenuButton<String>(
                     onSelected: (v) => _setStatus(d.id, v),
                     itemBuilder: (_) => const [
                       PopupMenuItem(value: 'Approved', child: Text('Approve')),
@@ -326,12 +349,24 @@ class StaffPage extends StatelessWidget {
                       PopupMenuItem(value: 'Revoked', child: Text('Revoke')),
                     ],
                   ),
+              ]),
             ),
           );
         }).toList(),
       ),
     ),
   );
+
+  Future<void> _resetPassword(String email, BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password reset link sent to $email.')));
+    } on FirebaseAuthException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not send reset link: ${e.code}')));
+    }
+  }
 
   Future<void> _setStatus(String id, String status) async {
     await FirebaseFirestore.instance.collection('staffAccess').doc(id).set({
