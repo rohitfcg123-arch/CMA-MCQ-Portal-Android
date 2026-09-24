@@ -371,7 +371,7 @@ class _ReportsPageState extends State<ReportsPage> {
   }
   Future<void> _excel() async {
     final rows=await _data(); final book=Excel.createExcel(); final sheet=book['Users'];
-    sheet.appendRow(rows.isEmpty?['No data']:rows.first.keys.map((k)=>TextCellValue(k)).toList());
+    sheet.appendRow(rows.isEmpty ? [TextCellValue('No data')] : rows.first.keys.map((k)=>TextCellValue(k)).toList());
     for(final r in rows) sheet.appendRow(r.values.map((v)=>TextCellValue(v.toString())).toList());
     final bytes=book.encode(); if(bytes==null)return; await _share('cma_users.xlsx',Uint8List.fromList(bytes));
   }
