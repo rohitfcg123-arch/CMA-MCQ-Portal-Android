@@ -382,6 +382,7 @@ auth.onAuthStateChanged(async user=>{
     window.cmaQuestionSource=mode;
     bankBtn.classList.toggle('active',mode==='bank'); pyqBtn.classList.toggle('active',mode==='pyq');
     updateCount();
+    clampCount();
   }
   function updateCount(){
     const v=sel.value, qs=window.CMA_MA_PYQ||[];
