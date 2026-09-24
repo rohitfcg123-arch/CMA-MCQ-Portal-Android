@@ -204,6 +204,13 @@ Widget build(BuildContext c) {
                         TextButton(onPressed: busy ? null : verify, child: const Text('I have verified my email')),
                       TextButton(onPressed: busy ? null : () => setState(() { reg = !reg; message = ''; isError = false; }),
                         child: Text(reg ? 'Already have an account? Login' : 'New user? Create an account')),
+                      TextButton(
+                        onPressed: busy ? null : () async {
+                          final u = Uri.parse('https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/delete-account.html');
+                          await launchUrl(u, mode: LaunchMode.externalApplication);
+                        },
+                        child: const Text('Delete account / data'),
+                      ),
                     ],
                   ),
                 ),
