@@ -188,16 +188,33 @@ class _PortalState extends State<Portal>{
   onWebResourceError:(e){if((e.isForMainFrame??false)&&mounted)setState((){loading=false;error=true;});},
   onNavigationRequest:(r)async{
     final u=Uri.tryParse(r.url);if(u==null)return NavigationDecision.prevent;
-    if(u.scheme=='http'||u.scheme=='https')return NavigationDecision.navigate;
-    // TEST-03: allow UPI deep links to leave the WebView and open an installed UPI app.
-    if(u.scheme=='upi'||u.scheme=='intent'){
+    // TEST-04: send mail/UPI links to Android's external app resolver.
+    if(u.scheme=='upi'||u.scheme=='intent'||u.scheme=='mailto'){
       try{
         final ok=await launchUrl(u,mode:LaunchMode.externalApplication);
-        if(!ok&&mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('No UPI app could be opened. Please install/enable a UPI app and try again.')));
+        if(!ok&&mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('No compatible app is available. Please install or enable the required app and try again.')));
       }catch(e){
-        if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Could not open the UPI app. Please try again.')));
+        if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Could not open the required app. Please try again.')));
       }
+      return NavigationDecision.prevent;
     }
+    // WhatsApp links: try the installed app first, then fall back to the web/download page.
+    if((u.scheme=='http'||u.scheme=='https')&&u.host.toLowerCase()=='wa.me'){
+      try{
+        final phone=u.pathSegments.isNotEmpty?u.pathSegments.first:'';
+        final textValue=u.queryParameters['text']??'';
+        final wa=Uri(scheme:'whatsapp',host:'send',queryParameters:{
+          if(phone.isNotEmpty)'phone':phone,
+          if(textValue.isNotEmpty)'text':textValue,
+        });
+        final opened=await launchUrl(wa,mode:LaunchMode.externalApplication);
+        if(!opened)await launchUrl(u,mode:LaunchMode.externalApplication);
+      }catch(e){
+        try{await launchUrl(u,mode:LaunchMode.externalApplication);}catch(_){}
+      }
+      return NavigationDecision.prevent;
+    }
+    if(u.scheme=='http'||u.scheme=='https')return NavigationDecision.navigate;
     return NavigationDecision.prevent;
   }))..loadRequest(Uri.parse(portalUrl));}
  Future<void> reload()async{setState((){loading=true;error=false;});await w.loadRequest(Uri.parse(portalUrl));}
