@@ -51,7 +51,7 @@ class _OffersPageState extends State<OffersPage> {
   void clearPromo(){setState((){editing=null;code.clear();name.clear();value.clear();maxUses.text='0';perUser.text='1';active=true;promoType='percent';applyOn='discounted';plans='monthly,threeMonth,sixMonth';start=null;expiry=null;});}
 
   Future<void> savePromo() async {
-    final k=code.text.trim().toUpperCase().replaceAll(RegExp(r'\\s+'),'');
+    final k=code.text.trim().toUpperCase().replaceAll(RegExp(r'\s+'),'');
     if(k.isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Enter a promo code.')));return;}
     final selected=plans.split(',').where((e)=>e.isNotEmpty).toList();
     await FirebaseFirestore.instance.collection('promoCodes').doc(k).set({
@@ -103,7 +103,7 @@ class _OffersPageState extends State<OffersPage> {
         Row(children:[Expanded(child:TextField(controller:maxUses,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Max Uses (0 = unlimited)',border:OutlineInputBorder()))),const SizedBox(width:8),Expanded(child:TextField(controller:perUser,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Per User Limit',border:OutlineInputBorder())))]),
         Row(children:[
           Expanded(child:TextButton(onPressed:()async{final d=await showDatePicker(context:context,firstDate:DateTime(2020),lastDate:DateTime(2100),initialDate:start??DateTime.now());if(d!=null)setState(()=>start=d);},child:Text('Start: '+(start==null?'Any':dateOnly(start!))))),
-          Expanded(child:TextButton(onPressed:()async{final d=await showDatePicker(context:context,firstDate:DateTime(2020),lastDate:DateTime(2100),initialDate:expiry??DateTime.now());if(d!=null)setState(()=>expiry=d);},child:Text('Expiry: '+(expiry==null?'None':dateOnly(expiry!)))),
+          Expanded(child:TextButton(onPressed:()async{final d=await showDatePicker(context:context,firstDate:DateTime(2020),lastDate:DateTime(2100),initialDate:expiry??DateTime.now());if(d!=null)setState(()=>expiry=d);},child:Text('Expiry: '+(expiry==null?'None':dateOnly(expiry!))))),
         ]),
         SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('Promo Active'),value:active,onChanged:(v)=>setState(()=>active=v)),
         Row(children:[Expanded(child:FilledButton.icon(onPressed:savePromo,icon:const Icon(Icons.save),label:Text(editing==null?'Create Promo':'Update Promo'))),const SizedBox(width:8),OutlinedButton(onPressed:clearPromo,child:const Text('Clear'))]),
@@ -118,7 +118,7 @@ class _OffersPageState extends State<OffersPage> {
             subtitle:Text((x['discountType']=='fixed'?'₹':'%')+x['discountValue'].toString()+' • '+(x['active']==true?'ACTIVE':'INACTIVE')+' • Uses: '+(x['uses']??0).toString()+'/'+(x['maxUses']??0).toString()),
             trailing:Wrap(children:[
               IconButton(onPressed:()=>editPromo(d.id,x),icon:const Icon(Icons.edit)),
-              IconButton(onPressed:()=>FirebaseFirestore.instance.collection('promoCodes').doc(d.id).set({'active':x['active']!=true,'updatedAt':FieldValue.serverTimestamp()},{merge:true}),icon:Icon(x['active']==true?Icons.toggle_on:Icons.toggle_off)),
+              IconButton(onPressed:()=>FirebaseFirestore.instance.collection('promoCodes').doc(d.id).set({'active':x['active']!=true,'updatedAt':FieldValue.serverTimestamp()}, SetOptions(merge:true)),icon:Icon(x['active']==true?Icons.toggle_on:Icons.toggle_off)),
               IconButton(onPressed:()=>FirebaseFirestore.instance.collection('promoCodes').doc(d.id).delete(),icon:const Icon(Icons.delete_outline)),
             ]));}).toList());
         }),
