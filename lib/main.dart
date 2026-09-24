@@ -95,7 +95,7 @@ class _AuthScreenState extends State<AuthScreen>{
  Future<void> _saveLogin(){
   return secureStorage.write(key:savedEmailKey,value:email.text.trim().toLowerCase()).then((_)=>secureStorage.write(key:savedPasswordKey,value:pass.text));
  }
- Future<void> _autoReauthFromWeb() async {\n  try {\n    final e=await secureStorage.read(key:savedEmailKey);\n    final p=await secureStorage.read(key:savedPasswordKey);\n    if(e!=null&&p!=null&&e.isNotEmpty&&p.isNotEmpty){\n      final cred=await FirebaseAuth.instance.signInWithEmailAndPassword(email:e,password:p);\n      await cred.user!.reload();\n      if(!FirebaseAuth.instance.currentUser!.emailVerified){\n        await FirebaseAuth.instance.signOut();\n        return;\n      }\n      nativeBridgePassword=p;\n      if(mounted){try{await w.runJavaScript(await bridge());}catch(_){}}\n      return;\n    }\n  }catch(_){ }\n  await FirebaseAuth.instance.signOut();\n  nativeBridgePassword=null;\n}\n Future<void> _clearSavedLogin() async {
+ Future<void> _clearSavedLogin() async {
   try{
    await secureStorage.delete(key:savedEmailKey);
    await secureStorage.delete(key:savedPasswordKey);
@@ -219,6 +219,26 @@ Widget build(BuildContext c) {
 class Portal extends StatefulWidget{const Portal({super.key});@override State<Portal> createState()=>_PortalState();}
 class _PortalState extends State<Portal>{
  late final WebViewController w;bool loading=true,error=false;
+ Future<void> _autoReauthFromWeb() async {
+  try {
+   final e=await secureStorage.read(key:savedEmailKey);
+   final p=await secureStorage.read(key:savedPasswordKey);
+   if(e!=null&&p!=null&&e.isNotEmpty&&p.isNotEmpty){
+    final cred=await FirebaseAuth.instance.signInWithEmailAndPassword(email:e,password:p);
+    await cred.user!.reload();
+    if(!FirebaseAuth.instance.currentUser!.emailVerified){
+     await FirebaseAuth.instance.signOut();
+     return;
+    }
+    nativeBridgePassword=p;
+    if(mounted){try{await w.runJavaScript(await bridge());}catch(_){}}
+    return;
+   }
+  }catch(_){}
+  await FirebaseAuth.instance.signOut();
+  nativeBridgePassword=null;
+ }
+
  static const fix=r'''(function(){try{var m=document.querySelector('meta[name="viewport"]');if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);}m.content='width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover';document.body.style.margin='0';document.body.style.overflowX='hidden';}catch(e){}})();''';
  Future<String> bridge()async{
   final u=FirebaseAuth.instance.currentUser!;final token=await u.getIdToken(true);
