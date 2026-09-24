@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -260,9 +261,16 @@ class _PortalWebViewState extends State<PortalWebView> {
 
     setState(() => _googleBusy = true);
     try {
-      GoogleSignInAccount? account =
-          await _googleSignIn.attemptLightweightAuthentication();
-      account ??= await _googleSignIn.authenticate();
+      // Use the explicit native authentication flow here. The previous
+      // lightweight-authentication path could leave the Android Credential
+      // Manager picker waiting indefinitely on some devices.
+      final GoogleSignInAccount account =
+          await _googleSignIn.authenticate().timeout(
+        const Duration(seconds: 20),
+        onTimeout: () => throw TimeoutException(
+          'Google account selection did not complete within 20 seconds.',
+        ),
+      );
       final idToken = account.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
         throw Exception(
@@ -296,6 +304,14 @@ class _PortalWebViewState extends State<PortalWebView> {
           : 'Google sign-in configuration failed: '
               '${e.description ?? e.code.name}. '
               'Check Android package + SHA-1 in Firebase.';
+      await _showWebAuthError(message);
+      _showMessage(message);
+    } on TimeoutException catch (e) {
+      debugPrint('Native Google Sign-In timed out: $e');
+      const message =
+          'Google account selection timed out. Please try again. '
+          'If this repeats, the Android Google OAuth configuration '
+          '(package/SHA-1) needs to be checked.';
       await _showWebAuthError(message);
       _showMessage(message);
     } catch (e) {
