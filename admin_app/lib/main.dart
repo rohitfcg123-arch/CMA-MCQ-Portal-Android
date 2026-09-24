@@ -254,7 +254,7 @@ class UsersPage extends StatefulWidget {
   @override State<UsersPage> createState() => _UsersPageState();
 }
 class _UsersPageState extends State<UsersPage> {
-  String activity = 'All', payment = 'All', access = 'All';
+  String activity = 'All', payment = 'All', group = 'All';
   DateTime? from, to;
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Users & Filters')),
@@ -275,8 +275,9 @@ class _UsersPageState extends State<UsersPage> {
           if (activity == 'Inactive >10 Days' && age <= 10) return false;
           final p = (x['paymentStatus'] ?? 'Unpaid').toString();
           if (payment != 'All' && p.toLowerCase() != payment.toLowerCase()) return false;
-          final a = (x['accessType'] ?? 'No Access').toString();
-          if (access != 'All' && a != access) return false;
+          final selectedGroupKey = {'CMA Foundation':'foundation','CMA Intermediate Group 1':'inter-group-1','CMA Intermediate Group 2':'inter-group-2','CMA Final Group 3':'final-group-3','CMA Final Group 4':'final-group-4'}[group];
+          final groups = x['groups'] is List ? List<String>.from(x['groups']) : const <String>[];
+          if (selectedGroupKey != null && !groups.contains(selectedGroupKey)) return false;
           return true;
         }).toList();
         return Column(children: [
@@ -284,7 +285,7 @@ class _UsersPageState extends State<UsersPage> {
             Wrap(children: [
               _drop('Activity', activity, ['All','Active','Active 5 Days','Active 10 Days','Inactive >10 Days'], (v)=>setState(()=>activity=v!)),
               _drop('Payment', payment, ['All','Paid','Unpaid','Free','Expired'], (v)=>setState(()=>payment=v!)),
-              _drop('Access', access, ['All','No Access','Foundation','Group 1','Group 2','All Groups','Custom Access'], (v)=>setState(()=>access=v!)),
+              _drop('Group', group, ['All','CMA Foundation','CMA Intermediate Group 1','CMA Intermediate Group 2','CMA Final Group 3','CMA Final Group 4'], (v)=>setState(()=>group=v!)),
             ]),
             Row(children: [
               Expanded(child: TextButton(onPressed: () async { final d=await showDatePicker(context:context, firstDate:DateTime(2020), lastDate:DateTime.now(), initialDate:from??DateTime.now()); if(d!=null)setState(()=>from=d); }, child: Text('From: ${from == null ? 'Any' : _fmt(from!)}'))),
