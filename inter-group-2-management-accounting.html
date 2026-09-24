@@ -106,12 +106,29 @@ let pool=[],answers=[],index=0,score=0,interval=null,roundEnd=0,bookmarks=new Se
 const $=id=>document.getElementById(id);
 const storage=()=>JSON.parse(localStorage.getItem(KEY)||'{}');
 function saveState(){localStorage.setItem(KEY,JSON.stringify({bookmarks:[...bookmarks],wrong:storage().wrong||[]}));updateCounts();}
-function updateChapterCount(){const v=$('chapterSelect').value;const n=v==='all'?QUESTIONS.length:QUESTIONS.filter(q=>String(q.chapter)===v).length;$('chapterCount').textContent=n+' questions available in '+(v==='all'?'all chapters':'selected chapter')+'.';clampCount();} function loadState(){const x=storage();bookmarks=new Set(x.bookmarks||[]);updateCounts();}
+function currentSourcePool(){
+  const v=$('chapterSelect').value, qs=window.CMA_MA_PYQ||[];
+  if(window.cmaQuestionSource==='pyq') return v==='pyq-all'?qs:qs.filter(q=>q.pyqTerm===v.slice(4));
+  return v==='all'?QUESTIONS.filter(q=>q.chapter!=='pyq'):QUESTIONS.filter(q=>String(q.chapter)===v);
+}
+function updateChapterCount(){
+  const n=currentSourcePool().length;
+  const label=window.cmaQuestionSource==='pyq'?(n===75?'all previous year questions':'selected exam'):(n===303?'all chapters':'selected chapter');
+  $('chapterCount').textContent=n+' questions available in '+label+'.';
+  clampCount();
+}
+function loadState(){const x=storage();bookmarks=new Set(x.bookmarks||[]);updateCounts();}
 function currentSubject(){return $('subjectSelect').value;}
 function gotoSubject(slug){location.href=slug;}
 function updateCounts(){const x=storage();const wrong=(x.wrong||[]).length;const bc=[...bookmarks].length;$('wrongCount').textContent=wrong?'('+wrong+')':'';$('bookCount').textContent=bc?'('+bc+')':'';$('retryWrong').disabled=!wrong;}
-function selectedMaxQuestions(){const v=$('chapterSelect').value;return v==='all'?QUESTIONS.length:QUESTIONS.filter(q=>String(q.chapter)===v).length;}
-function clampCount(){let v=$('chapterSelect').value;let max=v==='all'?QUESTIONS.length:QUESTIONS.filter(q=>String(q.chapter)===v).length;cfg.questions=Math.min(max,Math.max(5,cfg.questions));$('qCount').textContent=cfg.questions;}
+function selectedMaxQuestions(){return currentSourcePool().length;}
+function clampCount(){
+  const max=selectedMaxQuestions();
+  if(max<=0){cfg.questions=0;$('qCount').textContent='0';return;}
+  const min=Math.min(5,max);
+  cfg.questions=Math.min(max,Math.max(min,cfg.questions||min));
+  $('qCount').textContent=cfg.questions;
+}
 function step(id,delta,min,max,render){cfg[id]=Math.max(min,Math.min(max,cfg[id]+delta));render();}
 function setupEvents(){
  $('chapterSelect').addEventListener('change',updateChapterCount);
@@ -252,7 +269,7 @@ async function getAccessState(user){
   const freeTestMinutes=Number(ov.freeTestMinutes ?? settings.freeTestMinutes ?? 60)||60;
   const freeQuestionSeconds=Number(ov.freeQuestionSeconds ?? settings.freeQuestionSeconds ?? 60)||60;
   const src=(typeof source==='function'?source():"").toLowerCase();
-  const adminLike=paid||settings.siteWideFree||data.fullAccess===true||data.freeFullAccess===true;
+  const adminLike=paid||settings.siteWideFree||data.fullAccess===true||data.freeFullAccess===true||data.universalFull===true||data.universalFree===true||String(data.accessType||"").toLowerCase()==="all";
   if(src==="pyq"&&!allFeatures.pyq&&!adminLike) return {allowed:false,paid,reason:"Previous Year Papers are currently locked for this account. Please purchase/upgrade access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   if(src==="bank"&&!allFeatures.mcqBank) return {allowed:false,paid,reason:"MCQ Bank is currently locked for this account.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
   const wrongMode=(typeof arguments[1]==='string'&&arguments[1]==='wrong');
