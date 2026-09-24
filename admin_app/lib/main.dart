@@ -2,7 +2,7 @@ import 'offers_page.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' hide Border;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -282,12 +282,24 @@ class Dashboard extends StatelessWidget {
     ),
   );
 
-  Widget _metric(String title,int value,IconData icon)=>SizedBox(width:180,child:Card(margin:EdgeInsets.zero,child:Padding(
-    padding:const EdgeInsets.all(15),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-      Icon(icon,color:const Color(0xFF0D3B3E)),const SizedBox(height:7),
-      Text(value.toString(),style:const TextStyle(fontSize:27,fontWeight:FontWeight.w900,color:Color(0xFF082627))),
-      Text(title,style:const TextStyle(fontSize:12,color:Color(0xFF65716F),fontWeight:FontWeight.w600))
-    ])));
+  Widget _metric(String title,int value,IconData icon) => SizedBox(
+    width: 180,
+    child: Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: const Color(0xFF0D3B3E)),
+            const SizedBox(height: 7),
+            Text(value.toString(), style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w900, color: Color(0xFF082627))),
+            Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF65716F), fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    ),
+  );
 
   Widget _metricClickable(BuildContext context,String title,int value,IconData icon,List<QueryDocumentSnapshot<Map<String,dynamic>>> docs)=>GestureDetector(
     onTap:()=>_showActiveUsers(context,docs),
@@ -448,7 +460,7 @@ class _AccessPageState extends State<AccessPage> {
               return Card(
                 child: ListTile(
                   title: Text(name),
-                  subtitle: Text('\${x['email'] ?? d.id}\nAccess: \${x['universalFree'] == true ? 'Universal Free (individual)' : ((x['groups'] as List?)?.isNotEmpty == true ? 'Group access' : 'No group access')}'),
+                  subtitle: Text("${x['email'] ?? d.id}\nAccess: ${x['universalFree'] == true ? 'Universal Free (individual)' : ((x['groups'] as List?)?.isNotEmpty == true ? 'Group access' : 'No group access')}"),
                   isThreeLine: true,
                   trailing: TextButton(
                     onPressed: () => _edit(context, d.id, x),
@@ -471,7 +483,7 @@ class _AccessPageState extends State<AccessPage> {
       context: c,
       builder: (_) => StatefulBuilder(
         builder: (c, set) => AlertDialog(
-          title: Text('Access: \${x['email'] ?? uid}'),
+          title: Text("Access: ${x['email'] ?? uid}"),
           content: SizedBox(
             width: 430,
             child: SingleChildScrollView(
