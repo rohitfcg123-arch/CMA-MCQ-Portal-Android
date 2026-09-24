@@ -5,6 +5,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'lib/**'
+      - 'android/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'google-services.json'
+      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
 permissions:
