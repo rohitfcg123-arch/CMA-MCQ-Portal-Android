@@ -37,7 +37,7 @@ jobs:
             --org com.taxpath \
             --project-name cma_mcq_portal
 
-      - name: Configure Android deep link for browser login
+      - name: Configure Android callback for browser login
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -45,28 +45,24 @@ jobs:
           p = Path("android/app/src/main/AndroidManifest.xml")
           s = p.read_text()
 
-          intent = '''
-              <intent-filter>
-                  <action android:name="android.intent.action.VIEW" />
-                  <category android:name="android.intent.category.DEFAULT" />
-                  <category android:name="android.intent.category.BROWSABLE" />
-                  <data android:scheme="cma-mcq-portal" android:host="auth" />
-              </intent-filter>'''
+          callback_activity = '''
+              <activity
+                  android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
+                  android:exported="true"
+                  android:taskAffinity="">
+                  <intent-filter android:label="flutter_web_auth_2">
+                      <action android:name="android.intent.action.VIEW" />
+                      <category android:name="android.intent.category.DEFAULT" />
+                      <category android:name="android.intent.category.BROWSABLE" />
+                      <data android:scheme="cma-mcq-portal" />
+                  </intent-filter>
+              </activity>'''
 
-          if 'android:scheme="cma-mcq-portal"' not in s:
-              activity_start = s.find("<activity")
-              if activity_start == -1:
-                  raise RuntimeError("Flutter activity declaration not found")
-
-              activity_open_end = s.find(">", activity_start)
-              if activity_open_end == -1:
-                  raise RuntimeError("Flutter activity opening tag not found")
-
-              s = (
-                  s[:activity_open_end + 1]
-                  + intent
-                  + s[activity_open_end + 1:]
-              )
+          if 'com.linusu.flutter_web_auth_2.CallbackActivity' not in s:
+              marker = "</application>"
+              if marker not in s:
+                  raise RuntimeError("Android application block not found")
+              s = s.replace(marker, callback_activity + "\n" + marker, 1)
 
           p.write_text(s)
           PY
