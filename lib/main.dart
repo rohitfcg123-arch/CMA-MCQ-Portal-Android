@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'firebase_options.dart';
 
-const portalUrl='https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';
+const portalUrl='https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';\nString? nativeBridgePassword;
 
 Future<void> main() async {
  WidgetsFlutterBinding.ensureInitialized();
@@ -44,7 +44,7 @@ class _AuthScreenState extends State<AuthScreen>{
     showMsg('Verification link sent to '+email.text.trim()+'. Open it, then return and tap “I have verified”.');
    }else{
     final c=await a.signInWithEmailAndPassword(email:email.text.trim(),password:pass.text);await c.user!.reload();
-    if(!a.currentUser!.emailVerified){await c.user!.sendEmailVerification();await a.signOut();showMsg('Your email is not verified. A new verification link has been sent.',error:true);}
+    if(!a.currentUser!.emailVerified){await c.user!.sendEmailVerification();await a.signOut();showMsg('Your email is not verified. A new verification link has been sent.',error:true);}else{nativeBridgePassword=pass.text;}
    }
   }on FirebaseAuthException catch(e){showMsg(authError(e.code),error:true);}catch(_){showMsg('Something went wrong. Please try again.',error:true);}
   finally{if(mounted)setState(()=>busy=false);}
@@ -74,7 +74,7 @@ class _PortalState extends State<Portal>{
  static const fix=r'''(function(){try{var m=document.querySelector('meta[name="viewport"]');if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);}m.content='width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover';document.body.style.margin='0';document.body.style.overflowX='hidden';}catch(e){}})();''';
  Future<String> bridge()async{
   final u=FirebaseAuth.instance.currentUser!;final token=await u.getIdToken(true);
-  return '(function(){try{window.__cmaNativeFirebaseIdToken='+jsonEncode(token)+';window.__cmaNativeUser={email:'+jsonEncode(u.email??'')+',displayName:'+jsonEncode(u.displayName??'')+',uid:'+jsonEncode(u.uid)+'};window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}catch(e){console.error(e);}})();';
+  return '(function(){try{var e='+jsonEncode(u.email??'')+',p='+jsonEncode(nativeBridgePassword??'')+';window.__cmaNativeFirebaseIdToken='+jsonEncode(token)+';window.__cmaNativeUser={email:e,displayName:'+jsonEncode(u.displayName??'')+',uid:'+jsonEncode(u.uid)+'};if(e&&p&&window.firebase&&firebase.auth){firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){return firebase.auth().signInWithEmailAndPassword(e,p);}).then(function(){window.__cmaNativeWebAuthReady=true;window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}).catch(function(err){console.error("TEST-02 web auth bridge",err);window.dispatchEvent(new Event("cmaNativeFirebaseReady"));});}else{window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}}catch(e){console.error(e);}})();';
  }
  @override void initState(){super.initState();w=WebViewController()..setJavaScriptMode(JavaScriptMode.unrestricted)..setUserAgent('CMA-MCQ-Portal-Android/4.0')..setBackgroundColor(const Color(0xFFFAF6EE))..setNavigationDelegate(NavigationDelegate(
   onPageStarted:(_){if(mounted)setState((){loading=true;error=false;});},
