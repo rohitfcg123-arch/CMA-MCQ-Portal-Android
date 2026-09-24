@@ -22,14 +22,34 @@ class _OffersPageState extends State<OffersPage> {
   final maxUses=TextEditingController(text:'0'), perUser=TextEditingController(text:'1');
   String plans='monthly,threeMonth,sixMonth';
   DateTime? start, expiry;
+  final ruleName = TextEditingController();
+  final ruleValue = TextEditingController();
+  String ruleType = 'percent';
+  String selectedPlans = 'monthly,threeMonth,sixMonth';
+  String selectedGroup = 'all';
+  bool ruleActive = true;
+  String? editingRuleId;
+  List<Map<String,dynamic>> discountRules = [];
+  static const groupOptions = <Map<String,String>>[
+    {'key':'all','label':'All Groups'},
+    {'key':'foundation','label':'CMA Foundation'},
+    {'key':'inter-group-1','label':'CMA Intermediate Group 1'},
+    {'key':'inter-group-2','label':'CMA Intermediate Group 2'},
+    {'key':'inter-both','label':'Intermediate Both Groups'},
+    {'key':'final-group-3','label':'CMA Final Group 3'},
+    {'key':'final-group-4','label':'CMA Final Group 4'},
+  ];
 
   @override void initState(){super.initState(); load();}
-  @override void dispose(){code.dispose();name.dispose();value.dispose();maxUses.dispose();perUser.dispose();super.dispose();}
+  @override void dispose(){code.dispose();name.dispose();value.dispose();maxUses.dispose();perUser.dispose();ruleName.dispose();ruleValue.dispose();super.dispose();}
 
   Future<void> load() async {
     final d=await FirebaseFirestore.instance.collection('settings').doc('access').get();
-    final p=d.data()?['pricing'];
+    final data=d.data()??{};
+    final p=data['pricing'];
     if(p is Map) setState((){for(final k in pricing.keys){if(p[k] is Map) pricing[k]={...pricing[k]!,...Map<String,dynamic>.from(p[k])};}});
+    final rr=data['discountRules'];
+    if(rr is List) discountRules=rr.whereType<Map>().map((e)=>Map<String,dynamic>.from(e)).toList();
   }
 
   String label(String p)=>p=='monthly'?'Monthly':p=='threeMonth'?'3 Months':'6 Months';
@@ -49,6 +69,22 @@ class _OffersPageState extends State<OffersPage> {
   }
 
   void clearPromo(){setState((){editing=null;code.clear();name.clear();value.clear();maxUses.text='0';perUser.text='1';active=true;promoType='percent';applyOn='discounted';plans='monthly,threeMonth,sixMonth';start=null;expiry=null;});}
+
+  List<String> _planList()=>selectedPlans.split(',').where((e)=>e.isNotEmpty).toList();
+  String _groupLabel(String g){for(final x in groupOptions){if(x['key']==g)return x['label']!;}return g;}
+  void _clearRule(){ruleName.clear();ruleValue.clear();setState((){editingRuleId=null;ruleType='percent';selectedPlans='monthly,threeMonth,sixMonth';selectedGroup='all';ruleActive=true;});}
+  Future<void> _saveRule() async {
+    final v=double.tryParse(ruleValue.text.trim()); final ps=_planList();
+    if(v==null||v<0||ps.isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Select at least one plan and enter a valid discount.')));return;}
+    final id=editingRuleId??('rule_'+DateTime.now().millisecondsSinceEpoch.toString());
+    final rule={'id':id,'name':ruleName.text.trim().isEmpty?'Direct Discount':ruleName.text.trim(),'discountType':ruleType,'discountValue':v,'plans':ps,'group':selectedGroup,'active':ruleActive};
+    final next=[...discountRules.where((r)=>r['id']!=id),rule];
+    await FirebaseFirestore.instance.collection('settings').doc('access').set({'discountRules':next,'discountRulesUpdatedAt':FieldValue.serverTimestamp(),'discountRulesUpdatedBy':offersAdminEmail},SetOptions(merge:true));
+    if(!mounted)return; setState(()=>discountRules=next); _clearRule(); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Discount rule saved.')));
+  }
+  void _editRule(Map<String,dynamic> r){setState((){editingRuleId=r['id']?.toString();ruleName.text=r['name']?.toString()??'';ruleValue.text=r['discountValue']?.toString()??'0';ruleType=r['discountType']?.toString()??'percent';selectedPlans=r['plans'] is List?List<String>.from(r['plans']).join(','):r['plans']?.toString()??'monthly,threeMonth,sixMonth';selectedGroup=r['group']?.toString()??'all';ruleActive=r['active']==true;});}
+  Future<void> _deleteRule(String id) async {final next=discountRules.where((r)=>r['id']!=id).toList();await FirebaseFirestore.instance.collection('settings').doc('access').set({'discountRules':next},SetOptions(merge:true));if(mounted)setState(()=>discountRules=next);}
+  Future<void> _toggleRule(Map<String,dynamic> r) async {final id=r['id'];final next=discountRules.map((x)=>x['id']==id?{...x,'active':x['active']!=true}:x).toList();await FirebaseFirestore.instance.collection('settings').doc('access').set({'discountRules':next},SetOptions(merge:true));if(mounted)setState(()=>discountRules=next);}
 
   Future<void> savePromo() async {
     final k=code.text.trim().toUpperCase().replaceAll(RegExp(r'\s+'),'');
@@ -80,9 +116,43 @@ class _OffersPageState extends State<OffersPage> {
     body:ListView(padding:const EdgeInsets.all(16),children:[
       Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         const Text('Subscription Pricing & Offers',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
-        const SizedBox(height:8),const Text('Set public prices and automatic direct discounts.'),
-        for(final p in ['monthly','threeMonth','sixMonth']) priceEditor(p),
-        const SizedBox(height:10),FilledButton.icon(onPressed:savePricing,icon:const Icon(Icons.save),label:const Text('Save Pricing')),
+        const SizedBox(height:6),const Text('Set base prices once. Use one discount rule below for any plan + any group combination.'),
+        const SizedBox(height:10),
+        Row(children:[
+          Expanded(child:TextFormField(initialValue:pricing['monthly']!['price'].toString(),keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Monthly ₹',border:OutlineInputBorder()),onChanged:(v)=>pricing['monthly']!['price']=double.tryParse(v)??0)),
+          const SizedBox(width:8),
+          Expanded(child:TextFormField(initialValue:pricing['threeMonth']!['price'].toString(),keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'3 Months ₹',border:OutlineInputBorder()),onChanged:(v)=>pricing['threeMonth']!['price']=double.tryParse(v)??0)),
+          const SizedBox(width:8),
+          Expanded(child:TextFormField(initialValue:pricing['sixMonth']!['price'].toString(),keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'6 Months ₹',border:OutlineInputBorder()),onChanged:(v)=>pricing['sixMonth']!['price']=double.tryParse(v)??0)),
+        ]),
+        const SizedBox(height:10),FilledButton.icon(onPressed:savePricing,icon:const Icon(Icons.save),label:const Text('Save Base Prices')),
+      ]))),
+      const SizedBox(height:16),
+      Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text(editingRuleId==null?'Direct Discount Manager':'Edit Direct Discount',style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+        const SizedBox(height:5),const Text('One place for all plans and all CMA groups. Select Monthly / 3 Months / 6 Months and choose All Groups, one group, or both Intermediate groups.'),
+        const SizedBox(height:12),
+        TextField(controller:ruleName,decoration:const InputDecoration(labelText:'Discount / Offer Name',border:OutlineInputBorder())),
+        const SizedBox(height:10),
+        Row(children:[
+          Expanded(child:DropdownButtonFormField<String>(value:ruleType,items:const[DropdownMenuItem(value:'percent',child:Text('% Discount')),DropdownMenuItem(value:'fixed',child:Text('₹ Discount'))],onChanged:(v)=>setState(()=>ruleType=v!),decoration:const InputDecoration(labelText:'Discount Type',border:OutlineInputBorder()))),
+          const SizedBox(width:8),
+          Expanded(child:TextField(controller:ruleValue,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Discount Value',border:OutlineInputBorder()))),
+        ]),
+        const SizedBox(height:12),const Text('Apply to Plan(s)',style:TextStyle(fontWeight:FontWeight.bold)),
+        Wrap(spacing:7,runSpacing:7,children:[
+          for(final p in ['monthly','threeMonth','sixMonth']) FilterChip(label:Text(label(p)),selected:_planList().contains(p),onSelected:(v){final a=_planList();if(v&&!a.contains(p))a.add(p);if(!v)a.remove(p);setState(()=>selectedPlans=a.join(','));}),
+          ActionChip(label:const Text('All Plans'),onPressed:()=>setState(()=>selectedPlans='monthly,threeMonth,sixMonth')),
+        ]),
+        const SizedBox(height:12),const Text('Apply to Group(s)',style:TextStyle(fontWeight:FontWeight.bold)),
+        Wrap(spacing:7,runSpacing:7,children:[for(final g in groupOptions)FilterChip(label:Text(g['label']!),selected:selectedGroup==g['key'],onSelected:(v)=>setState(()=>selectedGroup=v?g['key']!:'all'))]),
+        const SizedBox(height:7),const Text('“Intermediate Both Groups” applies the discount to Group 1 + Group 2. “All Groups” applies it to every CMA group.',style:TextStyle(fontSize:12,color:Colors.black54)),
+        const SizedBox(height:10),SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('Discount Active'),value:ruleActive,onChanged:(v)=>setState(()=>ruleActive=v)),
+        Row(children:[Expanded(child:FilledButton.icon(onPressed:_saveRule,icon:const Icon(Icons.save),label:Text(editingRuleId==null?'Save Discount':'Update Discount'))),const SizedBox(width:8),OutlinedButton(onPressed:_clearRule,child:const Text('Clear'))]),
+        const SizedBox(height:12),
+        const Divider(),const SizedBox(height:5),const Text('Saved Discount Rules',style:TextStyle(fontWeight:FontWeight.bold,fontSize:16)),
+        if(discountRules.isEmpty)const Padding(padding:EdgeInsets.all(10),child:Text('No direct discount rules yet.')),
+        ...discountRules.map((r){final ps=r['plans'] is List?List<String>.from(r['plans']):[r['plans'].toString()];final gs=_groupLabel(r['group']?.toString()??'all');final val=(r['discountType']=='fixed'?'₹':'%')+r['discountValue'].toString();return Card(margin:const EdgeInsets.only(top:7),child:ListTile(title:Text(r['name']?.toString()??'Direct Discount'),subtitle:Text(val+' • '+ps.map(label).join(' + ')+' • '+gs+' • '+(r['active']==true?'ACTIVE':'INACTIVE')),trailing:Wrap(children:[IconButton(onPressed:()=>_editRule(r),icon:const Icon(Icons.edit)),IconButton(onPressed:()=>_toggleRule(r),icon:Icon(r['active']==true?Icons.toggle_on:Icons.toggle_off)),IconButton(onPressed:()=>_deleteRule(r['id'].toString()),icon:const Icon(Icons.delete_outline))]))}),
       ]))),
       const SizedBox(height:16),
       Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
