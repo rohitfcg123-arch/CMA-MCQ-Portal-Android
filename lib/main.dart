@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'firebase_options.dart';
 
 const portalUrl='https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';
@@ -185,7 +186,20 @@ class _PortalState extends State<Portal>{
   onPageStarted:(_){if(mounted)setState((){loading=true;error=false;});},
   onPageFinished:(url)async{await w.runJavaScript(fix);final u=Uri.tryParse(url);if(u?.host=='rohitfcg123-arch.github.io')await w.runJavaScript(await bridge());if(mounted)setState(()=>loading=false);},
   onWebResourceError:(e){if((e.isForMainFrame??false)&&mounted)setState((){loading=false;error=true;});},
-  onNavigationRequest:(r){final u=Uri.tryParse(r.url);if(u==null)return NavigationDecision.prevent;return(u.scheme=='http'||u.scheme=='https')?NavigationDecision.navigate:NavigationDecision.prevent;}))..loadRequest(Uri.parse(portalUrl));}
+  onNavigationRequest:(r)async{
+    final u=Uri.tryParse(r.url);if(u==null)return NavigationDecision.prevent;
+    if(u.scheme=='http'||u.scheme=='https')return NavigationDecision.navigate;
+    // TEST-03: allow UPI deep links to leave the WebView and open an installed UPI app.
+    if(u.scheme=='upi'||u.scheme=='intent'){
+      try{
+        final ok=await launchUrl(u,mode:LaunchMode.externalApplication);
+        if(!ok&&mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('No UPI app could be opened. Please install/enable a UPI app and try again.')));
+      }catch(e){
+        if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Could not open the UPI app. Please try again.')));
+      }
+    }
+    return NavigationDecision.prevent;
+  }))..loadRequest(Uri.parse(portalUrl));}
  Future<void> reload()async{setState((){loading=true;error=false;});await w.loadRequest(Uri.parse(portalUrl));}
  @override Widget build(BuildContext c)=>PopScope(canPop:false,onPopInvokedWithResult:(didPop,_)async{if(didPop)return;if(await w.canGoBack())await w.goBack();else if(mounted)Navigator.of(c).pop();},child:Scaffold(body:SafeArea(child:Stack(children:[WebViewWidget(controller:w),if(loading)const Align(alignment:Alignment.topCenter,child:LinearProgressIndicator(minHeight:2)),if(error)Center(child:FilledButton(onPressed:reload,child:const Text('Retry')))]))));
 }
