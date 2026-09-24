@@ -65,7 +65,7 @@ service cloud.firestore {
     }
 
     // Outbound email queue for a configured server-side mail worker.
-    match /mailQueue/{mailId} {
+    match /mail/{mailId} {
       allow read, create: if isAdmin();
       allow update, delete: if isAdmin();
     }
