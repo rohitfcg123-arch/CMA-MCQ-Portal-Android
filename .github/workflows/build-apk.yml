@@ -41,25 +41,33 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+
           p = Path("android/app/src/main/AndroidManifest.xml")
           s = p.read_text()
-          s = s.replace(
-              '<activity',
-              '<activity',
-              1
-          )
-          intent = '''\n            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="cma-mcq-portal" android:host="auth" />
-            </intent-filter>'''
+
+          intent = '''
+              <intent-filter>
+                  <action android:name="android.intent.action.VIEW" />
+                  <category android:name="android.intent.category.DEFAULT" />
+                  <category android:name="android.intent.category.BROWSABLE" />
+                  <data android:scheme="cma-mcq-portal" android:host="auth" />
+              </intent-filter>'''
+
           if 'android:scheme="cma-mcq-portal"' not in s:
-              target = 'android:exported="true"'
-              if target in s:
-                  s = s.replace(target, target + intent, 1)
-              else:
+              activity_start = s.find("<activity")
+              if activity_start == -1:
                   raise RuntimeError("Flutter activity declaration not found")
+
+              activity_open_end = s.find(">", activity_start)
+              if activity_open_end == -1:
+                  raise RuntimeError("Flutter activity opening tag not found")
+
+              s = (
+                  s[:activity_open_end + 1]
+                  + intent
+                  + s[activity_open_end + 1:]
+              )
+
           p.write_text(s)
           PY
 
@@ -166,7 +174,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CMA-MCQ-Portal-APK
-          path: build/app/outputs/apk/release/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
 
 # Google Sign-In bridge workflow made idempotent.
