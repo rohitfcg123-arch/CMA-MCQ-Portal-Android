@@ -45,12 +45,11 @@ class PortalWebView extends StatefulWidget {
 
 class _PortalWebViewState extends State<PortalWebView> {
   late final WebViewController _controller;
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(serverClientId: webClientId);
 
   bool _loading = true;
   bool _hasError = false;
   bool _googleBusy = false;
-  bool _googleInitialized = false;
 
   static const String _mobileViewportFix = r'''
 (function () {
@@ -165,22 +164,7 @@ class _PortalWebViewState extends State<PortalWebView> {
   @override
   void initState() {
     super.initState();
-    _initializeGoogle();
     _initializeWebView();
-  }
-
-  Future<void> _initializeGoogle() async {
-    try {
-      await _googleSignIn.initialize(
-        serverClientId: webClientId,
-      );
-      _googleInitialized = true;
-      debugPrint('Google Sign-In initialized successfully.');
-    } catch (e) {
-      _googleInitialized = false;
-      debugPrint('Google Sign-In initialization failed: $e');
-      _showWebAuthError('Google setup error: $e');
-    }
   }
 
   Future<void> _showWebAuthError(String message) async {
@@ -253,24 +237,25 @@ class _PortalWebViewState extends State<PortalWebView> {
 
   Future<void> _startNativeGoogleSignIn() async {
     if (_googleBusy) return;
-    if (!_googleInitialized) await _initializeGoogle();
-    if (!_googleInitialized) {
-      _showMessage('Google Sign-In could not be initialized. Please try again.');
-      return;
-    }
-
     setState(() => _googleBusy = true);
     try {
-      // Use the explicit native authentication flow here. The previous
-      // lightweight-authentication path could leave the Android Credential
-      // Manager picker waiting indefinitely on some devices.
-      final GoogleSignInAccount account =
-          await _googleSignIn.authenticate().timeout(
+      // Use the legacy Android Google Sign-In flow. The 7.x plugin switched
+      // Android authentication to Credential Manager; this build deliberately
+      // uses the pre-Credential-Manager implementation because the device is
+      // hanging after account selection.
+      final GoogleSignInAccount? account =
+          await _googleSignIn.signIn().timeout(
         const Duration(seconds: 20),
         onTimeout: () => throw TimeoutException(
           'Google account selection did not complete within 20 seconds.',
         ),
       );
+      if (account == null) {
+        throw GoogleSignInException(
+          code: GoogleSignInExceptionCode.canceled,
+          description: 'Google account selection was cancelled.',
+        );
+      }
       final idToken = account.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
         throw Exception(
