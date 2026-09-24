@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -256,7 +257,7 @@ class _PortalWebViewState extends State<PortalWebView> {
         _showMessage(message);
         return;
       }
-      final idToken = account.authentication.idToken;
+      final idToken = (await account.authentication).idToken;
       if (idToken == null || idToken.isEmpty) {
         throw Exception(
           'Google returned no ID token. Check the Android OAuth client, '
@@ -279,16 +280,19 @@ class _PortalWebViewState extends State<PortalWebView> {
           }
         })();
       ''');
-    } on GoogleSignInException catch (e) {
+    } on PlatformException catch (e) {
+      // google_sign_in 6.x reports Android Play Services failures as a
+      // PlatformException. Preserve the native code/message so a real
+      // DEVELOPER_ERROR (10), SIGN_IN_FAILED, etc. is visible instead of
+      // being mistaken for a user cancellation.
       debugPrint(
-        'Native Google Sign-In failed: code=${e.code}, '
-        'description=${e.description}, details=${e.details}',
+        'Native Google Sign-In PlatformException: '
+        'code=${e.code}, message=${e.message}, details=${e.details}',
       );
-      final message = e.code == GoogleSignInExceptionCode.canceled
-          ? 'Google sign-in was cancelled.'
-          : 'Google sign-in configuration failed: '
-              '${e.description ?? e.code.name}. '
-              'Check Android package + SHA-1 in Firebase.';
+      final message =
+          'Google sign-in error: ${e.code}'
+          '${e.message == null || e.message!.isEmpty ? '' : ' — ${e.message}'}'
+          '${e.details == null ? '' : ' — ${e.details}'}';
       await _showWebAuthError(message);
       _showMessage(message);
     } on TimeoutException catch (e) {
