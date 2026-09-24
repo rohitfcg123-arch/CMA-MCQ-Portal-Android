@@ -121,6 +121,15 @@ jobs:
           p.write_text(s)
           PY
 
+      - name: Verify release signing certificate
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          keytool -list -v \\
+            -keystore android/app/cma-release-key.jks \\
+            -storepass "$KEYSTORE_PASSWORD" \\
+            -alias cma_mcq | grep -E "Alias name:|SHA1:|SHA256:"
+
       - name: Get Flutter dependencies
         run: flutter pub get
 
