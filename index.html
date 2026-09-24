@@ -47,8 +47,9 @@ async function callNativeGoogleLogin(){
   return false;
 }
 const appLoginParams=new URLSearchParams(location.search);
-const appLoginMode=appLoginParams.get('app_login')==='1';
-const appReturnUri=appLoginParams.get('return_uri')||'';
+const storedAppReturnUri=sessionStorage.getItem('cma_app_return_uri')||'';
+const appLoginMode=appLoginParams.get('app_login')==='1' || sessionStorage.getItem('cma_app_login_mode')==='1';
+const appReturnUri=appLoginParams.get('return_uri')||storedAppReturnUri;
 let appReturnSent=false;
 async function returnToAndroidApp(user){
   if(!appLoginMode || !appReturnUri || appReturnSent || !user) return false;
@@ -56,6 +57,8 @@ async function returnToAndroidApp(user){
     appReturnSent=true;
     const token=await user.getIdToken(true);
     const sep=appReturnUri.includes('?')?'&':'?';
+    sessionStorage.removeItem('cma_app_return_uri');
+    sessionStorage.removeItem('cma_app_login_mode');
     location.href=appReturnUri+sep+'id_token='+encodeURIComponent(token);
     return true;
   }catch(e){
@@ -76,6 +79,14 @@ document.getElementById('google').onclick=async()=>{
   b.disabled=true;b.textContent='Signing in…';
   try{
     await persistenceReady;
+    if(appLoginMode){
+      // In the Android Auth Tab, use redirect rather than popup. Chrome Auth
+      // Tab can block/keep popups inside the authentication session.
+      sessionStorage.setItem('cma_app_return_uri',appReturnUri);
+      sessionStorage.setItem('cma_app_login_mode','1');
+      await auth.signInWithRedirect(provider);
+      return;
+    }
     const result=await auth.signInWithPopup(provider);
     const user=result&&result.user;
     const h=pendingHref;
