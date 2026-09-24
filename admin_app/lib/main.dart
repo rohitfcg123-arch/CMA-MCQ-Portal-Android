@@ -396,6 +396,9 @@ class AccessPage extends StatefulWidget {
 }
 
 class _AccessPageState extends State<AccessPage> {
+  final TextEditingController _preApprovedEmail = TextEditingController();
+  DateTime? _preApprovedExpiry;
+
   static const groupOptions = <Map<String, String>>[
     {'key': 'foundation', 'label': 'CMA Foundation'},
     {'key': 'inter-group-1', 'label': 'CMA Intermediate Group 1'},
@@ -418,10 +421,82 @@ class _AccessPageState extends State<AccessPage> {
     );
   }
 
+  Future<void> _grantFullAccess(String email, {DateTime? expiry}) async {
+    final e = email.trim().toLowerCase();
+    if (e.isEmpty || !e.contains('@')) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid email address.')));
+      return;
+    }
+    final expiryDate = expiry == null ? '' : '${expiry.year.toString().padLeft(4,'0')}-${expiry.month.toString().padLeft(2,'0')}-${expiry.day.toString().padLeft(2,'0')}';
+    await FirebaseFirestore.instance.collection('access').doc(e).set({
+      'email': e,
+      'status': 'active',
+      'accessType': 'all',
+      'universalFull': true,
+      'universalFree': true,
+      'startDate': DateTime.now().toIso8601String().substring(0, 10),
+      'expiryDate': expiryDate,
+      'groups': groupOptions.map((g) => g['key']!).toList(),
+      'overrides': <String, dynamic>{},
+      'accessUpdatedAt': FieldValue.serverTimestamp(),
+      'accessUpdatedBy': superAdminEmail,
+    }, SetOptions(merge: true));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Full access granted to $e')));
+  }
+
+  Future<void> _preApprove() async {
+    await _grantFullAccess(_preApprovedEmail.text, expiry: _preApprovedExpiry);
+    if (!mounted) return;
+    _preApprovedEmail.clear();
+    setState(() => _preApprovedExpiry = null);
+  }
+
+  Future<void> _pickPreExpiry() async {
+    final d = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+      initialDate: _preApprovedExpiry ?? DateTime.now().add(const Duration(days: 30)),
+    );
+    if (d != null && mounted) setState(() => _preApprovedExpiry = d);
+  }
+
+  @override
+  void dispose() {
+    _preApprovedEmail.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Access Management')),
     body: Column(children: [
+      Card(
+        margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Pre-Approved Full Access', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            const Text('Enter any email, even before registration. Access will apply automatically when that email signs up.'),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _preApprovedEmail,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(labelText: 'Email', hintText: 'student@example.com', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: Text(_preApprovedExpiry == null ? 'No expiry' : 'Expiry: ${_fmt(_preApprovedExpiry)}')),
+              TextButton.icon(onPressed: _pickPreExpiry, icon: const Icon(Icons.event), label: const Text('Set expiry')),
+              if (_preApprovedExpiry != null) IconButton(onPressed: () => setState(() => _preApprovedExpiry = null), icon: const Icon(Icons.clear)),
+            ]),
+            const SizedBox(height: 6),
+            SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _preApprove, icon: const Icon(Icons.lock_open), label: const Text('Grant Full Access'))),
+          ]),
+        ),
+      ),
       StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.collection('settings').doc('access').snapshots(),
         builder: (_, s) {
@@ -462,9 +537,18 @@ class _AccessPageState extends State<AccessPage> {
                   title: Text(name),
                   subtitle: Text("${x['email'] ?? d.id}\nAccess: ${x['universalFree'] == true ? 'Universal Free (individual)' : ((x['groups'] as List?)?.isNotEmpty == true ? 'Group access' : 'No group access')}"),
                   isThreeLine: true,
-                  trailing: TextButton(
-                    onPressed: () => _edit(context, d.id, x),
-                    child: const Text('Permissions'),
+                  trailing: Wrap(
+                    spacing: 4,
+                    children: [
+                      TextButton(
+                        onPressed: () => _grantFullAccess((x['email'] ?? d.id).toString()),
+                        child: const Text('Full Access'),
+                      ),
+                      TextButton(
+                        onPressed: () => _edit(context, d.id, x),
+                        child: const Text('Permissions'),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -518,6 +602,7 @@ class _AccessPageState extends State<AccessPage> {
                   'email': email,
                   'name': x['name'] ?? x['displayName'] ?? '',
                   'universalFree': universal,
+                  'universalFull': universal,
                   'groups': groupList,
                   'accessType': universal ? 'all' : (groupList.isEmpty ? 'partial' : 'partial'),
                   'status': 'active',
