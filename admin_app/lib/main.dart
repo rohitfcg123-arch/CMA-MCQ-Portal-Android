@@ -48,9 +48,13 @@ class AuthGate extends StatelessWidget {
           if (staff.connectionState != ConnectionState.done) return const Scaffold(body: Center(child: CircularProgressIndicator()));
           final data = staff.data?.data();
           final status = (data?['status'] ?? 'Pending Approval').toString();
-          if (data == null || status != 'Approved') {
+          final expiresAtRaw = data?['expiresAt'];
+          DateTime? expiresAt;
+          if (expiresAtRaw is Timestamp) expiresAt = expiresAtRaw.toDate();
+          final expired = expiresAt != null && expiresAt.isBefore(DateTime.now());
+          if (data == null || status != 'Approved' || expired) {
             FirebaseAuth.instance.signOut();
-            return AdminLogin(error: status == 'Pending Approval' ? 'Account created. Waiting for admin approval.' : 'Staff access is not approved.');
+            return AdminLogin(error: expired ? 'Your staff access has expired. Contact the Super Admin.' : (status == 'Pending Approval' ? 'Account created. Waiting for admin approval.' : 'Staff access is not approved.'));
           }
           return const Dashboard();
         },
@@ -705,54 +709,54 @@ class StaffPage extends StatelessWidget {
     }, SetOptions(merge: true));
   }
 
-  Future<void> _request(BuildContext c) async {
-    final e = TextEditingController();
+  Future<void> _request(BuildContext context) async {
+    final email = TextEditingController();
+    final days = TextEditingController(text: '30');
     String role = 'Employee', level = 'Read';
-    await showDialog(
-      context: c,
-      builder: (_) => StatefulBuilder(
-        builder: (c, set) => AlertDialog(
-          title: const Text('Invite / Access Request'),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextField(controller: e, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email')),
-            DropdownButtonFormField<String>(
-              value: role,
-              items: ['Admin','Manager','Employee'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-              onChanged: (v) => set(() => role = v!),
-              decoration: const InputDecoration(labelText: 'Role'),
-            ),
-            DropdownButtonFormField<String>(
-              value: level,
-              items: ['Read','Read & Write','Limited'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-              onChanged: (v) => set(() => level = v!),
-              decoration: const InputDecoration(labelText: 'Access level'),
-            ),
-          ]),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-            FilledButton(
-              onPressed: () async {
-                final email = e.text.trim().toLowerCase();
-                if (email.isEmpty) return;
-                await FirebaseFirestore.instance.collection('staffAccess').doc(email).set({
-                  'email': email,
-                  'role': role,
-                  'accessLevel': level,
-                  'status': 'Pending Approval',
-                  'requestedBy': superAdminEmail,
-                  'requestedAt': FieldValue.serverTimestamp(),
-                  'permissions': _defaultPermissions(role, level),
-                }, SetOptions(merge: true));
-                if (c.mounted) Navigator.pop(c);
-              },
-              child: const Text('Send Request'),
-            ),
-          ],
-        ),
-      ),
-    );
+    bool sendEmail = true;
+    String? durationPreset = '30 days';
+    await showDialog(context: context, builder: (dialogContext) => StatefulBuilder(builder: (c, set) => AlertDialog(
+      title: const Row(children: [Icon(Icons.mark_email_read_outlined), SizedBox(width: 10), Text('Invite employee')]),
+      content: SizedBox(width: 460, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Align(alignment: Alignment.centerLeft, child: Text('Send a professional access invitation', style: TextStyle(fontWeight: FontWeight.w700))),
+        const SizedBox(height: 12),
+        TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(prefixIcon: Icon(Icons.email_outlined), labelText: 'Employee email', hintText: 'employee@example.com')),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(child: DropdownButtonFormField<String>(value: role, items: ['Admin','Manager','Employee'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => set(() => role = v!), decoration: const InputDecoration(labelText: 'Role'))),
+          const SizedBox(width: 10),
+          Expanded(child: DropdownButtonFormField<String>(value: level, items: ['Read','Read & Write','Limited'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => set(() => level = v!), decoration: const InputDecoration(labelText: 'Access level'))),
+        ]),
+        const SizedBox(height: 10),
+        DropdownButtonFormField<String>(value: durationPreset, items: const ['7 days','30 days','90 days','180 days','365 days','Custom'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => set(() => durationPreset = v), decoration: const InputDecoration(labelText: 'Access validity')),
+        if (durationPreset == 'Custom') ...[const SizedBox(height: 10), TextField(controller: days, keyboardType: TextInputType.number, decoration: const InputDecoration(prefixIcon: Icon(Icons.schedule), labelText: 'Custom validity (days)'))],
+        CheckboxListTile(contentPadding: EdgeInsets.zero, value: sendEmail, onChanged: (v) => set(() => sendEmail = v ?? true), title: const Text('Queue professional invitation email'), subtitle: const Text('Subject: CMA MCQ Portal — Staff Access Invitation')),
+      ]))),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+        FilledButton.icon(icon: const Icon(Icons.send_outlined), label: const Text('Save & Send'), onPressed: () async {
+          final mail = email.text.trim().toLowerCase();
+          if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(mail)) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid employee email.'))); return; }
+          int validityDays = int.tryParse(days.text.trim()) ?? 30;
+          if (durationPreset != 'Custom') validityDays = int.tryParse(durationPreset!.split(' ').first) ?? 30;
+          if (validityDays < 1) validityDays = 1;
+          final expiry = DateTime.now().add(Duration(days: validityDays));
+          await FirebaseFirestore.instance.collection('staffAccess').doc(mail).set({
+            'email': mail, 'role': role, 'accessLevel': level, 'status': 'Pending Approval', 'requestedBy': superAdminEmail,
+            'requestedAt': FieldValue.serverTimestamp(), 'expiresAt': Timestamp.fromDate(expiry), 'validityDays': validityDays,
+            'permissions': _defaultPermissions(role, level), 'mailStatus': sendEmail ? 'Queued' : 'Not requested',
+            'mailSubject': 'CMA MCQ Portal — Staff Access Invitation',
+          }, SetOptions(merge: true));
+          if (sendEmail) await FirebaseFirestore.instance.collection('mailQueue').add({
+            'to': mail, 'template': 'staff_access_invitation', 'subject': 'CMA MCQ Portal — Staff Access Invitation',
+            'role': role, 'accessLevel': level, 'validityDays': validityDays, 'expiresAt': Timestamp.fromDate(expiry),
+            'requestedBy': superAdminEmail, 'createdAt': FieldValue.serverTimestamp(), 'status': 'queued'
+          });
+          if (dialogContext.mounted) Navigator.pop(dialogContext);
+        }),
+      ],
+    )));
   }
-
   static Map<String, dynamic> _defaultPermissions(String role, String level) {
     if (level == 'Limited') {
       return {'users.read': true, 'activity.read': true, 'reports.read': false, 'payments.read': false, 'access.write': false, 'staff.write': false, 'settings.write': false};
