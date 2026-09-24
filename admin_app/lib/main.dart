@@ -114,7 +114,8 @@ class _AdminLoginState extends State<AdminLogin> {
     }
     setState(() => busy = true);
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(email: e, password: password.text);
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: e, password: password.text);
+      await credential.user?.sendEmailVerification();
       await FirebaseFirestore.instance.collection('staffAccess').doc(e).set({
         'email': e,
         'role': 'Employee',
@@ -653,7 +654,7 @@ class StaffPage extends StatelessWidget {
           return Card(
             child: ListTile(
               title: Text((x['email'] ?? '').toString()),
-              subtitle: Text('Role: ${x['role'] ?? 'Employee'}\nStatus: $status\nLevel: ${x['accessLevel'] ?? 'Read'}'),
+              subtitle: Text('Role: ${x['role'] ?? 'Employee'}\nStatus: $status\nLevel: ${x['accessLevel'] ?? 'Read'}\nValidity: ${x['validityDays'] ?? '—'} days\nEmail: ${x['mailStatus'] ?? 'Not requested'}'),
               isThreeLine: true,
               trailing: Wrap(children: [
                 IconButton(
