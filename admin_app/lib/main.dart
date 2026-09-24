@@ -737,30 +737,48 @@ class StaffPage extends StatelessWidget {
         TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
         FilledButton.icon(icon: const Icon(Icons.send_outlined), label: const Text('Save & Send'), onPressed: () async {
           final mail = email.text.trim().toLowerCase();
-          if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(mail)) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid employee email.'))); return; }
+          if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(mail)) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid employee email.')));
+            return;
+          }
           int validityDays = int.tryParse(days.text.trim()) ?? 30;
           if (durationPreset != 'Custom') validityDays = int.tryParse(durationPreset!.split(' ').first) ?? 30;
           if (validityDays < 1) validityDays = 1;
           final expiry = DateTime.now().add(Duration(days: validityDays));
-          await FirebaseFirestore.instance.collection('staffAccess').doc(mail).set({
-            'email': mail, 'role': role, 'accessLevel': level, 'status': 'Pending Approval', 'requestedBy': superAdminEmail,
-            'requestedAt': FieldValue.serverTimestamp(), 'expiresAt': Timestamp.fromDate(expiry), 'validityDays': validityDays,
-            'permissions': _defaultPermissions(role, level), 'mailStatus': sendEmail ? 'Queued' : 'Not requested',
-            'mailSubject': 'CMA MCQ Portal — Staff Access Invitation',
-          }, SetOptions(merge: true));
-          if (sendEmail) await FirebaseFirestore.instance.collection('mail').add({
-            'to': mail,
-            'message': {
-              'subject': 'CMA MCQ Portal — Staff Access Invitation',
-              'text': 'Hello,\n\nYou have been invited to access the CMA MCQ Portal as $role with $level permissions.\nAccess validity: $validityDays days.\nExpiry: ${expiry.toLocal().toString().split('.').first}.\n\nPlease use the staff portal to complete registration and wait for approval.\n\nRegards,\nCMA MCQ Portal Admin',
-              'html': '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#22302f"><div style="background:#0d3b3e;color:white;padding:20px;border-radius:14px"><h2 style="margin:0">CMA MCQ Portal</h2><p style="margin:6px 0 0">Staff Access Invitation</p></div><div style="padding:22px 4px"><p>Hello,</p><p>You have been invited to access the <b>CMA MCQ Portal</b>.</p><table style="border-collapse:collapse;width:100%"><tr><td style="padding:8px;border-bottom:1px solid #eee"><b>Role</b></td><td style="padding:8px;border-bottom:1px solid #eee">$role</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee"><b>Access</b></td><td style="padding:8px;border-bottom:1px solid #eee">$level</td></tr><tr><td style="padding:8px"><b>Validity</b></td><td style="padding:8px">$validityDays days</td></tr></table><p style="margin-top:20px">Please complete registration in the staff portal. Your access will remain subject to Super Admin approval.</p></div><p style="font-size:12px;color:#65716f">This is an automated CMA MCQ Portal email.</p></div>'
-            },
-            'template': 'staff_access_invitation',
-            'role': role, 'accessLevel': level, 'validityDays': validityDays, 'expiresAt': Timestamp.fromDate(expiry),
-            'requestedBy': superAdminEmail, 'createdAt': FieldValue.serverTimestamp(), 'status': 'queued'
-          });
-          if (dialogContext.mounted) Navigator.pop(dialogContext);
-        }),
+          try {
+            await FirebaseFirestore.instance.collection('staffAccess').doc(mail).set({
+              'email': mail, 'role': role, 'accessLevel': level, 'status': 'Pending Approval', 'requestedBy': superAdminEmail,
+              'requestedAt': FieldValue.serverTimestamp(), 'expiresAt': Timestamp.fromDate(expiry), 'validityDays': validityDays,
+              'permissions': _defaultPermissions(role, level), 'mailStatus': sendEmail ? 'Queued' : 'Not requested',
+              'mailSubject': 'CMA MCQ Portal — Staff Access Invitation',
+            }, SetOptions(merge: true));
+            String resultMessage = 'Employee access saved successfully.';
+            if (sendEmail) {
+              try {
+                await FirebaseFirestore.instance.collection('mail').add({
+                  'to': mail,
+                  'message': {
+                    'subject': 'CMA MCQ Portal — Staff Access Invitation',
+                    'text': 'Hello,\n\nYou have been invited to access the CMA MCQ Portal as $role with $level permissions.\nAccess validity: $validityDays days.\nExpiry: ' + expiry.toLocal().toString().split('.').first + '.\n\nPlease use the staff portal to complete registration and wait for approval.\n\nRegards,\nCMA MCQ Portal Admin',
+                    'html': '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#22302f"><h2>CMA MCQ Portal — Staff Access Invitation</h2><p>Hello,</p><p>You have been invited as <b>$role</b> with <b>$level</b> access for <b>$validityDays days</b>.</p><p>Please complete registration in the staff portal. Access remains subject to Super Admin approval.</p></div>'
+                  },
+                  'template': 'staff_access_invitation',
+                  'role': role, 'accessLevel': level, 'validityDays': validityDays,
+                  'expiresAt': Timestamp.fromDate(expiry), 'requestedBy': superAdminEmail,
+                  'createdAt': FieldValue.serverTimestamp(), 'status': 'queued'
+                });
+              } catch (_) {
+                resultMessage = 'Access saved, but invitation email could not be queued. Check Firebase mail configuration.';
+              }
+            }
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resultMessage)));
+          } on FirebaseException catch (e) {
+            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save employee access: ${e.code} — ${e.message ?? 'Permission or Firebase error'}')));
+          } catch (e) {
+            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save employee access: $e')));
+          }
+        }),,
       ],
     )));
   }
