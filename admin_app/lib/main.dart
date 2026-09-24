@@ -748,8 +748,14 @@ class StaffPage extends StatelessWidget {
             'permissions': _defaultPermissions(role, level), 'mailStatus': sendEmail ? 'Queued' : 'Not requested',
             'mailSubject': 'CMA MCQ Portal — Staff Access Invitation',
           }, SetOptions(merge: true));
-          if (sendEmail) await FirebaseFirestore.instance.collection('mailQueue').add({
-            'to': mail, 'template': 'staff_access_invitation', 'subject': 'CMA MCQ Portal — Staff Access Invitation',
+          if (sendEmail) await FirebaseFirestore.instance.collection('mail').add({
+            'to': mail,
+            'message': {
+              'subject': 'CMA MCQ Portal — Staff Access Invitation',
+              'text': 'Hello,\n\nYou have been invited to access the CMA MCQ Portal as $role with $level permissions.\nAccess validity: $validityDays days.\nExpiry: ${expiry.toLocal().toString().split('.').first}.\n\nPlease use the staff portal to complete registration and wait for approval.\n\nRegards,\nCMA MCQ Portal Admin',
+              'html': '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#22302f"><div style="background:#0d3b3e;color:white;padding:20px;border-radius:14px"><h2 style="margin:0">CMA MCQ Portal</h2><p style="margin:6px 0 0">Staff Access Invitation</p></div><div style="padding:22px 4px"><p>Hello,</p><p>You have been invited to access the <b>CMA MCQ Portal</b>.</p><table style="border-collapse:collapse;width:100%"><tr><td style="padding:8px;border-bottom:1px solid #eee"><b>Role</b></td><td style="padding:8px;border-bottom:1px solid #eee">$role</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee"><b>Access</b></td><td style="padding:8px;border-bottom:1px solid #eee">$level</td></tr><tr><td style="padding:8px"><b>Validity</b></td><td style="padding:8px">$validityDays days</td></tr></table><p style="margin-top:20px">Please complete registration in the staff portal. Your access will remain subject to Super Admin approval.</p></div><p style="font-size:12px;color:#65716f">This is an automated CMA MCQ Portal email.</p></div>'
+            },
+            'template': 'staff_access_invitation',
             'role': role, 'accessLevel': level, 'validityDays': validityDays, 'expiresAt': Timestamp.fromDate(expiry),
             'requestedBy': superAdminEmail, 'createdAt': FieldValue.serverTimestamp(), 'status': 'queued'
           });
