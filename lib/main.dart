@@ -1,17 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 const String portalUrl =
     'https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';
-
-const String webClientId =
-    '208738737302-qpv57rh3voh02dtpqs369175ahieb3q7.apps.googleusercontent.com';
+const String appCallbackBase = 'cma-mcq-portal://auth';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,9 +24,7 @@ class CmaMcqPortalApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'CMA MCQ Portal',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D3B3E),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D3B3E)),
         useMaterial3: true,
       ),
       home: const PortalWebView(),
@@ -46,11 +41,12 @@ class PortalWebView extends StatefulWidget {
 
 class _PortalWebViewState extends State<PortalWebView> {
   late final WebViewController _controller;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(serverClientId: webClientId);
+  final AppLinks _appLinks = AppLinks();
+  StreamSubscription<Uri>? _linkSubscription;
 
   bool _loading = true;
   bool _hasError = false;
-  bool _googleBusy = false;
+  bool _browserLoginBusy = false;
 
   static const String _mobileViewportFix = r'''
 (function () {
@@ -73,7 +69,7 @@ class _PortalWebViewState extends State<PortalWebView> {
 })();
 ''';
 
-  static const String _nativeGoogleBridge = r'''
+  static const String _browserLoginBridge = r'''
 (function () {
   try {
     window.__cmaNativeGoogleLogin = function () {
@@ -96,9 +92,7 @@ class _PortalWebViewState extends State<PortalWebView> {
               location.href = pending;
               return;
             }
-            if (typeof closeLogin === 'function') {
-              closeLogin();
-            }
+            if (typeof closeLogin === 'function') closeLogin();
             var button = document.getElementById('google');
             if (button) {
               button.disabled = false;
@@ -111,41 +105,33 @@ class _PortalWebViewState extends State<PortalWebView> {
             }
           })
           .catch(function (e) {
-            console.error('Native Google Firebase sign-in failed', e);
-            var msg = document.getElementById('authMsg');
+            console.error('Browser Google Firebase sign-in failed', e);
+            var msg = document.getElementById('authMsg') ||
+                      document.getElementById('message');
             if (msg) {
               msg.textContent =
                 'Google sign-in failed: ' + (e && e.code ? e.code : 'unknown-error');
               msg.className = 'error';
             }
-            var button = document.getElementById('google');
-            if (button) {
-              button.disabled = false;
-              button.textContent = 'G  Continue with Google';
-            }
           });
       } catch (e) {
-        console.error(e);
+        console.error('Browser Google token bridge failed', e);
       }
     };
 
-    var button = document.getElementById('google');
-    if (button) {
-      button.onclick = function () {
-        window.__cmaNativeGoogleLogin();
-      };
-    }
-
-    var paymentButton = document.getElementById('googleBtn');
-    if (paymentButton) {
-      paymentButton.onclick = function () {
-        window.__cmaNativeGoogleLogin();
-      };
-    }
+    ['google', 'googleBtn', 'googleLogin'].forEach(function (id) {
+      var button = document.getElementById(id);
+      if (button) {
+        button.onclick = function () {
+          window.__cmaNativeGoogleLogin();
+        };
+      }
+    });
 
     document.addEventListener('click', function (event) {
       var el = event.target;
-      while (el && el !== document && el.tagName !== 'A' && el.tagName !== 'BUTTON') {
+      while (el && el !== document &&
+             el.tagName !== 'A' && el.tagName !== 'BUTTON') {
         el = el.parentElement;
       }
       if (!el || el === document) return;
@@ -157,7 +143,7 @@ class _PortalWebViewState extends State<PortalWebView> {
     }, true);
     window.dispatchEvent(new Event('cmaNativeBridgeReady'));
   } catch (e) {
-    console.error('Native Google bridge setup failed', e);
+    console.error('Browser login bridge setup failed', e);
   }
 })();
 ''';
@@ -166,31 +152,96 @@ class _PortalWebViewState extends State<PortalWebView> {
   void initState() {
     super.initState();
     _initializeWebView();
+    _initializeDeepLinks();
   }
 
-  Future<void> _showWebAuthError(String message) async {
-    final safe = jsonEncode(message);
+  Future<void> _initializeDeepLinks() async {
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        await _handleAppCallback(initialUri);
+      }
+    } catch (e) {
+      debugPrint('Initial app-link read failed: $e');
+    }
+
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (uri) => _handleAppCallback(uri),
+      onError: (Object e) => debugPrint('App-link stream error: $e'),
+    );
+  }
+
+  Future<void> _handleAppCallback(Uri uri) async {
+    if (uri.scheme != 'cma-mcq-portal' || uri.host != 'auth') return;
+
+    final token = uri.queryParameters['id_token'] ??
+        (uri.fragment.isNotEmpty
+            ? Uri.splitQueryString(uri.fragment)['id_token']
+            : null);
+
+    if (token == null || token.isEmpty) {
+      _showMessage('Google login returned without a valid sign-in token.');
+      return;
+    }
+
+    final tokenForJs = jsonEncode(token);
     try {
       await _controller.runJavaScript('''
         (function () {
-          var msg = document.getElementById('authMsg');
-          if (msg) {
-            msg.textContent = $safe;
-            msg.className = 'error';
+          if (typeof window.__cmaNativeGoogleToken === 'function') {
+            window.__cmaNativeGoogleToken($tokenForJs);
+          } else {
+            window.__cmaPendingNativePath = '';
+            location.reload();
           }
         })();
       ''');
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Could not inject browser login token: $e');
+      _showMessage('Could not complete Google login in the app.');
+    }
+  }
+
+  Future<void> _openBrowserGoogleLogin() async {
+    if (_browserLoginBusy) return;
+    if (!mounted) return;
+
+    setState(() => _browserLoginBusy = true);
+    try {
+      final callback =
+          '$appCallbackBase?source=android';
+      final loginUrl = Uri.parse(portalUrl).replace(
+        queryParameters: <String, String>{
+          'app_login': '1',
+          'return_uri': callback,
+        },
+      );
+
+      final launched = await launchUrl(
+        loginUrl,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        throw Exception('Could not open the website in the browser.');
+      }
+    } catch (e) {
+      _showMessage('Could not open website login: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _browserLoginBusy = false);
+      }
+    }
   }
 
   void _initializeWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setUserAgent('CMA-MCQ-Portal-Android/2.0')
+      ..setUserAgent('CMA-MCQ-Portal-Android/3.0')
       ..setBackgroundColor(const Color(0xFFFAF6EE))
       ..addJavaScriptChannel(
         'NativeGoogleSignIn',
-        onMessageReceived: (_) => _startNativeGoogleSignIn(),
+        onMessageReceived: (_) => _openBrowserGoogleLogin(),
       )
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -206,7 +257,7 @@ class _PortalWebViewState extends State<PortalWebView> {
             await _controller.runJavaScript(_mobileViewportFix);
             final uri = Uri.tryParse(url);
             if (uri != null && uri.host == 'rohitfcg123-arch.github.io') {
-              await _controller.runJavaScript(_nativeGoogleBridge);
+              await _controller.runJavaScript(_browserLoginBridge);
             }
             if (mounted) setState(() => _loading = false);
           },
@@ -236,97 +287,11 @@ class _PortalWebViewState extends State<PortalWebView> {
       ..loadRequest(Uri.parse(portalUrl));
   }
 
-  Future<void> _startNativeGoogleSignIn() async {
-    if (_googleBusy) return;
-    setState(() => _googleBusy = true);
-    try {
-      // Use the legacy Android Google Sign-In flow. The 7.x plugin switched
-      // Android authentication to Credential Manager; this build deliberately
-      // uses the pre-Credential-Manager implementation because the device is
-      // hanging after account selection.
-      final GoogleSignInAccount? account =
-          await _googleSignIn.signIn().timeout(
-        const Duration(seconds: 20),
-        onTimeout: () => throw TimeoutException(
-          'Google account selection did not complete within 20 seconds.',
-        ),
-      );
-      if (account == null) {
-        const message = 'Google account selection was cancelled.';
-        await _showWebAuthError(message);
-        _showMessage(message);
-        return;
-      }
-      final idToken = (await account.authentication).idToken;
-      if (idToken == null || idToken.isEmpty) {
-        throw Exception(
-          'Google returned no ID token. Check the Android OAuth client, '
-          'package name and release SHA-1 in Firebase.',
-        );
-      }
-
-      final tokenForJs = jsonEncode(idToken);
-      await _controller.runJavaScript('''
-        (function () {
-          if (typeof window.__cmaNativeGoogleToken === 'function') {
-            window.__cmaNativeGoogleToken($tokenForJs);
-          } else {
-            var msg = document.getElementById('authMsg');
-            if (msg) {
-              msg.textContent =
-                'Login bridge is not ready. Please reload the app.';
-              msg.className = 'error';
-            }
-          }
-        })();
-      ''');
-    } on PlatformException catch (e) {
-      // google_sign_in 6.x reports Android Play Services failures as a
-      // PlatformException. Preserve the native code/message so a real
-      // DEVELOPER_ERROR (10), SIGN_IN_FAILED, etc. is visible instead of
-      // being mistaken for a user cancellation.
-      debugPrint(
-        'Native Google Sign-In PlatformException: '
-        'code=${e.code}, message=${e.message}, details=${e.details}',
-      );
-      final message =
-          'Google sign-in error: ${e.code}'
-          '${e.message == null || e.message!.isEmpty ? '' : ' — ${e.message}'}'
-          '${e.details == null ? '' : ' — ${e.details}'}';
-      await _showWebAuthError(message);
-      _showMessage(message);
-    } on TimeoutException catch (e) {
-      debugPrint('Native Google Sign-In timed out: $e');
-      const message =
-          'Google account selection timed out. Please try again. '
-          'If this repeats, the Android Google OAuth configuration '
-          '(package/SHA-1) needs to be checked.';
-      await _showWebAuthError(message);
-      _showMessage(message);
-    } catch (e) {
-      debugPrint('Native Google Sign-In failed: $e');
-      final message = 'Google sign-in failed: $e';
-      await _showWebAuthError(message);
-      _showMessage(message);
-    } finally {
-      if (mounted) setState(() => _googleBusy = false);
-    }
-  }
-
   void _showMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
-    _controller.runJavaScript('''
-      (function () {
-        var msg = document.getElementById('authMsg');
-        if (msg) {
-          msg.textContent = ${jsonEncode(message)};
-          msg.className = 'error';
-        }
-      })();
-    ''');
   }
 
   Future<bool> _handleBack() async {
@@ -348,6 +313,12 @@ class _PortalWebViewState extends State<PortalWebView> {
   }
 
   @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
@@ -361,7 +332,7 @@ class _PortalWebViewState extends State<PortalWebView> {
           child: Stack(
             children: [
               WebViewWidget(controller: _controller),
-              if (_loading || _googleBusy)
+              if (_loading || _browserLoginBusy)
                 const Align(
                   alignment: Alignment.topCenter,
                   child: LinearProgressIndicator(minHeight: 2),
