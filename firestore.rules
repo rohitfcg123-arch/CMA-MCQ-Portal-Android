@@ -21,14 +21,26 @@ service cloud.firestore {
         && request.auth.token.email == email;
     }
 
+    function isStaff() {
+      return signedIn()
+        && request.auth.token.email != "rohit.fcg123@gmail.com"
+        && exists(/databases/$(database)/documents/staffAccess/$(request.auth.token.email))
+        && get(/databases/$(database)/documents/staffAccess/$(request.auth.token.email)).data.status == "Approved";
+    }
+
+    function staffCan(permission) {
+      return isStaff()
+        && get(/databases/$(database)/documents/staffAccess/$(request.auth.token.email)).data.permissions[permission] == true;
+    }
+
     // ------------------------------------------------------------
     // User/profile records
     // ------------------------------------------------------------
     match /portalUsers/{uid} {
-      allow read: if isOwner(uid) || isAdmin();
-      allow create: if isOwner(uid);
-      allow update: if isOwner(uid) || isAdmin();
-      allow delete: if isOwner(uid) || isAdmin();
+      allow read: if isOwner(uid) || isAdmin() || staffCan("users.read");
+      allow create: if isOwner(uid) || staffCan("users.write");
+      allow update: if isOwner(uid) || isAdmin() || staffCan("users.write");
+      allow delete: if isOwner(uid) || isAdmin() || staffCan("users.write");
     }
 
     match /users/{uid} {
