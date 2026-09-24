@@ -1,362 +1,86 @@
 import 'dart:convert';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'firebase_options.dart';
 
-const String portalUrl =
-    'https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';
-const String appCallbackBase = 'cma-mcq-portal://auth';
+const portalUrl='https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/index.html';
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const CmaMcqPortalApp());
+Future<void> main() async {
+ WidgetsFlutterBinding.ensureInitialized();
+ await Firebase.initializeApp(options:DefaultFirebaseOptions.currentPlatform);
+ runApp(const App());
 }
-
-class CmaMcqPortalApp extends StatelessWidget {
-  const CmaMcqPortalApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'CMA MCQ Portal',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D3B3E)),
-        useMaterial3: true,
-      ),
-      home: const PortalWebView(),
-    );
-  }
+class App extends StatelessWidget{
+ const App({super.key});
+ @override Widget build(BuildContext c)=>MaterialApp(debugShowCheckedModeBanner:false,title:'CMA MCQ Portal',
+  theme:ThemeData(colorScheme:ColorScheme.fromSeed(seedColor:const Color(0xFF0D3B3E)),useMaterial3:true),home:const AuthGate());
 }
-
-class PortalWebView extends StatefulWidget {
-  const PortalWebView({super.key});
-
-  @override
-  State<PortalWebView> createState() => _PortalWebViewState();
+class AuthGate extends StatelessWidget{
+ const AuthGate({super.key});
+ @override Widget build(BuildContext c)=>StreamBuilder<User?>(stream:FirebaseAuth.instance.authStateChanges(),builder:(c,s){
+  if(s.connectionState==ConnectionState.waiting)return const Scaffold(body:Center(child:CircularProgressIndicator()));
+  final u=s.data;if(u==null)return const AuthScreen();return u.emailVerified?const Portal():const AuthScreen();
+ });
 }
-
-class _PortalWebViewState extends State<PortalWebView> {
-  late final WebViewController _controller;
-
-  bool _loading = true;
-  bool _hasError = false;
-  bool _browserLoginBusy = false;
-
-  static const String _mobileViewportFix = r'''
-(function () {
-  try {
-    var meta = document.querySelector('meta[name="viewport"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'viewport';
-      document.head.appendChild(meta);
-    }
-    meta.content =
-      'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
-    document.documentElement.style.width = '100%';
-    document.documentElement.style.maxWidth = '100%';
-    document.body.style.width = '100%';
-    document.body.style.maxWidth = '100%';
-    document.body.style.margin = '0';
-    document.body.style.overflowX = 'hidden';
-  } catch (e) {}
-})();
-''';
-
-  static const String _browserLoginBridge = r'''
-(function () {
-  try {
-    window.__cmaNativeGoogleLogin = function () {
-      if (window.NativeGoogleSignIn) {
-        window.NativeGoogleSignIn.postMessage('signin');
-        return true;
-      }
-      return false;
-    };
-
-    window.__cmaNativeGoogleToken = function (idToken) {
-      try {
-        var provider = new firebase.auth.GoogleAuthProvider();
-        var credential = provider.credential(idToken);
-        firebase.auth().signInWithCredential(credential)
-          .then(function () {
-            var pending = window.__cmaPendingNativePath;
-            if (pending && pending !== location.href) {
-              window.__cmaPendingNativePath = '';
-              location.href = pending;
-              return;
-            }
-            if (typeof closeLogin === 'function') closeLogin();
-            var button = document.getElementById('google');
-            if (button) {
-              button.disabled = false;
-              button.textContent = 'G  Continue with Google';
-            }
-            var paymentButton = document.getElementById('googleBtn');
-            if (paymentButton) {
-              paymentButton.disabled = false;
-              paymentButton.textContent = 'Continue with Google';
-            }
-          })
-          .catch(function (e) {
-            console.error('Browser Google Firebase sign-in failed', e);
-            var msg = document.getElementById('authMsg') ||
-                      document.getElementById('message');
-            if (msg) {
-              msg.textContent =
-                'Google sign-in failed: ' + (e && e.code ? e.code : 'unknown-error');
-              msg.className = 'error';
-            }
-          });
-      } catch (e) {
-        console.error('Browser Google token bridge failed', e);
-      }
-    };
-
-    ['google', 'googleBtn', 'googleLogin'].forEach(function (id) {
-      var button = document.getElementById(id);
-      if (button) {
-        button.onclick = function () {
-          window.__cmaNativeGoogleLogin();
-        };
-      }
-    });
-
-    document.addEventListener('click', function (event) {
-      var el = event.target;
-      while (el && el !== document &&
-             el.tagName !== 'A' && el.tagName !== 'BUTTON') {
-        el = el.parentElement;
-      }
-      if (!el || el === document) return;
-      if (el.id === 'google' || el.id === 'googleBtn' || el.id === 'googleLogin') {
-        event.preventDefault();
-        event.stopPropagation();
-        window.__cmaNativeGoogleLogin();
-      }
-    }, true);
-    window.dispatchEvent(new Event('cmaNativeBridgeReady'));
-  } catch (e) {
-    console.error('Browser login bridge setup failed', e);
-  }
-})();
-''';
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeWebView();
-  }
-
-  Future<void> _handleAppCallback(Uri uri) async {
-    if (uri.scheme != 'cma-mcq-portal' || uri.host != 'auth') return;
-
-    final token = uri.queryParameters['id_token'] ??
-        (uri.fragment.isNotEmpty
-            ? Uri.splitQueryString(uri.fragment)['id_token']
-            : null);
-
-    if (token == null || token.isEmpty) {
-      _showMessage('Google login returned without a valid sign-in token.');
-      return;
-    }
-
-    final tokenForJs = jsonEncode(token);
-    try {
-      await _controller.runJavaScript('''
-        (function () {
-          if (typeof window.__cmaNativeGoogleToken === 'function') {
-            window.__cmaNativeGoogleToken($tokenForJs);
-          } else {
-            window.__cmaPendingNativePath = '';
-            location.reload();
-          }
-        })();
-      ''');
-    } catch (e) {
-      debugPrint('Could not inject browser login token: $e');
-      _showMessage('Could not complete Google login in the app.');
-    }
-  }
-
-  Future<void> _openBrowserGoogleLogin() async {
-    if (_browserLoginBusy) return;
-    if (!mounted) return;
-
-    setState(() => _browserLoginBusy = true);
-    try {
-      final callback = '$appCallbackBase?source=android';
-      final loginUrl = Uri.parse(portalUrl).replace(
-        queryParameters: <String, String>{
-          'app_login': '1',
-          'return_uri': callback,
-        },
-      );
-
-      // WebAuth2 owns the browser/auth session and waits for the custom-scheme
-      // callback. This is more reliable than launching Chrome separately and
-      // hoping the browser returns to the app after an async JS redirect.
-      final result = await FlutterWebAuth2.authenticate(
-        url: loginUrl.toString(),
-        callbackUrlScheme: 'cma-mcq-portal',
-      );
-
-      final callbackUri = Uri.tryParse(result);
-      if (callbackUri == null) {
-        throw Exception('Invalid Google login callback.');
-      }
-      await _handleAppCallback(callbackUri);
-    } catch (e) {
-      debugPrint('Browser Google login failed: $e');
-      _showMessage('Could not complete Google login: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _browserLoginBusy = false);
-      }
-    }
-  }
-
-  void _initializeWebView() {
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setUserAgent('CMA-MCQ-Portal-Android/3.0')
-      ..setBackgroundColor(const Color(0xFFFAF6EE))
-      ..addJavaScriptChannel(
-        'NativeGoogleSignIn',
-        onMessageReceived: (_) => _openBrowserGoogleLogin(),
-      )
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (_) {
-            if (mounted) {
-              setState(() {
-                _loading = true;
-                _hasError = false;
-              });
-            }
-          },
-          onPageFinished: (url) async {
-            await _controller.runJavaScript(_mobileViewportFix);
-            final uri = Uri.tryParse(url);
-            if (uri != null && uri.host == 'rohitfcg123-arch.github.io') {
-              await _controller.runJavaScript(_browserLoginBridge);
-            }
-            if (mounted) setState(() => _loading = false);
-          },
-          onWebResourceError: (error) {
-            if (error.isForMainFrame ?? false) {
-              if (mounted) {
-                setState(() {
-                  _loading = false;
-                  _hasError = true;
-                });
-              }
-            }
-          },
-          onNavigationRequest: (request) async {
-            final uri = Uri.tryParse(request.url);
-            if (uri == null) return NavigationDecision.prevent;
-            if (uri.scheme == 'http' || uri.scheme == 'https') {
-              return NavigationDecision.navigate;
-            }
-            // Non-HTTP links are handled outside the WebView (including the
-            // flutter_web_auth_2 callback). Do not try to launch them here.
-            return NavigationDecision.prevent;
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(portalUrl));
-  }
-
-  void _showMessage(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-
-  Future<bool> _handleBack() async {
-    if (await _controller.canGoBack()) {
-      await _controller.goBack();
-      return false;
-    }
-    return true;
-  }
-
-  Future<void> _reload() async {
-    if (mounted) {
-      setState(() {
-        _hasError = false;
-        _loading = true;
-      });
-    }
-    await _controller.loadRequest(Uri.parse(portalUrl));
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldExit = await _handleBack();
-        if (shouldExit && mounted) Navigator.of(context).pop();
-      },
-      child: Scaffold(
-        body: SafeArea(
-          child: Stack(
-            children: [
-              WebViewWidget(controller: _controller),
-              if (_loading || _browserLoginBusy)
-                const Align(
-                  alignment: Alignment.topCenter,
-                  child: LinearProgressIndicator(minHeight: 2),
-                ),
-              if (_hasError)
-                Center(
-                  child: Card(
-                    margin: const EdgeInsets.all(24),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.wifi_off, size: 46),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Unable to load CMA MCQ Portal',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Check your internet connection and try again.',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: _reload,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+class AuthScreen extends StatefulWidget{const AuthScreen({super.key});@override State<AuthScreen> createState()=>_AuthScreenState();}
+class _AuthScreenState extends State<AuthScreen>{
+ final f=GlobalKey<FormState>();final name=TextEditingController(),phone=TextEditingController(),email=TextEditingController(),pass=TextEditingController(),confirm=TextEditingController();
+ bool reg=false,busy=false,hide=true,isError=false;String message='';
+ @override void dispose(){name.dispose();phone.dispose();email.dispose();pass.dispose();confirm.dispose();super.dispose();}
+ String? req(String? v,String n)=>(v==null||v.trim().isEmpty)?n+' is required':null;
+ void showMsg(String s,{bool error=false}){if(mounted)setState((){message=s;isError=error;});}
+ String authError(String c){switch(c){case'email-already-in-use':return'This email is already registered.';case'invalid-email':return'Enter a valid email.';case'weak-password':return'Password must be at least 6 characters.';case'invalid-credential':case'wrong-password':case'user-not-found':return'Incorrect email or password.';default:return'Authentication failed: '+c;}}
+ Future<void> submit()async{
+  if(!f.currentState!.validate())return;setState(()=>busy=true);
+  try{final a=FirebaseAuth.instance;
+   if(reg){
+    final c=await a.createUserWithEmailAndPassword(email:email.text.trim(),password:pass.text);final u=c.user!;
+    await u.updateDisplayName(name.text.trim());
+    await FirebaseFirestore.instance.collection('portalUsers').doc(u.uid).set({'uid':u.uid,'email':email.text.trim().toLowerCase(),'displayName':name.text.trim(),'phone':phone.text.trim(),'provider':'password','createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp()},SetOptions(merge:true));
+    await u.sendEmailVerification();
+    showMsg('Verification link sent to '+email.text.trim()+'. Open it, then return and tap “I have verified”.');
+   }else{
+    final c=await a.signInWithEmailAndPassword(email:email.text.trim(),password:pass.text);await c.user!.reload();
+    if(!a.currentUser!.emailVerified){await c.user!.sendEmailVerification();await a.signOut();showMsg('Your email is not verified. A new verification link has been sent.',error:true);}
+   }
+  }on FirebaseAuthException catch(e){showMsg(authError(e.code),error:true);}catch(_){showMsg('Something went wrong. Please try again.',error:true);}
+  finally{if(mounted)setState(()=>busy=false);}
+ }
+ Future<void> verify()async{
+  setState(()=>busy=true);try{final u=FirebaseAuth.instance.currentUser;if(u==null){showMsg('Please register again.',error:true);return;}await u.reload();if(!FirebaseAuth.instance.currentUser!.emailVerified)showMsg('Email is not verified yet. Open the latest link.',error:true);}
+  catch(_){showMsg('Could not check verification.',error:true);}finally{if(mounted)setState(()=>busy=false);}
+ }
+ @override Widget build(BuildContext c)=>Scaffold(backgroundColor:const Color(0xFFFAF6EE),body:SafeArea(child:Center(child:SingleChildScrollView(padding:const EdgeInsets.all(22),child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:430),child:Card(child:Padding(padding:const EdgeInsets.all(24),child:Form(key:f,child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+  const CircleAvatar(radius:28,backgroundColor:Color(0xFF0D3B3E),child:Text('C',style:TextStyle(color:Color(0xFFEAD39B),fontSize:22,fontWeight:FontWeight.bold))),const SizedBox(height:16),
+  Text(reg?'Create your account':'Sign in to continue',style:const TextStyle(fontSize:23,fontWeight:FontWeight.w800,color:Color(0xFF082627))),const SizedBox(height:6),
+  Text(reg?'Register inside the app. We will verify your email.':'Use your verified email and password.',style:const TextStyle(color:Color(0xFF65716F))),const SizedBox(height:20),
+  if(reg)...[TextFormField(controller:name,decoration:const InputDecoration(labelText:'Name',border:OutlineInputBorder()),validator:(v)=>req(v,'Name')),const SizedBox(height:12),TextFormField(controller:phone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'Phone number',border:OutlineInputBorder()),validator:(v)=>req(v,'Phone number')),const SizedBox(height:12)],
+  TextFormField(controller:email,keyboardType:TextInputType.emailAddress,decoration:const InputDecoration(labelText:'Email',border:OutlineInputBorder()),validator:(v)=>req(v,'Email')),const SizedBox(height:12),
+  TextFormField(controller:pass,obscureText:hide,decoration:InputDecoration(labelText:'Password',border:const OutlineInputBorder(),suffixIcon:IconButton(onPressed:()=>setState(()=>hide=!hide),icon:Icon(hide?Icons.visibility:Icons.visibility_off))),validator:(v)=>v==null||v.length<6?'Password must be at least 6 characters':null),
+  if(reg)...[const SizedBox(height:12),TextFormField(controller:confirm,obscureText:hide,decoration:const InputDecoration(labelText:'Confirm password',border:OutlineInputBorder()),validator:(v)=>v!=pass.text?'Passwords do not match':null)],
+  const SizedBox(height:16),if(message.isNotEmpty)Container(padding:const EdgeInsets.all(10),margin:const EdgeInsets.only(bottom:12),decoration:BoxDecoration(color:isError?const Color(0xFFFDECEA):const Color(0xFFE6EFED),borderRadius:BorderRadius.circular(9)),child:Text(message)),
+  FilledButton(onPressed:busy?null:submit,child:Padding(padding:const EdgeInsets.all(12),child:Text(reg?'Create account':'Login'))),
+  if(reg&&FirebaseAuth.instance.currentUser!=null&&!FirebaseAuth.instance.currentUser!.emailVerified)TextButton(onPressed:busy?null:verify,child:const Text('I have verified my email')),
+  TextButton(onPressed:busy?null:()=>setState((){reg=!reg;message='';isError=false;}),child:Text(reg?'Already have an account? Login':'New user? Create an account'))
+]))))))));
+}
+}
+class Portal extends StatefulWidget{const Portal({super.key});@override State<Portal> createState()=>_PortalState();}
+class _PortalState extends State<Portal>{
+ late final WebViewController w;bool loading=true,error=false;
+ static const fix=r'''(function(){try{var m=document.querySelector('meta[name="viewport"]');if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);}m.content='width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover';document.body.style.margin='0';document.body.style.overflowX='hidden';}catch(e){}})();''';
+ Future<String> bridge()async{
+  final u=FirebaseAuth.instance.currentUser!;final token=await u.getIdToken(true);
+  return '(function(){try{window.__cmaNativeFirebaseIdToken='+jsonEncode(token)+';window.__cmaNativeUser={email:'+jsonEncode(u.email??'')+',displayName:'+jsonEncode(u.displayName??'')+',uid:'+jsonEncode(u.uid)+'};window.dispatchEvent(new Event("cmaNativeFirebaseReady"));}catch(e){console.error(e);}})();';
+ }
+ @override void initState(){super.initState();w=WebViewController()..setJavaScriptMode(JavaScriptMode.unrestricted)..setUserAgent('CMA-MCQ-Portal-Android/4.0')..setBackgroundColor(const Color(0xFFFAF6EE))..setNavigationDelegate(NavigationDelegate(
+  onPageStarted:(_){if(mounted)setState((){loading=true;error=false;});},
+  onPageFinished:(url)async{await w.runJavaScript(fix);final u=Uri.tryParse(url);if(u?.host=='rohitfcg123-arch.github.io')await w.runJavaScript(await bridge());if(mounted)setState(()=>loading=false);},
+  onWebResourceError:(e){if((e.isForMainFrame??false)&&mounted)setState((){loading=false;error=true;});},
+  onNavigationRequest:(r){final u=Uri.tryParse(r.url);if(u==null)return NavigationDecision.prevent;return(u.scheme=='http'||u.scheme=='https')?NavigationDecision.navigate:NavigationDecision.prevent;}))..loadRequest(Uri.parse(portalUrl));}
+ Future<void> reload()async{setState((){loading=true;error=false;});await w.loadRequest(Uri.parse(portalUrl));}
+ @override Widget build(BuildContext c)=>PopScope(canPop:false,onPopInvokedWithResult:(didPop,_)async{if(didPop)return;if(await w.canGoBack())await w.goBack();else if(mounted)Navigator.of(c).pop();},child:Scaffold(body:SafeArea(child:Stack(children:[WebViewWidget(controller:w),if(loading)const Align(alignment:Alignment.topCenter,child:LinearProgressIndicator(minHeight:2)),if(error)Center(child:FilledButton(onPressed:reload,child:const Text('Retry')))]))));
 }
