@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:convert';
 
-import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 const String portalUrl =
@@ -41,8 +39,6 @@ class PortalWebView extends StatefulWidget {
 
 class _PortalWebViewState extends State<PortalWebView> {
   late final WebViewController _controller;
-  final AppLinks _appLinks = AppLinks();
-  StreamSubscription<Uri>? _linkSubscription;
 
   bool _loading = true;
   bool _hasError = false;
@@ -152,23 +148,6 @@ class _PortalWebViewState extends State<PortalWebView> {
   void initState() {
     super.initState();
     _initializeWebView();
-    _initializeDeepLinks();
-  }
-
-  Future<void> _initializeDeepLinks() async {
-    try {
-      final initialUri = await _appLinks.getInitialLink();
-      if (initialUri != null) {
-        await _handleAppCallback(initialUri);
-      }
-    } catch (e) {
-      debugPrint('Initial app-link read failed: $e');
-    }
-
-    _linkSubscription = _appLinks.uriLinkStream.listen(
-      (uri) => _handleAppCallback(uri),
-      onError: (Object e) => debugPrint('App-link stream error: $e'),
-    );
   }
 
   Future<void> _handleAppCallback(Uri uri) async {
@@ -208,8 +187,7 @@ class _PortalWebViewState extends State<PortalWebView> {
 
     setState(() => _browserLoginBusy = true);
     try {
-      final callback =
-          '$appCallbackBase?source=android';
+      final callback = '$appCallbackBase?source=android';
       final loginUrl = Uri.parse(portalUrl).replace(
         queryParameters: <String, String>{
           'app_login': '1',
@@ -217,16 +195,22 @@ class _PortalWebViewState extends State<PortalWebView> {
         },
       );
 
-      final launched = await launchUrl(
-        loginUrl,
-        mode: LaunchMode.externalApplication,
+      // WebAuth2 owns the browser/auth session and waits for the custom-scheme
+      // callback. This is more reliable than launching Chrome separately and
+      // hoping the browser returns to the app after an async JS redirect.
+      final result = await FlutterWebAuth2.authenticate(
+        url: loginUrl.toString(),
+        callbackUrlScheme: 'cma-mcq-portal',
       );
 
-      if (!launched) {
-        throw Exception('Could not open the website in the browser.');
+      final callbackUri = Uri.tryParse(result);
+      if (callbackUri == null) {
+        throw Exception('Invalid Google login callback.');
       }
+      await _handleAppCallback(callbackUri);
     } catch (e) {
-      _showMessage('Could not open website login: $e');
+      debugPrint('Browser Google login failed: $e');
+      _showMessage('Could not complete Google login: $e');
     } finally {
       if (mounted) {
         setState(() => _browserLoginBusy = false);
@@ -314,7 +298,6 @@ class _PortalWebViewState extends State<PortalWebView> {
 
   @override
   void dispose() {
-    _linkSubscription?.cancel();
     super.dispose();
   }
 
