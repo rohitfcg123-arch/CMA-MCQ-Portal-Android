@@ -64,6 +64,17 @@ jobs:
                   raise RuntimeError("Android application block not found")
               s = s.replace(marker, callback_activity + "\n" + marker, 1)
 
+          # flutter_web_auth_2 5.x recommends an empty task affinity for all
+          # exported auth-related activities, including MainActivity.
+          main_marker = 'android:name=".MainActivity"'
+          if main_marker in s:
+              import re
+              pattern = r'(<activity\\b[^>]*android:name="\\.MainActivity"[^>]*)(>)'
+              match = re.search(pattern, s, flags=re.S)
+              if match and 'android:taskAffinity=' not in match.group(1):
+                  replacement = match.group(1) + ' android:taskAffinity=""' + match.group(2)
+                  s = s[:match.start()] + replacement + s[match.end():]
+
           p.write_text(s)
           PY
 
