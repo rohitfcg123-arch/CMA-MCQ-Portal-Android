@@ -108,6 +108,41 @@ setTimeout(repairGreenBlock,400);
 })();
 </script>
 <style id="cma-real-layout-fix">.screen,.screen.active,#setup,#setupScreen,.wrap,.app{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}#setup>.hero,#setupScreen>.hero,.wrap>.hero,.app>.hero{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;background:transparent!important;display:block!important;visibility:visible!important;opacity:1!important}.hero h1,.hero p,.lede{visibility:visible!important;opacity:1!important}</style>
+<style id="cma-setup-empty-spacer-fix-20260925">
+/* FINAL FIX: collapse any genuinely empty setup child that is creating a large
+   invisible spacer. Real cards/controls contain text or form elements and are untouched. */
+#setup{display:block!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+#setup>*{flex:none!important;position:static!important}
+</style>
+<script id="cma-setup-empty-spacer-runtime-20260925">
+(function(){
+  function collapseEmptySetupSpacer(){
+    var setup=document.getElementById('setup');
+    if(!setup)return;
+    Array.prototype.forEach.call(setup.children,function(el){
+      var cs=getComputedStyle(el);
+      if(cs.display==='none')return;
+      var hasMeaningfulContent=!!el.querySelector('input,select,button,textarea,iframe,img,svg,video,canvas') ||
+        !!(el.innerText||'').replace(/\s+/g,'').trim();
+      var rect=el.getBoundingClientRect();
+      if(!hasMeaningfulContent && rect.height>100){
+        el.style.setProperty('height','0px','important');
+        el.style.setProperty('min-height','0px','important');
+        el.style.setProperty('max-height','0px','important');
+        el.style.setProperty('margin','0','important');
+        el.style.setProperty('padding','0','important');
+        el.style.setProperty('overflow','hidden','important');
+        el.style.setProperty('display','none','important');
+      }
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',collapseEmptySetupSpacer);
+  else collapseEmptySetupSpacer();
+  window.addEventListener('load',collapseEmptySetupSpacer);
+  setTimeout(collapseEmptySetupSpacer,100);
+  setTimeout(collapseEmptySetupSpacer,500);
+})();
+</script>
 </head><body>
 <div id="cmaSessionBar">
   <div class="cma-session-left"><strong>CMA MCQ Portal</strong><span id="cmaSessionEmail" class="cma-session-email"></span></div>
