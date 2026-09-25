@@ -377,9 +377,15 @@ async function continueAction(btn){
     if(!state.allowed){showNotice("You don't have access to this Group 4 content. Please buy a subscription to continue.");return;}
     if(state.fixedPool) applyFreePoolCap(state.poolSize); else clearFreePoolCap();
     try{await recordAttempt(user, (btn.textContent||"").trim().slice(0,80));}catch(e){console.warn("Attempt logging failed; continuing with authorized test:",e);}
+    /* UPDATE 25: invoke the page's real Start handler directly after access verification.
+       This avoids a second synthetic click being swallowed by the capture-phase access gate. */
     bypassClick=true;
-    btn.click();
-    setTimeout(()=>{bypassClick=false;},0);
+    try{
+      if(typeof btn.onclick==="function") btn.onclick();
+      else btn.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true}));
+    }finally{
+      setTimeout(()=>{bypassClick=false;},0);
+    }
   }catch(e){
     console.error("Access/attempt check failed:",e);
     showNotice("Access verification could not be completed. Please refresh the page and sign in again.");
