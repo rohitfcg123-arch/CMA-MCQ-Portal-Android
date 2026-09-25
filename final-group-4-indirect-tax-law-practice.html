@@ -294,7 +294,7 @@ async function getAccessState(user){
   const today=new Date().toISOString().slice(0,10), expiry=String(data.expiryDate||""), expired=!!expiry&&expiry<today;
   const groups=Array.isArray(data.groups)?data.groups:[];
   const paid=groups.includes(ACCESS_GROUP)&&!expired;
-  const universalUserAccess=data.universalFull===true||data.universalFree===true||data.universalAccess===true||data.fullAccess===true||data.freeFullAccess===true||String(data.accessType||"").toLowerCase()==="all"||String(data.plan||"").toLowerCase()==="universal"||String(data.plan||"").toLowerCase()==="universal access";
+  const universalUserAccess=data.universalFull===true||data.universalFree===true||data.universalAccess===true||data.fullAccess===true||data.freeFullAccess===true||String(data.accessType||"").trim().toLowerCase()==="all"||String(data.accessType||"").trim().toLowerCase()==="universal"||String(data.accessType||"").trim().toLowerCase()==="universal access"||String(data.plan||"").trim().toLowerCase()==="universal"||String(data.plan||"").trim().toLowerCase()==="universal access";
   const universalSettings=settings.siteWideFree===true||settings.universalFull===true||settings.universalFree===true||settings.universalAccess===true;
   const adminLike=paid||universalSettings||universalUserAccess;
   const allFeatures=adminLike
@@ -378,7 +378,7 @@ async function continueAction(btn){
     setTimeout(()=>{bypassClick=false;},0);
   }catch(e){
     console.error("Access/attempt check failed:",e);
-    showNotice("Could not verify your access right now. Please try again.");
+    showNotice("We could not verify your access right now. Please check your connection and try again.");
   }finally{actionBusy=false;}
 }
 
@@ -407,7 +407,7 @@ auth.onAuthStateChanged(async user=>{
 })();
 </script>
 <script id="cma-central-access-controller">
-window.CMA_ACCESS_VERSION="2026.09.26.22";
+window.CMA_ACCESS_VERSION="2026.09.26.23";
 (function(){
   function isFeatureClick(btn){
     const t=((btn&&btn.textContent)||'').toLowerCase(), id=((btn&&btn.id)||'').toLowerCase();
