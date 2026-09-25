@@ -61,6 +61,7 @@ initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'))
     el.style.removeProperty('display');
   }
   function routeSubjectScreens(){
+    if(new URLSearchParams(location.search).get('cmaQuiz')==='1') return;
     const setup=document.getElementById('setup')||document.getElementById('setupScreen');
     const quiz=document.getElementById('quiz')||document.getElementById('quizScreen');
     const result=document.getElementById('results')||document.getElementById('resultScreen');
@@ -82,6 +83,11 @@ initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'))
   },true);
   document.addEventListener('DOMContentLoaded',routeSubjectScreens);
   window.addEventListener('load',routeSubjectScreens);
+  const observer=new MutationObserver(function(){
+    if(new URLSearchParams(location.search).get('cmaQuiz')==='1') return;
+    routeSubjectScreens();
+  });
+  if(document.documentElement) observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
 })();
 
 /* UPDATE 7 — real document navigation for question attempt
@@ -158,8 +164,7 @@ initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'))
   },true);
   function prepareQuizDocument(){
     if(new URLSearchParams(location.search).get('cmaQuiz')!=='1')return;
-    /* Do not show the setup page at the top while the real Start action is
-       being replayed. The user should land directly on the question viewport. */
+    /* Keep the new document renderable while the native Start action is replayed. */
     document.documentElement.classList.add('cma-quiz-loading');
     if(!document.getElementById('cma-quiz-loading-style')){
       const s=document.createElement('style');
