@@ -122,7 +122,23 @@ function finish(){
 function init(){
  const source=root(),refs=inject();const sel=document.getElementById("fpyqSource");
  sel.value=state.source==="pyq"?"pyq":"bank";
- const setMode=()=>{state.source=sel.value;document.body.classList.toggle("final-pyq-active",sel.value==="pyq");save();if(sel.value==="pyq")renderSetup();};
+ const restoreBank=()=>{
+   document.body.classList.remove("final-pyq-active");
+   const quiz=document.getElementById("fpyqQuiz");if(quiz){quiz.style.display="none";quiz.innerHTML="";}
+   const panel=document.getElementById("finalPyqPanel");if(panel)panel.style.display="none";
+   try{if(typeof show==="function")show("setup");}catch(e){}
+   try{
+     const start=document.getElementById("startBtn");if(start&&typeof startRound==="function")start.onclick=()=>startRound("normal");
+     const wrong=document.getElementById("wrongBtn");if(wrong&&typeof startRound==="function")wrong.onclick=()=>startRound("wrong");
+     const book=document.getElementById("bookBtn");if(book&&typeof startRound==="function")book.onclick=()=>startRound("bookmarks");
+     const retry=document.getElementById("retryWrong");if(retry&&typeof startRound==="function")retry.onclick=()=>startRound("wrong");
+   }catch(e){}
+ };
+ const setMode=()=>{
+   state.source=sel.value;save();
+   if(sel.value==="pyq"){document.body.classList.add("final-pyq-active");renderSetup();}
+   else restoreBank();
+ };
  sel.onchange=setMode;
  document.getElementById("fpyqTerm").value=state.term||"all";
  document.getElementById("fpyqTerm").onchange=e=>{state.term=e.target.value;state.mode="all";refreshCounts();save();};
