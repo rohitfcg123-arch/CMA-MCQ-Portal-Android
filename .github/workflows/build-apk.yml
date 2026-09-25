@@ -1,5 +1,5 @@
-name: Build CMA MCQ Portal Android
-# TEST-02 native Firebase email-auth build
+name: Build CMA Zone Android
+# CMA Zone native Firebase email-auth build
 
 on:
   push:
@@ -45,16 +45,11 @@ jobs:
             --org com.taxpath \
             --project-name cma_mcq_portal
 
-      - name: Install ImageMagick for CMA Zone logo generation
+      - name: Use CMA Zone logo for app and launcher
         run: |
-          sudo apt-get update
-          sudo apt-get install -y imagemagick
-
-      - name: Generate CMA Zone logo assets and Android launcher icon
-        run: |
-          mkdir -p assets android/app/src/main/res/drawable
-          convert assets/cma_zone_logo.svg -background none -resize 1024x1024 assets/cma_zone_logo.png
-          convert assets/cma_zone_logo.svg -background none -resize 1024x1024 android/app/src/main/res/drawable/cma_zone_logo.png
+          mkdir -p android/app/src/main/res/drawable
+          test -s assets/cma_zone_logo.png
+          cp assets/cma_zone_logo.png android/app/src/main/res/drawable/cma_zone_logo.png
           python3 - <<'PY'
           from pathlib import Path
           p = Path("android/app/src/main/AndroidManifest.xml")
@@ -180,7 +175,7 @@ jobs:
       - name: Upload Play Store App Bundle
         uses: actions/upload-artifact@v4
         with:
-          name: CMA-MCQ-Portal-AAB
+          name: CMA-Zone-AAB
           path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
@@ -192,6 +187,6 @@ jobs:
       - name: Upload APK for testing
         uses: actions/upload-artifact@v4
         with:
-          name: CMA-MCQ-Portal-APK
+          name: CMA-Zone-APK
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
