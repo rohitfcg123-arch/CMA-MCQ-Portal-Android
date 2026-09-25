@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+<linearGradient id="teal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19cdb2"/><stop offset="1" stop-color="#087f80"/></linearGradient>
+<linearGradient id="deep" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123e40"/><stop offset="1" stop-color="#06282a"/></linearGradient>
+<linearGradient id="wave" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b7778"/><stop offset=".48" stop-color="#17bda8"/><stop offset="1" stop-color="#07585b"/></linearGradient>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#06282a" flood-opacity=".18"/></filter>
+</defs>
+<rect x="24" y="24" width="976" height="976" rx="150" fill="#faf6ee" filter="url(#shadow)"/>
+<circle cx="512" cy="425" r="318" fill="none" stroke="url(#teal)" stroke-width="22" opacity=".95"/>
+<path d="M475 260h48v86h-48z" fill="url(#deep)" rx="8"/><path d="M540 214h52v132h-52z" fill="url(#deep)" rx="8"/><path d="M606 164h56v182h-56z" fill="url(#deep)" rx="8"/>
+<path d="M334 346 Q420 286 512 366 Q604 286 690 346 L654 405 Q580 352 512 427 Q444 352 370 405Z" fill="url(#deep)"/>
+<path d="M365 348 Q438 318 512 385 Q586 318 659 348" fill="none" stroke="#1bc8b0" stroke-width="17" stroke-linecap="round"/>
+<path d="M512 365v64" stroke="#faf6ee" stroke-width="12" stroke-linecap="round"/>
+<text x="512" y="570" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="174" font-weight="900" letter-spacing="-5" fill="#062c2f">CMA</text>
+<text x="512" y="735" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="156" font-weight="900" letter-spacing="-3" fill="url(#teal)">ZONE</text>
+<circle cx="513" cy="679" r="63" fill="#07383b"/><circle cx="513" cy="679" r="47" fill="#16bda9"/>
+<path d="M480 679l23 24 45-51" fill="none" stroke="#fffdf8" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M24 804 Q220 725 410 820 T1000 800 V1000 H24Z" fill="#07565a"/><path d="M24 826 Q240 760 450 846 T1000 825 V1000 H24Z" fill="url(#wave)" opacity=".98"/><path d="M24 865 Q250 800 470 874 T1000 862 V1000 H24Z" fill="#0b8582" opacity=".72"/>
+</svg>

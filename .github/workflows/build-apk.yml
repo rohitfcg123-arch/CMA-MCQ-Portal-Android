@@ -45,6 +45,22 @@ jobs:
             --org com.taxpath \
             --project-name cma_mcq_portal
 
+      - name: Generate CMA Zone logo assets and Android launcher icon
+        run: |
+          mkdir -p assets android/app/src/main/res/drawable
+          magick assets/cma_zone_logo.svg -background none -resize 1024x1024 assets/cma_zone_logo.png
+          magick assets/cma_zone_logo.svg -background none -resize 1024x1024 android/app/src/main/res/drawable/cma_zone_logo.png
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          import re
+          s = re.sub(r'android:label="[^"]*"', 'android:label="CMA Zone"', s, count=1)
+          s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/cma_zone_logo"')
+          s = s.replace('android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@drawable/cma_zone_logo"')
+          p.write_text(s)
+          PY
+
       - name: Configure Android release build
         run: |
           python3 - <<'PY'

@@ -22,7 +22,7 @@ Future<void> main() async {
 }
 class App extends StatelessWidget{
  const App({super.key});
- @override Widget build(BuildContext c)=>MaterialApp(debugShowCheckedModeBanner:false,title:'CMA MCQ Portal',
+ @override Widget build(BuildContext c)=>MaterialApp(debugShowCheckedModeBanner:false,title:'CMA Zone - MCQ Portal',
   theme:ThemeData(colorScheme:ColorScheme.fromSeed(seedColor:const Color(0xFF0D3B3E)),useMaterial3:true),home:const AuthGate());
 }
 class AuthGate extends StatelessWidget{
@@ -121,10 +121,22 @@ Widget build(BuildContext c) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const CircleAvatar(radius: 28, backgroundColor: Color(0xFF0D3B3E),
-                        child: Text('C', style: TextStyle(color: Color(0xFFEAD39B), fontSize: 22, fontWeight: FontWeight.bold))),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset(
+                          'assets/cma_zone_logo.png',
+                          width: 104,
+                          height: 104,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Color(0xFF0D3B3E),
+                            child: Text('CMA', style: TextStyle(color: Color(0xFFEAD39B), fontSize: 18, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 16),
-                      Text(reg ? 'Create your account' : 'CMA MCQ Portal',
+                      Text(reg ? 'Create your account' : 'CMA Zone — MCQ Portal',
                         style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: Color(0xFF082627))),
                       const SizedBox(height: 6),
                       Text(reg ? 'Register inside the app. We will verify your email.' : 'Login securely with your verified email and password.',
