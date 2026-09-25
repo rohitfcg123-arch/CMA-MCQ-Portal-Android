@@ -83,3 +83,86 @@ initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'))
   document.addEventListener('DOMContentLoaded',routeSubjectScreens);
   window.addEventListener('load',routeSubjectScreens);
 })();
+
+/* UPDATE 7 — real document navigation for question attempt
+   Start must load the question view as a new document, not render it underneath setup.
+   Selection state is preserved in sessionStorage and the original Start action is replayed
+   after the new document loads. */
+(function(){
+  'use strict';
+  const NAV_KEY='cma_question_page_start_v1';
+  function isStartButton(btn){
+    if(!btn)return false;
+    const t=((btn.textContent||'')+' '+(btn.id||'')).trim().toLowerCase();
+    return /^(start|start test|start quiz|start practice|begin test|begin round|start round|start new round)$/.test(t)
+      || /start(test|quiz|practice|round|newround)/i.test(btn.getAttribute('onclick')||'')
+      || /start/.test(btn.id||'');
+  }
+  function saveSelections(){
+    const values={};
+    document.querySelectorAll('input,select,textarea').forEach((el,i)=>{
+      const key=el.id||el.name||('__i'+i);
+      if(el.type==='checkbox'||el.type==='radio') values[key]={type:el.type,checked:el.checked,value:el.value};
+      else values[key]={type:el.type||el.tagName.toLowerCase(),value:el.value};
+    });
+    sessionStorage.setItem(NAV_KEY,JSON.stringify({
+      path:location.pathname,
+      values,
+      buttonId:(window.__cmaLastStartButton&&window.__cmaLastStartButton.id)||'',
+      buttonText:(window.__cmaLastStartButton&&window.__cmaLastStartButton.textContent||'').trim(),
+      at:Date.now()
+    }));
+  }
+  function restoreSelections(){
+    let data=null;
+    try{data=JSON.parse(sessionStorage.getItem(NAV_KEY)||'null')}catch(e){}
+    if(!data||data.path!==location.pathname)return null;
+    Object.keys(data.values||{}).forEach(key=>{
+      const el=document.getElementById(key)||document.querySelector('[name="'+CSS.escape(key)+'"]');
+      const v=data.values[key];
+      if(!el)return;
+      if(v.type==='checkbox'||v.type==='radio')el.checked=!!v.checked;
+      else el.value=v.value;
+      el.dispatchEvent(new Event('input',{bubbles:true}));
+      el.dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    return data;
+  }
+  function findStart(data){
+    if(data?.buttonId){
+      const b=document.getElementById(data.buttonId);
+      if(b)return b;
+    }
+    const all=[...document.querySelectorAll('button,a')];
+    return all.find(b=>isStartButton(b) && (!data?.buttonText || b.textContent.trim()===data.buttonText)) ||
+           all.find(isStartButton);
+  }
+  document.addEventListener('click',function(e){
+    if(new URLSearchParams(location.search).get('cmaQuiz')==='1')return;
+    if(sessionStorage.getItem('cma_real_start')==='1'){
+      sessionStorage.removeItem('cma_real_start');
+      return;
+    }
+    const btn=e.target.closest('button,a');
+    if(!isStartButton(btn))return;
+    window.__cmaLastStartButton=btn;
+    saveSelections();
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const u=new URL(location.href);
+    u.searchParams.set('cmaQuiz','1');
+    location.href=u.href;
+  },true);
+  function replayStart(){
+    if(new URLSearchParams(location.search).get('cmaQuiz')!=='1')return;
+    const data=restoreSelections();
+    if(!data)return;
+    sessionStorage.setItem('cma_real_start','1');
+    const b=findStart(data);
+    if(b){
+      setTimeout(()=>b.click(),120);
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(replayStart,150));
+  else setTimeout(replayStart,150);
+})();
