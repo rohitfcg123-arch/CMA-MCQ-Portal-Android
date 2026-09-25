@@ -205,223 +205,98 @@ function loadState(){const x=storage();bookmarks=new Set(x.bookmarks||[]);update
 </script><script id="cma-access-gate-script">
 (function(){
 "use strict";
-const firebaseConfig={
-  apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",
-  authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",
-  projectId:"cma-mcq-portal-cf33f",
-  storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",
-  messagingSenderId:"208738737302",
-  appId:"1:208738737302:web:3754a55033f67a8ffef6b7",
-  measurementId:"G-TXD74QQE8F"
-};
 const ADMIN_EMAIL="rohit.fcg123@gmail.com";
-const GROUP="final-group-4";
-const GROUP_LABEL="CMA Final Group 4";
-const ACCESS_GROUP="final-group-4";
-if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(),db=firebase.firestore();
-const provider=new firebase.auth.GoogleAuthProvider();
-provider.setCustomParameters({prompt:"select_account"});
-const persistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>{console.error(e);});
-const authStateReady=Promise.race([
-  Promise.all([
-    persistenceReady,
-    new Promise(resolve=>{
-      let done=false;
-      let unsub=null;
-      const finish=()=>{if(done)return;done=true;if(unsub)unsub();resolve();};
-      unsub=auth.onAuthStateChanged(finish);
-    })
-  ]),
-  new Promise(resolve=>setTimeout(resolve,3000))
-]);
-
+const auth=firebase.auth();
+const db=firebase.firestore();
 const emailEl=document.getElementById("cmaSessionEmail");
 const loginBtn=document.getElementById("cmaLoginBtn");
 const logoutBtn=document.getElementById("cmaLogoutBtn");
-const overlay=document.getElementById("cmaAuthOverlay");
-const googleBtn=document.getElementById("cmaGoogleLogin");
-const closeBtn=document.getElementById("cmaCloseAuth");
-const msg=document.getElementById("cmaAuthMsg");
 const notice=document.getElementById("cmaAccessNotice");
-let authReady=false, pendingAction=null, bypassClick=false, actionBusy=false;
+let authUser=null, authReady=false, actionBusy=false;
 
-function norm(v){return(v||"").toString().trim().toLowerCase();}
-function showNotice(t){notice.textContent=t||"";notice.style.display=t?"block":"none";if(t)setTimeout(()=>{notice.style.display="none";},5000);}
-function openLogin(action){pendingAction=action||null;location.href="index.html";}
-function closeLogin(){overlay.style.display="none";msg.textContent="";pendingAction=null;}
-closeBtn.onclick=closeLogin;
-overlay.addEventListener("click",e=>{if(e.target===overlay)closeLogin();});
-loginBtn.onclick=()=>{location.href="index.html";};
-logoutBtn.onclick=async()=>{try{await auth.signOut();}catch(e){showNotice("Logout failed. Please try again.");}};
-
-googleBtn.onclick=()=>{location.href="index.html";};
-auth.getRedirectResult().catch(e=>{if(e)console.error("Redirect result:",e);}).finally(()=>{authReady=true;});
-
-function dateExpired(v){return !!v && String(v)<new Date().toISOString().slice(0,10);}
-
-let __siteSettingsCache=null;
-async function getSiteSettings(){
-  if(__siteSettingsCache) return __siteSettingsCache;
-  const defaults={freeAccessMode:"attemptLimit",freeAttemptLimit:5,freePoolSize:30,siteWideFree:false};
-  try{
-    const snap=await db.collection("settings").doc("access").get();
-    __siteSettingsCache=snap.exists?Object.assign({},defaults,snap.data()):defaults;
-  }catch(e){console.warn("Could not load access settings, using defaults.",e);__siteSettingsCache=defaults;}
-  return __siteSettingsCache;
+function norm(v){return String(v||"").trim().toLowerCase();}
+function showNotice(t){
+  if(!notice)return;
+  notice.textContent=t||"";
+  notice.style.display=t?"block":"none";
+  if(t)setTimeout(()=>{notice.style.display="none";},4500);
 }
-
-let __origSourceQuestions=null;
-function applyFreePoolCap(poolSize){
-  if(!__origSourceQuestions) __origSourceQuestions=window.sourceQuestions;
-  window.sourceQuestions=function(){
-    let qs=__origSourceQuestions();
-    if(source()==="bank") qs=qs.slice().sort((a,b)=>a.id-b.id).slice(0,poolSize);
-    return qs;
-  };
-}
-function clearFreePoolCap(){
-  if(__origSourceQuestions) window.sourceQuestions=__origSourceQuestions;
-}
-
-async function getAccessState(user){
-  const email=norm(user.email);
-  if(!email) return {allowed:false,reason:"No Google email was returned."};
-  if(email===ADMIN_EMAIL) return {allowed:true,paid:true,admin:true,freeUsed:0,freeRemaining:999999,data:{role:"admin"},settings:{},features:{mcqBank:true,pyq:true,reattemptWrong:true,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:true},maxQuestions:999999,maxAttempts:999999};
-  const defaults={freeAccessMode:"fixedPool",freePoolSize:20,freeAttemptLimit:5,freeTestMinutes:60,freeQuestionSeconds:60,siteWideFree:false,features:{mcqBank:true,pyq:false,reattemptWrong:false,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:false}};
-  let settings=defaults;
-  try{const snap=await db.collection("settings").doc("access").get(); if(snap.exists) settings=Object.assign({},defaults,snap.data(),{features:Object.assign({},defaults.features,snap.data().features||{})});}catch(e){console.warn("Access settings unavailable; using defaults",e)}
-  let data={};
-  try{const snap=await db.collection("access").doc(email).get();if(snap.exists)data=snap.data()||{};}catch(e){console.warn("Access record unavailable",e)}
-  const ov=data.overrides||{};
-  const feature=(key, fallback)=> ov[key]!==undefined ? !!ov[key] : (settings.features&&settings.features[key]!==undefined ? !!settings.features[key] : fallback);
-  if(String(data.status||"active").toLowerCase()==="inactive") return {allowed:false,reason:"Your account is currently inactive.",settings,data,features:{}};
-  const today=new Date().toISOString().slice(0,10), expiry=String(data.expiryDate||""), expired=!!expiry&&expiry<today;
-  const groups=Array.isArray(data.groups)?data.groups:[];
-  const paid=groups.includes(ACCESS_GROUP)&&!expired;
-  const universalUserAccess=data.universalFull===true||data.universalFree===true||data.universalAccess===true||data.fullAccess===true||data.freeFullAccess===true||String(data.accessType||"").trim().toLowerCase()==="all"||String(data.accessType||"").trim().toLowerCase()==="universal"||String(data.accessType||"").trim().toLowerCase()==="universal access"||String(data.plan||"").trim().toLowerCase()==="universal"||String(data.plan||"").trim().toLowerCase()==="universal access";
-  const universalSettings=settings.siteWideFree===true||settings.universalFull===true||settings.universalFree===true||settings.universalAccess===true;
-  const adminLike=paid||universalSettings||universalUserAccess;
-  /* UPDATE 24: an explicit Universal/Full Access grant is authoritative. Do not let an old inactive/expiry flag block it. */
-  if(universalSettings||universalUserAccess){
-    return {allowed:true,paid:true,admin:universalUserAccess&&email===ADMIN_EMAIL,universal:true,freeUsed:0,freeRemaining:999999,data,settings,features:{mcqBank:true,pyq:true,reattemptWrong:true,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:true},maxQuestions:999999,maxAttempts:999999,freeTestMinutes:999999,freeQuestionSeconds:999999};
-  }
-  const allFeatures=adminLike
-    ? {mcqBank:true,pyq:true,reattemptWrong:true,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:true}
-    : {mcqBank:feature("mcqBank",true),pyq:feature("pyq",false),reattemptWrong:feature("reattemptWrong",false),bookmark:feature("bookmark",true),chapterTopic:feature("chapterTopic",true),answerReveal:feature("answerReveal",true),overallTimer:feature("overallTimer",true),questionTimer:feature("questionTimer",false)};
-  const maxQuestions=Number(ov.freeQuestionLimit ?? settings.freeQuestionLimit ?? settings.freePoolSize ?? 20)||20;
-  const maxAttempts=Number(ov.freeAttemptLimit ?? settings.freeAttemptLimit ?? 5)||0;
-  const freeTestMinutes=Number(ov.freeTestMinutes ?? settings.freeTestMinutes ?? 60)||60;
-  const freeQuestionSeconds=Number(ov.freeQuestionSeconds ?? settings.freeQuestionSeconds ?? 60)||60;
-  const src=(typeof source==='function'?source():"").toLowerCase();
-  if(src==="pyq"&&!allFeatures.pyq) return {allowed:false,paid,reason:"Previous Year Papers are currently locked for this account. Please purchase/upgrade access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
-  if(src==="bank"&&!allFeatures.mcqBank) return {allowed:false,paid,reason:"MCQ Bank is currently locked for this account.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
-  const wrongMode=(typeof arguments[1]==='string'&&arguments[1]==='wrong');
-
-  if(!adminLike && src==="pyq") return {allowed:false,paid:false,reason:"Previous Year Papers require premium access.",data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
-  if(!adminLike && src==="bank" && settings.freeAccessMode==="fixedPool") return {allowed:true,paid:false,fixedPool:true,poolSize:Math.max(1,Number(ov.freeQuestionLimit??settings.freePoolSize??20)||20),freeUsed:0,freeRemaining:999999,data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
-  if(!adminLike){
-    const attemptsSnap=await db.collection("attempts").where("uid","==",user.uid).get();
-    const freeUsed=attemptsSnap.size, freeRemaining=Math.max(0,maxAttempts-freeUsed);
-    if(freeRemaining<=0) return {allowed:false,paid:false,freeUsed,freeRemaining,data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds,reason:"Your free attempts are finished. Please purchase access."};
-    return {allowed:true,paid:false,freeUsed,freeRemaining,data,settings,features:allFeatures,maxQuestions,freeTestMinutes,freeQuestionSeconds};
-  }
-  return {allowed:true,paid:true,freeUsed:0,freeRemaining:999999,data,settings,features:allFeatures,maxQuestions:999999,maxAttempts:999999,freeTestMinutes,freeQuestionSeconds};
-}
-async function recordAttempt(user,mode){
-  await db.collection("attempts").add({
-    uid:user.uid,
-    email:norm(user.email),
-    group:GROUP,
-    groupName:GROUP_LABEL,
-    subject:document.title||location.pathname,
-    mode:mode||"practice",
-    startedAt:firebase.firestore.FieldValue.serverTimestamp(),
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
-}
-
 function isStartAction(btn){
   if(!btn || btn.tagName!=="BUTTON") return false;
-  const onclick=(btn.getAttribute("onclick")||"").toLowerCase();
+  const t=(btn.textContent||"").trim().toLowerCase();
   const id=(btn.id||"").toLowerCase();
-  const text=(btn.textContent||"").trim().toLowerCase();
-  if(/startnewround|starttest|startfull|startround|startspecialround|startquiz|beginround/.test(onclick)) return true;
-  if(["startbtn","start"].includes(id)) return true;
-  if(/^start\b/.test(text) || /^▶\s*start\b/.test(text) || text.includes("full bank")) return true;
-  if(text.includes("reattempt wrong") || text.includes("practice bookmarks")) return true;
-  return false;
+  return id==="startbtn" || /^start\b/.test(t) || t.includes("start practice") || t.includes("start exam") || t.includes("reattempt wrong") || t.includes("bookmarked");
 }
-
-async function continueAction(btn){
+async function getAccess(user){
+  if(!user) return {allowed:false,reason:"Please sign in to continue."};
+  const email=norm(user.email);
+  if(email===ADMIN_EMAIL) return {allowed:true,paid:true,admin:true};
+  try{
+    const snap=await db.collection("access").doc(email).get();
+    const d=snap.exists?(snap.data()||{}):{};
+    const settingsSnap=await db.collection("settings").doc("access").get();
+    const settings=settingsSnap.exists?(settingsSnap.data()||{}):{};
+    const expiry=String(d.expiryDate||"");
+    const expired=!!expiry && expiry<new Date().toISOString().slice(0,10);
+    if(String(d.status||"active").toLowerCase()==="inactive") return {allowed:false,reason:"Your account is currently inactive."};
+    const groups=Array.isArray(d.groups)?d.groups:[];
+    const universal=d.universalFull===true||d.universalFree===true||d.universalAccess===true||d.fullAccess===true||String(d.accessType||"").toLowerCase()==="all"||String(d.accessType||"").toLowerCase()==="universal"||String(d.plan||"").toLowerCase()==="universal"||settings.siteWideFree===true||settings.universalFull===true||settings.universalAccess===true;
+    const paid=universal || (groups.includes("final-group-4") && !expired);
+    return {allowed:true,paid,universal,data:d,settings};
+  }catch(err){
+    console.error("Group 4 access lookup failed:",err);
+    return {allowed:false,lookupError:true,reason:"Access service could not be reached. Please try again."};
+  }
+}
+async function runStart(btn){
   if(actionBusy)return;
   actionBusy=true;
   try{
-    await authStateReady;
-    const user=auth.currentUser;
-    if(!user){
+    if(!authUser){
       location.href="index.html";
       return;
     }
-    const state=await getAccessState(user);
-    const selectedCount=(()=>{
-      const ids=["questions","count","qCount","questionCount","maxQuestions"]; if(typeof state!=="undefined"&&state&&Number.isFinite(Number(state.count)))return Number(state.count);
-      for(const id of ids){const el=document.getElementById(id);if(el){const n=Number(el.value??el.textContent);if(Number.isFinite(n)&&n>0)return n;}}
-      return null;
-    })();
-    if(state.allowed && !state.paid && selectedCount && selectedCount>Number(state.maxQuestions||999999)){
-      showNotice("Free access allows only "+state.maxQuestions+" questions. Please reduce the question count or purchase full access.");
+    const state=await getAccess(authUser);
+    if(!state.allowed){
+      showNotice(state.reason);
       return;
     }
-    if(state.allowed && typeof window.startRound==="function" && btn.id==="startBtn" && typeof btn.onclick!=="function"){
-      window.startRound("normal");
-      return;
-    }
-    if(state.allowed && !state.features.reattemptWrong && /wrong/i.test(btn.textContent||"")){
-      showNotice("Reattempt Wrong Answers is not included in your current access."); return;
-    }
-    if(state.allowed && !state.features.bookmark && /bookmark/i.test(btn.textContent||"")){
-      showNotice("Bookmarks are not included in your current access."); return;
-    }
-    if(!state.allowed){showNotice("You don't have access to this Group 4 content. Please buy a subscription to continue.");return;}
-    if(state.fixedPool) applyFreePoolCap(state.poolSize); else clearFreePoolCap();
-    try{await recordAttempt(user, (btn.textContent||"").trim().slice(0,80));}catch(e){console.warn("Attempt logging failed; continuing with authorized test:",e);}
-    /* UPDATE 25: invoke the page's real Start handler directly after access verification.
-       This avoids a second synthetic click being swallowed by the capture-phase access gate. */
-    bypassClick=true;
-    try{
+    if(state.paid){
+      // The subject page owns the quiz logic. Call its real handler directly.
       if(typeof btn.onclick==="function") btn.onclick();
-      else btn.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true}));
-    }finally{
-      setTimeout(()=>{bypassClick=false;},0);
+      else if(typeof window.startRound==="function") window.startRound(btn.id==="retryWrong"?"wrong":btn.id==="bookBtn"?"bookmarks":"normal");
+      return;
     }
-  }catch(e){
-    console.error("Access/attempt check failed:",e);
-    showNotice("Access verification could not be completed. Please refresh the page and sign in again.");
+    // Free users: enforce the page's configured question limit without blocking normal small rounds.
+    const limit=Number(state.settings?.freeQuestionLimit ?? state.settings?.freePoolSize ?? 20);
+    const countEl=document.getElementById("qCount");
+    const selected=countEl?Number(countEl.textContent||countEl.value):null;
+    if(Number.isFinite(limit)&&Number.isFinite(selected)&&selected>limit){
+      showNotice("Free access allows only "+limit+" questions. Please reduce the question count or purchase full access.");
+      return;
+    }
+    if(typeof btn.onclick==="function") btn.onclick();
+    else if(typeof window.startRound==="function") window.startRound("normal");
+  }catch(err){
+    console.error("Group 4 start action failed:",err);
+    showNotice("Could not start the practice round. Please try again.");
   }finally{actionBusy=false;}
 }
-
 document.addEventListener("click",function(e){
   const btn=e.target.closest("button");
-  if(!isStartAction(btn) || bypassClick)return;
-  e.preventDefault();e.stopImmediatePropagation();
-  continueAction(btn);
+  if(!isStartAction(btn))return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  runStart(btn);
 },true);
-
-auth.onAuthStateChanged(async user=>{
-  if(user){
-    emailEl.textContent=user.email||"";
-    loginBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
-    if(overlay.style.display==="flex" && pendingAction){
-      const action=pendingAction;pendingAction=null;closeLogin();
-      action();
-    }else if(overlay.style.display==="flex") closeLogin();
-  }else{
-    emailEl.textContent="";
-    loginBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
-  }
+loginBtn && (loginBtn.onclick=()=>{location.href="index.html";});
+logoutBtn && (logoutBtn.onclick=async()=>{try{await auth.signOut();}catch(e){showNotice("Logout failed.");}});
+auth.onAuthStateChanged(user=>{
+  authUser=user||null;
+  authReady=true;
+  if(emailEl)emailEl.textContent=user?(user.email||""):"";
+  if(loginBtn)loginBtn.style.display=user?"none":"inline-block";
+  if(logoutBtn)logoutBtn.style.display=user?"inline-block":"none";
 });
 })();
 </script>
