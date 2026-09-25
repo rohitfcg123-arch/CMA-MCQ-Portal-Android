@@ -84,3 +84,10 @@ button,.btn,.primary,.secondary,.outline,.home,.danger,.chip{border-radius:10px 
  .hero{padding-top:22px !important}
  .hero h1{font-size:1.55rem !important}
 }
+
+/* Fix practice settings rows: do not let the theme's toggle-switch class collapse form rows. */
+.card .switch{position:static;width:auto;height:auto;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 0;border-top:1px solid var(--rule);border-radius:0;background:transparent;flex:initial}
+.card .switch:first-child{border-top:0}
+.card .switch>span{display:block;min-width:0;flex:1;line-height:1.35}
+.card .switch input[type="checkbox"]{position:static;opacity:1;width:20px;height:20px;min-width:20px;margin:0;appearance:auto;accent-color:var(--teal);flex:0 0 auto}
+.card .switch input[type="number"]{position:static;opacity:1;width:130px;height:auto;min-width:0;margin:0;padding:10px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink);flex:0 0 130px}
