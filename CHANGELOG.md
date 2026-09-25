@@ -1,5 +1,10 @@
 # CMA MCQ Portal — Update
 
+## UPDATE 1 — 2026-09-25
+- Fixed the large blank/teal mobile block appearing above the Answer Mode and Timer sections on Intermediate Group 1 and Group 2 subject screens.
+- Added a visible Update 1 notice on the home page. Future portal changes will increment this as Update 2, Update 3, and so on.
+
+
 ## 2026-09-23
 - Added Premium User Access Type: All Services / Partly Access.
 - Added richer user/payment records: name, phone, start/expiry, groups, original amount, discount, final paid, promo code, UTR and notes.
