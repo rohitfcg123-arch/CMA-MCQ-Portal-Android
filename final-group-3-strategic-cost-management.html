@@ -4,11 +4,521 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SCM Paper 16 — MCQ Practice</title>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<link rel="stylesheet" href="css/cma-subject-theme.css?v=20260925rootfix">
-<link rel="stylesheet" href="css/cma-subject-theme.css?v=20260926master">
+<style>
+  :root{
+    --ink:#1c2a2e;
+    --paper:#f6f3ec;
+    --paper-2:#efe9dc;
+    --rule:#d8d0bd;
+    --brass:#8a6a1f;
+    --brass-deep:#6b5117;
+    --teal:#12484a;
+    --teal-deep:#0b3436;
+    --good:#2f6d3f;
+    --good-bg:#e4efe2;
+    --bad:#9c3b30;
+    --bad-bg:#f3e2df;
+    --muted:#6f6a5c;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#ece7da;
+      --paper:#171d1c;
+      --paper-2:#1e2624;
+      --rule:#333d3a;
+      --brass:#d8b45c;
+      --brass-deep:#e8c876;
+      --teal:#7fc3c1;
+      --teal-deep:#a6dbd9;
+      --good:#7fbf8f;
+      --good-bg:#1c2f22;
+      --bad:#e08b7d;
+      --bad-bg:#341f1c;
+      --muted:#a39d8c;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#ece7da;
+    --paper:#171d1c;
+    --paper-2:#1e2624;
+    --rule:#333d3a;
+    --brass:#d8b45c;
+    --brass-deep:#e8c876;
+    --teal:#7fc3c1;
+    --teal-deep:#a6dbd9;
+    --good:#7fbf8f;
+    --good-bg:#1c2f22;
+    --bad:#e08b7d;
+    --bad-bg:#341f1c;
+    --muted:#a39d8c;
+  }
+  html,body{height:100%;}
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Serif",serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:18px 16px 40px;
+  }
+
+  /* ---------- Header / masthead ---------- */
+  .masthead{
+    border-bottom:3px double var(--rule);
+    padding-bottom:12px;
+    margin-bottom:18px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .masthead h1{
+    font-size:1.28rem;
+    margin:0;
+    letter-spacing:0.01em;
+    font-weight:600;
+    color:var(--teal-deep);
+  }
+  .masthead .sub{
+    font-family:"Courier New",ui-monospace,monospace;
+    font-size:0.72rem;
+    color:var(--muted);
+    letter-spacing:0.03em;
+  }
+  .home-btn{
+    background:transparent;
+    border:1px solid var(--rule);
+    color:var(--teal);
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.8rem;
+    font-weight:600;
+    padding:7px 12px;
+    border-radius:3px;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+
+  /* ---------- Screens ---------- */
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  /* ---------- Setup screen ---------- */
+  .lede{
+    font-size:0.98rem;
+    line-height:1.55;
+    color:var(--muted);
+    margin:0 0 22px;
+    max-width:52ch;
+  }
+  .card{
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:18px 18px 20px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    font-weight:600;
+    color:var(--brass-deep);
+    margin:0 0 12px;
+    font-family:"Courier New",ui-monospace,monospace;
+  }
+  .opt-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:10px 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .opt-row:last-child{ border-bottom:none; }
+  .opt-row label{
+    font-size:0.95rem;
+    line-height:1.35;
+    flex:1;
+  }
+  .opt-row .desc{
+    display:block;
+    font-size:0.78rem;
+    color:var(--muted);
+    margin-top:2px;
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  /* toggle switch */
+  .switch{
+    position:relative;
+    width:44px;
+    height:26px;
+    flex:0 0 auto;
+  }
+  .switch input{ opacity:0; width:0; height:0; position:absolute; }
+  .switch .track{
+    position:absolute; inset:0;
+    background:var(--rule);
+    border-radius:20px;
+    transition:background .15s ease;
+    cursor:pointer;
+  }
+  .switch .track::after{
+    content:"";
+    position:absolute;
+    top:3px; left:3px;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:var(--paper);
+    box-shadow:0 1px 2px rgba(0,0,0,.25);
+    transition:transform .15s ease;
+  }
+  .switch input:checked + .track{ background:var(--teal); }
+  .switch input:checked + .track::after{ transform:translateX(18px); }
+
+  /* number stepper */
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .stepper button{
+    width:30px;height:30px;
+    border-radius:50%;
+    border:1px solid var(--rule);
+    background:var(--paper);
+    color:var(--ink);
+    font-size:1rem;
+    line-height:1;
+    cursor:pointer;
+  }
+  .stepper button:active{ transform:scale(0.94); }
+  .stepper .count{
+    font-family:"Courier New",ui-monospace,monospace;
+    font-size:1rem;
+    min-width:2.6em;
+    text-align:center;
+  }
+
+  .primary-btn{
+    display:block;
+    width:100%;
+    padding:14px 18px;
+    background:var(--teal);
+    color:var(--paper);
+    border:none;
+    border-radius:3px;
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:1rem;
+    font-weight:600;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  .primary-btn:active{ transform:translateY(1px); }
+  .ghost-btn{
+    display:inline-block;
+    padding:10px 16px;
+    background:transparent;
+    color:var(--teal);
+    border:1px solid var(--teal);
+    border-radius:3px;
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.9rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  /* ---------- Quiz screen ---------- */
+  .quiz-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:6px;
+    font-family:"Courier New",ui-monospace,monospace;
+    font-size:0.76rem;
+    color:var(--muted);
+  }
+  .progress-track{
+    width:100%;
+    height:4px;
+    background:var(--rule);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:20px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--brass);
+    width:0%;
+    transition:width .25s ease;
+  }
+  .timer-tag{
+    font-weight:600;
+    color:var(--teal);
+  }
+  .timer-tag.urgent{ color:var(--bad); }
+  .timer-track{
+    width:100%;
+    height:3px;
+    background:var(--rule);
+    border-radius:2px;
+    overflow:hidden;
+    margin:-16px 0 20px;
+  }
+  .timer-fill{
+    height:100%;
+    background:var(--teal);
+    width:100%;
+    transition:width 1s linear, background .3s ease;
+  }
+  .timer-fill.urgent{ background:var(--bad); }
+  .q-num{
+    font-family:"Courier New",ui-monospace,monospace;
+    color:var(--brass-deep);
+    font-size:0.8rem;
+    letter-spacing:0.04em;
+    margin-bottom:6px;
+  }
+  .q-text{
+    font-size:1.12rem;
+    line-height:1.5;
+    margin:0 0 18px;
+    font-weight:500;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .option{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:13px 14px;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    background:var(--paper-2);
+    cursor:pointer;
+    font-size:0.96rem;
+    line-height:1.4;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .option:active{ transform:translateY(1px); }
+  .option .tag{
+    flex:0 0 auto;
+    width:22px; height:22px;
+    border-radius:50%;
+    border:1px solid var(--muted);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:"Courier New",ui-monospace,monospace;
+    font-size:0.72rem;
+    color:var(--muted);
+  }
+  .option.selected{
+    border-color:var(--teal);
+    background:color-mix(in srgb, var(--teal) 10%, var(--paper-2));
+  }
+  .option.selected .tag{
+    border-color:var(--teal);
+    color:var(--teal);
+    background:color-mix(in srgb, var(--teal) 18%, transparent);
+  }
+  .option.correct{
+    border-color:var(--good);
+    background:var(--good-bg);
+  }
+  .option.correct .tag{
+    border-color:var(--good);
+    color:var(--good);
+    background:color-mix(in srgb, var(--good) 20%, transparent);
+  }
+  .option.wrong{
+    border-color:var(--bad);
+    background:var(--bad-bg);
+  }
+  .option.wrong .tag{
+    border-color:var(--bad);
+    color:var(--bad);
+    background:color-mix(in srgb, var(--bad) 20%, transparent);
+  }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    display:none;
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.88rem;
+    padding:10px 14px;
+    border-radius:3px;
+    margin-bottom:16px;
+  }
+  .feedback.show{ display:block; }
+  .feedback.right{ background:var(--good-bg); color:var(--good); }
+  .feedback.miss{ background:var(--bad-bg); color:var(--bad); }
+
+  .nav-row{
+    display:flex;
+    gap:10px;
+    margin-top:6px;
+  }
+  .nav-row button{ flex:1; }
+  .secondary{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid var(--rule);
+  }
+
+  .foot-link{
+    text-align:center;
+    margin-top:22px;
+  }
+  .foot-link button{
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.82rem;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+
+  /* ---------- Results screen ---------- */
+  .score-block{
+    text-align:center;
+    padding:26px 10px 20px;
+    border-bottom:1px solid var(--rule);
+    margin-bottom:18px;
+  }
+  .score-num{
+    font-size:3rem;
+    font-weight:600;
+    color:var(--teal-deep);
+    line-height:1;
+  }
+  .score-label{
+    font-family:"Courier New",ui-monospace,monospace;
+    font-size:0.78rem;
+    color:var(--muted);
+    letter-spacing:0.06em;
+    margin-top:8px;
+    text-transform:uppercase;
+  }
+  .score-pct{
+    font-size:1.1rem;
+    color:var(--brass-deep);
+    margin-top:4px;
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-weight:600;
+  }
+  .breakdown{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .bd-item{
+    text-align:center;
+    padding:12px 6px;
+    border-radius:3px;
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+  }
+  .bd-num{
+    font-size:1.4rem;
+    font-weight:600;
+    font-family:"Courier New",ui-monospace,monospace;
+  }
+  .bd-lbl{
+    font-size:0.72rem;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-top:2px;
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .bd-good .bd-num{ color:var(--good); }
+  .bd-bad .bd-num{ color:var(--bad); }
+  .bd-muted .bd-num{ color:var(--muted); }
+  .marks-block{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    margin-bottom:18px;
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.94rem;
+  }
+  .marks-block strong{
+    font-size:1.15rem;
+    color:var(--brass-deep);
+    font-family:"Courier New",ui-monospace,monospace;
+  }
+  .review-item{
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:14px 14px 12px;
+    margin-bottom:10px;
+    background:var(--paper-2);
+  }
+  .review-item .rq{
+    font-size:0.94rem;
+    line-height:1.4;
+    margin:0 0 8px;
+    font-weight:500;
+  }
+  .review-item .rmeta{
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.82rem;
+    line-height:1.5;
+  }
+  .review-item .rmeta .yours{ color:var(--bad); }
+  .review-item .rmeta .correct-line{ color:var(--good); }
+  .review-item.ok{ border-left:3px solid var(--good); }
+  .review-item.no{ border-left:3px solid var(--bad); }
+  .review-item.skip{ border-left:3px solid var(--muted); }
+  .review-toggle{
+    text-align:center;
+    margin:20px 0 12px;
+  }
+  #reviewList{ display:none; }
+  #reviewList.show{ display:block; }
+
+  .btn-row{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+  }
+  .btn-row button{ flex:1; }
+
+  .chapter-select{
+    width:100%; padding:11px 12px; border:1px solid var(--rule); border-radius:3px;
+    background:var(--paper); color:var(--ink); font:inherit;
+  }
+  .quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .quick-actions button{margin:0}
+  .bookmark-btn{
+    width:100%; margin:0 0 14px; padding:9px 12px; background:transparent;
+    border:1px solid var(--rule); color:var(--teal); border-radius:3px;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:600;
+  }
+  .bookmark-btn.on{border-color:var(--brass);color:var(--brass-deep)}
+
+</style>
 <link rel="stylesheet" href="css/cma-subject-theme.css?v=20260926master">
 </head>
 <body>
@@ -746,7 +1256,6 @@ function scmChapterPool(value){
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="js/firebase-init.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script><script src="js/firebase-init.js"></script><script src="js/popup-manager.js"></script><script src="js/access-controller.js"></script>
 </body>
 </html>
