@@ -370,7 +370,7 @@ async function continueAction(btn){
     if(state.allowed && !state.features.bookmark && /bookmark/i.test(btn.textContent||"")){
       showNotice("Bookmarks are not included in your current access."); return;
     }
-    if(!state.allowed){showNotice(state.reason||"Access is not available.");return;}
+    if(!state.allowed){showNotice("You don't have access to this Group 4 content. Please buy a subscription to continue.");return;}
     if(state.fixedPool) applyFreePoolCap(state.poolSize); else clearFreePoolCap();
     await recordAttempt(user, (btn.textContent||"").trim().slice(0,80));
     bypassClick=true;
@@ -407,7 +407,7 @@ auth.onAuthStateChanged(async user=>{
 })();
 </script>
 <script id="cma-central-access-controller">
-window.CMA_ACCESS_VERSION="2026.09.23.2";
+window.CMA_ACCESS_VERSION="2026.09.26.22";
 (function(){
   function isFeatureClick(btn){
     const t=((btn&&btn.textContent)||'').toLowerCase(), id=((btn&&btn.id)||'').toLowerCase();
@@ -426,7 +426,7 @@ window.CMA_ACCESS_VERSION="2026.09.23.2";
       const setSnap=await firebase.firestore().collection('settings').doc('access').get();
       const settings=setSnap.exists?setSnap.data()||{}:{};
       const f=settings.features||settings.freeFeatures||{};const ov=data.overrides||{};
-      const universalFull=data.universalFull===true||data.universalFree===true||String(data.accessType||'').toLowerCase()==='all';
+      const universalFull=data.universalFull===true||data.universalFree===true||data.universalAccess===true||data.fullAccess===true||data.freeFullAccess===true||String(data.accessType||'').toLowerCase()==='all'||String(data.plan||'').toLowerCase()==='universal'||String(data.plan||'').toLowerCase()==='universal access';
       const allowed=universalFull?true:(ov[feature]!==undefined?!!ov[feature]:(f[feature]!==undefined?!!f[feature]:true));
       if(!allowed){e.preventDefault();e.stopImmediatePropagation();if(typeof cmaShowAccessPopup==='function')cmaShowAccessPopup(feature+' is not included in your current access. Please buy a subscription to continue.');}
     }catch(err){console.warn('Central feature check failed',err)}
