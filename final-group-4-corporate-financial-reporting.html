@@ -383,11 +383,24 @@ async function continueAction(btn){
       showNotice("Bookmarks are not included in your current access."); return;
     }
     if(!state.allowed){showNotice(state.reason||"Access is not available.");return;}
-    if(state.fixedPool) applyFreePoolCap(state.poolSize); else clearFreePoolCap();
-    await recordAttempt(user, (btn.textContent||"").trim().slice(0,80));
+    if(state.fixedPool){
+      applyFreePoolCap(state.poolSize);
+      /* Group 4 quiz pages use the embedded QUESTIONS array directly. */
+      if(typeof cfg!=="undefined" && cfg && Number.isFinite(Number(state.poolSize))){
+        cfg.questions=Math.min(Number(cfg.questions)||Number(state.poolSize),Number(state.poolSize));
+      }
+    }else clearFreePoolCap();
+
+    /* Never block the quiz on analytics/Firestore logging. */
+    recordAttempt(user, (btn.textContent||"").trim().slice(0,80)).catch(err=>console.warn("Attempt logging failed:",err));
     bypassClick=true;
-    btn.click();
-    setTimeout(()=>{bypassClick=false;},0);
+    try{
+      /* Group 4 assigns Start through startBtn.onclick; invoke it directly. */
+      if(typeof btn.onclick==="function") btn.onclick();
+      else btn.click();
+    }finally{
+      setTimeout(()=>{bypassClick=false;},0);
+    }
   }catch(e){
     console.error("Access/attempt check failed:",e);
     showNotice("Could not verify your access right now. Please try again.");
@@ -419,7 +432,7 @@ auth.onAuthStateChanged(async user=>{
 })();
 </script>
 <script id="cma-central-access-controller">
-window.CMA_ACCESS_VERSION="2026.09.23.2";
+window.CMA_ACCESS_VERSION="2026.09.25.3";
 (function(){
   function isFeatureClick(btn){
     const t=((btn&&btn.textContent)||'').toLowerCase(), id=((btn&&btn.id)||'').toLowerCase();
