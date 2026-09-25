@@ -36,10 +36,14 @@ function textOf(el){return ((el?.textContent||'')+' '+(el?.id||'')+' '+(el?.name
 function selectedQuestionCount(){let vals=[];document.querySelectorAll('select,input[type="number"],input[type="range"]').forEach(el=>{const t=textOf(el);const n=Number(el.value);if(Number.isFinite(n)&&n>0&&(t.includes('question')||t.includes('count')||t.includes('mcq')||t.includes('number')))vals.push(n)});return vals.length?Math.max(...vals):null}
 function featureFromClick(btn){const t=textOf(btn);if(t.includes('pyq'))return'pyq';if(t.includes('mcq bank')||t.includes('mcqbank'))return'mcqBank';if(t.includes('reattempt wrong')||t.includes('wrong answers'))return'reattemptWrong';if(t.includes('bookmark'))return'bookmark';if(t.includes('chapter')||t.includes('topic'))return'chapterTopic';if(t.includes('reveal answer')||t.includes('show answer')||t.includes('instant answer'))return'answerReveal';if(t.includes('question-wise timer')||t.includes('question timer'))return'questionTimer';if(t.includes('overall timer')||t.includes('test timer'))return'overallTimer';return null}
 function looksLikeStart(btn){const t=textOf(btn);return t.includes('start practice')||t==='start'||t.includes('start test')||t.includes('begin test')||t.includes('start quiz')}
+/* Group 4 subject pages have their own access/start/PYQ controllers.
+   The central click gate must never intercept their buttons. */
+if(!/final-group-4-/.test(location.pathname)){
 document.addEventListener('click',function(e){const btn=e.target.closest('button,a');if(!btn)return;const a=window.cmaAccessState;if(!a||a.admin||a.paid)return;const f=featureFromClick(btn);if(f&&!featureAllowed(a,f,DEFAULTS.features[f])){e.preventDefault();e.stopImmediatePropagation();showPopup(f+' is not included in your current access. Please buy a subscription to continue.');return}if(looksLikeStart(btn)){const lim=questionLimit(a),count=selectedQuestionCount();if(Number.isFinite(lim)&&count&&count>lim){e.preventDefault();e.stopImmediatePropagation();showPopup('',{questionLimit:lim,selectedQuestions:count});return}if(Number.isFinite(attemptLimit(a))&&attemptLimit(a)<=0){e.preventDefault();e.stopImmediatePropagation();showPopup('Your free attempts are exhausted. Please buy a subscription to continue.');return}}},true);
+}
 initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'));
 })();
-/* UPDATE 15 — legacy global screen-routing/navigation hooks disabled.
+/* UPDATE 19 — legacy global screen-routing/navigation hooks disabled.
    Subject pages already own their setup/quiz/result state. The old global
    click + timeout + URL-replay layer was running on every subject page and
    could interfere with taps and create page-level stalls. Keep this controller
