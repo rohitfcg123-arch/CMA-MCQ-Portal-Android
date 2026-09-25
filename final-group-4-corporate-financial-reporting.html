@@ -66,6 +66,17 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid rgba
 .app{background:transparent!important;min-height:0!important;height:auto!important}
 #setup{background:transparent!important;min-height:0!important;height:auto!important}
 </style>
+/* G4 HERO HEIGHT FIX */
+<style id="g4-hero-height-fix">
+/* Remove only the unintended full-height Hero block on Group 4 setup screens. */
+#setup .hero{
+  background:transparent!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+</style>
 </head><body>
 <div id="cmaSessionBar">
   <div class="cma-session-left"><strong>CMA MCQ Portal</strong><span id="cmaSessionEmail" class="cma-session-email"></span></div>
