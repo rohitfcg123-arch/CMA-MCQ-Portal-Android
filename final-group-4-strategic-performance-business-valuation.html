@@ -241,6 +241,12 @@ async function getSiteSettings(){
 }
 
 let __origSourceQuestions=null;
+/* Compatibility helpers for the shared access controller. */
+function source(){
+  const el=document.getElementById("fpyqSource");
+  return el ? (el.value||"bank").toLowerCase() : "bank";
+}
+window.sourceQuestions=function(){return QUESTIONS.slice();};
 function applyFreePoolCap(poolSize){
   if(!__origSourceQuestions) __origSourceQuestions=window.sourceQuestions;
   window.sourceQuestions=function(){
