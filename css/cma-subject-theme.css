@@ -193,3 +193,55 @@ button,.btn,.primary,.secondary,.outline,.home,.danger,.chip{border-radius:10px 
     max-height:none !important;
   }
 }
+
+
+/* =========================================================
+   CMA SUBJECT UI — MASTER EXAM INTERFACE 2026-09-25
+   Applies the same visual language to legacy subject templates
+   without changing their question/quiz JavaScript logic.
+   ========================================================= */
+
+/* Legacy setup/dashboard aliases */
+.dashboard-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin:12px 0 16px!important}
+.dash-card{display:flex!important;flex-direction:column!important;gap:5px!important;text-align:left!important;width:100%!important;padding:15px!important;border:1px solid #d5cdbb!important;border-radius:12px!important;background:#eee9dc!important;color:#17272a!important;box-shadow:0 4px 14px rgba(8,56,58,.035)!important}
+.dash-card b{color:#08383a!important;font-size:.92rem!important}.dash-card span{color:#6d695f!important;font-size:.78rem!important;line-height:1.4!important}
+.opt-row{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;padding:12px 0!important;border-bottom:1px solid #d5cdbb!important}.opt-row:last-child{border-bottom:0!important}.opt-row>label:first-child{flex:1!important;line-height:1.4!important}.opt-row .desc{display:block!important;margin-top:3px!important}
+.primary-btn{width:100%!important;padding:15px!important;border-radius:12px!important;background:#0e5052!important;border:1px solid #0e5052!important;color:#fff!important;font-weight:800!important;font-size:1rem!important;box-shadow:0 8px 20px rgba(14,80,82,.14)!important}
+.ghost-btn{border:1px solid #d5cdbb!important;border-radius:10px!important;padding:10px 13px!important;background:#f7f5ef!important;color:#0e5052!important;font-weight:750!important}
+.utility-row,.btn-row{display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important;margin-top:10px!important}
+
+/* Legacy exam/question aliases — same appearance as the master subject UI */
+.quiz-bar,.qbar{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:8px!important;font-size:.78rem!important;color:#6d695f!important;font-weight:800!important;margin-top:16px!important}
+.progress-track{height:6px!important;background:#d5cdbb!important;border-radius:99px!important;overflow:hidden!important;margin:9px 0 13px!important}
+.progress-fill{height:100%!important;width:0!important;background:#0e5052!important;transition:width .2s!important}
+.timer-track{height:4px!important;background:#d5cdbb!important;border-radius:99px!important;overflow:hidden!important;margin-bottom:18px!important}
+.timer-fill{height:100%!important;width:100%!important;background:#0e5052!important;transition:width 1s linear!important}
+.q-num,.qno{font-size:.78rem!important;color:#9a741e!important;font-weight:800!important;margin:10px 0 7px!important}
+.q-text{font-size:1.12rem!important;line-height:1.55!important;font-weight:650!important;margin:0 0 16px!important;color:#17272a!important}
+.bookmark-btn{float:right!important;border:1px solid #d5cdbb!important;background:#f7f5ef!important;border-radius:9px!important;padding:8px 10px!important;color:#0e5052!important;font-weight:750!important}
+.nav-row{display:grid!important;grid-template-columns:1fr 1.2fr!important;gap:8px!important;margin-top:13px!important}
+.foot-link{text-align:center!important}.foot-link button{width:100%!important;margin-top:9px!important;padding:10px!important;border:0!important;background:transparent!important;color:#6d695f!important;text-decoration:underline!important}
+
+/* Legacy result aliases */
+.score-block{text-align:center!important;padding-top:26px!important}.score-num{font-size:3.3rem!important;font-weight:850!important;color:#08383a!important;letter-spacing:-.04em!important}.score-pct{font-size:1.05rem!important;color:#9a741e!important;font-weight:800!important}.score-label{color:#6d695f!important}
+.breakdown{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:8px!important;margin:18px 0!important}.bd-item{padding:12px 5px!important;border:1px solid #d5cdbb!important;background:#eee9dc!important;border-radius:10px!important;text-align:center!important}.bd-num{font-size:1.3rem!important;font-weight:800!important}.bd-lbl{font-size:.68rem!important;color:#6d695f!important;font-weight:800!important;text-transform:uppercase!important}.bd-good .bd-num{color:#2f7042!important}.bd-bad .bd-num{color:#a13d31!important}.bd-muted .bd-num{color:#6d695f!important}
+.marks-block{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:10px!important;padding:14px 16px!important;background:#eee9dc!important;border:1px solid #d5cdbb!important;border-radius:14px!important}.marks-block span{color:#6d695f!important}.marks-block strong{color:#08383a!important}
+.review-toggle{margin-top:18px!important}.review-toggle .ghost-btn{width:100%!important}
+
+/* Topic/config controls */
+.topic-select{width:100%!important;padding:12px!important;border:1px solid #d5cdbb!important;border-radius:10px!important;background:#f7f5ef!important;color:#17272a!important}
+.topic-info{padding-top:8px!important;color:#6d695f!important;font-size:.8rem!important;line-height:1.4!important}
+
+/* Keep the exam surface stable: no viewport-sized blank panels on any subject template. */
+body,html,.wrap,.app,.screen,.screen.active,#setup,#setupScreen,#quiz,#quizScreen,#result,#resultScreen,#results{
+  min-height:0!important;height:auto!important;max-height:none!important;
+}
+.screen:not(.active){display:none!important}.screen.active{display:block!important}
+#setupScreen,#quizScreen,#resultScreen{position:static!important;overflow:visible!important;background:transparent!important}
+
+@media(max-width:520px){
+ .dashboard-grid{grid-template-columns:1fr!important}
+ .utility-row,.btn-row{grid-template-columns:1fr 1fr!important}
+ .breakdown{grid-template-columns:repeat(3,1fr)!important}
+ .q-text{font-size:1.03rem!important}
+}
