@@ -1,5 +1,5 @@
 name: cma_mcq_portal
-description: CMA MCQ Portal Android wrapper with native Firebase email authentication.
+description: CMA Zone Android app with native Firebase email authentication.
 publish_to: "none"
 version: 1.0.0+1
 
@@ -24,4 +24,4 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/cma_zone_logo.png
+    - assets/cma_zone_logo.webp
