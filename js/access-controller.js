@@ -83,11 +83,12 @@ initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'))
   },true);
   document.addEventListener('DOMContentLoaded',routeSubjectScreens);
   window.addEventListener('load',routeSubjectScreens);
-  const observer=new MutationObserver(function(){
-    if(new URLSearchParams(location.search).get('cmaQuiz')==='1') return;
-    routeSubjectScreens();
-  });
-  if(document.documentElement) observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+  /* UPDATE 14: disable the old class/style MutationObserver.
+     routeSubjectScreens() itself changes class/style on setup/quiz/result.
+     Watching those same mutations caused a feedback loop: route -> style mutation
+     -> observer -> route -> style mutation, which could peg the main thread and
+     make every button/page appear frozen. Screen routing is already covered by
+     DOMContentLoaded, load and click hooks above, so no observer is required. */
 })();
 
 /* UPDATE 7 — real document navigation for question attempt
