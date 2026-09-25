@@ -310,6 +310,8 @@ async function recordAttempt(user,mode){
 
 function isStartAction(btn){
   if(!btn || btn.tagName!=="BUTTON") return false;
+  /* PYQ controls have their own access/session controller. Never intercept them here. */
+  if(btn.id==="fpyqStart" || btn.id==="fpyqWrong" || btn.id==="fpyqBook" || btn.closest("#finalPyqPanel")) return false;
   const onclick=(btn.getAttribute("onclick")||"").toLowerCase();
   const id=(btn.id||"").toLowerCase();
   const text=(btn.textContent||"").trim().toLowerCase();
@@ -396,7 +398,7 @@ auth.onAuthStateChanged(async user=>{
 })();
 </script>
 <script id="cma-central-access-controller">
-window.CMA_ACCESS_VERSION="2026.09.25.3";
+window.CMA_ACCESS_VERSION="2026.09.25.4";
 (function(){
   function isFeatureClick(btn){
     const t=((btn&&btn.textContent)||'').toLowerCase(), id=((btn&&btn.id)||'').toLowerCase();
