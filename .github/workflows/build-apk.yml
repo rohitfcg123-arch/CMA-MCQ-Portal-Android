@@ -48,8 +48,8 @@ jobs:
       - name: Use CMA Zone logo for app and launcher
         run: |
           mkdir -p android/app/src/main/res/drawable
-          test -s assets/cma_zone_logo.png
-          cp assets/cma_zone_logo.png android/app/src/main/res/drawable/cma_zone_logo.png
+          test -s assets/cma_zone_logo.webp
+          cp assets/cma_zone_logo.webp android/app/src/main/res/drawable/cma_zone_logo.png
           python3 - <<'PY'
           from pathlib import Path
           p = Path("android/app/src/main/AndroidManifest.xml")
