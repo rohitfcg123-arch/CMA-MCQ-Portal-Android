@@ -59,7 +59,16 @@ select,.field{outline:none;transition:.15s}select:focus,.field:focus{border-colo
 .review-item{box-shadow:0 3px 10px rgba(8,56,58,.025)}
 button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid rgba(200,162,74,.38);outline-offset:2px}
 @media(max-width:520px){.app{padding-left:12px;padding-right:12px}.hero{padding-top:22px}.hero h1{font-size:1.55rem}.qtext{font-size:1.03rem}.option{padding:13px}.topline{align-items:flex-start}}
-</style><link rel="stylesheet" href="css/cma-subject-theme.css">
+</style><link rel="stylesheet" href="css/cma-subject-theme.css?v=20260925interfix1">
+<style id="cma-mobile-hero-fix">
+/* Mobile setup-screen fix: keep the subject hero compact and paper-coloured. */
+html,body{background:#f7f5ef!important;min-height:0!important;height:auto!important}
+.app{background:#f7f5ef!important;height:auto!important;min-height:0!important}
+#setup.screen.active{display:block!important;background:#f7f5ef!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+#setup .hero{display:block!important;position:relative!important;background:#f7f5ef!important;color:#17272a!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;padding:22px 3px 20px!important}
+#setup .hero h1{display:block!important;visibility:visible!important;color:#08383a!important}
+#setup .hero p{display:block!important;visibility:visible!important;color:#6d695f!important}
+</style>
 </head><body>
 <div id="cmaSessionBar">
   <div class="cma-session-left"><strong>CMA MCQ Portal</strong><span id="cmaSessionEmail" class="cma-session-email"></span></div>
