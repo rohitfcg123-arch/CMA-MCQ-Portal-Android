@@ -294,7 +294,9 @@ async function getAccessState(user){
   const today=new Date().toISOString().slice(0,10), expiry=String(data.expiryDate||""), expired=!!expiry&&expiry<today;
   const groups=Array.isArray(data.groups)?data.groups:[];
   const paid=groups.includes(ACCESS_GROUP)&&!expired;
-  const adminLike=paid||settings.siteWideFree||data.fullAccess===true||data.freeFullAccess===true||data.universalFull===true||data.universalFree===true||String(data.accessType||"").toLowerCase()==="all";
+  const universalUserAccess=data.universalFull===true||data.universalFree===true||data.universalAccess===true||data.fullAccess===true||data.freeFullAccess===true||String(data.accessType||"").toLowerCase()==="all"||String(data.plan||"").toLowerCase()==="universal"||String(data.plan||"").toLowerCase()==="universal access";
+  const universalSettings=settings.siteWideFree===true||settings.universalFull===true||settings.universalFree===true||settings.universalAccess===true;
+  const adminLike=paid||universalSettings||universalUserAccess;
   const allFeatures=adminLike
     ? {mcqBank:true,pyq:true,reattemptWrong:true,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:true}
     : {mcqBank:feature("mcqBank",true),pyq:feature("pyq",false),reattemptWrong:feature("reattemptWrong",false),bookmark:feature("bookmark",true),chapterTopic:feature("chapterTopic",true),answerReveal:feature("answerReveal",true),overallTimer:feature("overallTimer",true),questionTimer:feature("questionTimer",false)};
