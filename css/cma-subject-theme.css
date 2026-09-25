@@ -294,3 +294,61 @@ body,html,.wrap,.app,.screen,.screen.active,#setup,#setupScreen,#quiz,#quizScree
   appearance:none!important;
   z-index:2!important;
 }
+
+/* UPDATE 5 — HARD FIX 2026-09-25
+   The practice switch must never become a page-sized click target.
+   Only the 48x28 switch itself is interactive. */
+.card label.switch,
+.card .switch{
+  box-sizing:border-box!important;
+  display:block!important;
+  position:relative!important;
+  width:48px!important;
+  min-width:48px!important;
+  max-width:48px!important;
+  height:28px!important;
+  min-height:28px!important;
+  max-height:28px!important;
+  flex:0 0 48px!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  background:transparent!important;
+}
+.card label.switch > .track,
+.card .switch > .track{
+  box-sizing:border-box!important;
+  position:absolute!important;
+  inset:0!important;
+  width:48px!important;
+  min-width:48px!important;
+  max-width:48px!important;
+  height:28px!important;
+  min-height:28px!important;
+  max-height:28px!important;
+  flex:none!important;
+  pointer-events:none!important;
+}
+.card label.switch > input[type="checkbox"],
+.card .switch > input[type="checkbox"]{
+  box-sizing:border-box!important;
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:48px!important;
+  min-width:48px!important;
+  max-width:48px!important;
+  height:28px!important;
+  min-height:28px!important;
+  max-height:28px!important;
+  padding:0!important;
+  margin:0!important;
+  opacity:0!important;
+  pointer-events:auto!important;
+  z-index:5!important;
+  cursor:pointer!important;
+}
+.card label.switch > span:not(.track){
+  display:none!important;
+}
