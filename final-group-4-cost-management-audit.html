@@ -297,6 +297,10 @@ async function getAccessState(user){
   const universalUserAccess=data.universalFull===true||data.universalFree===true||data.universalAccess===true||data.fullAccess===true||data.freeFullAccess===true||String(data.accessType||"").trim().toLowerCase()==="all"||String(data.accessType||"").trim().toLowerCase()==="universal"||String(data.accessType||"").trim().toLowerCase()==="universal access"||String(data.plan||"").trim().toLowerCase()==="universal"||String(data.plan||"").trim().toLowerCase()==="universal access";
   const universalSettings=settings.siteWideFree===true||settings.universalFull===true||settings.universalFree===true||settings.universalAccess===true;
   const adminLike=paid||universalSettings||universalUserAccess;
+  /* UPDATE 24: an explicit Universal/Full Access grant is authoritative. Do not let an old inactive/expiry flag block it. */
+  if(universalSettings||universalUserAccess){
+    return {allowed:true,paid:true,admin:universalUserAccess&&email===ADMIN_EMAIL,universal:true,freeUsed:0,freeRemaining:999999,data,settings,features:{mcqBank:true,pyq:true,reattemptWrong:true,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:true},maxQuestions:999999,maxAttempts:999999,freeTestMinutes:999999,freeQuestionSeconds:999999};
+  }
   const allFeatures=adminLike
     ? {mcqBank:true,pyq:true,reattemptWrong:true,bookmark:true,chapterTopic:true,answerReveal:true,overallTimer:true,questionTimer:true}
     : {mcqBank:feature("mcqBank",true),pyq:feature("pyq",false),reattemptWrong:feature("reattemptWrong",false),bookmark:feature("bookmark",true),chapterTopic:feature("chapterTopic",true),answerReveal:feature("answerReveal",true),overallTimer:feature("overallTimer",true),questionTimer:feature("questionTimer",false)};
@@ -378,7 +382,7 @@ async function continueAction(btn){
     setTimeout(()=>{bypassClick=false;},0);
   }catch(e){
     console.error("Access/attempt check failed:",e);
-    showNotice("We could not verify your access right now. Please check your connection and try again.");
+    showNotice("Access verification could not be completed. Please refresh the page and sign in again.");
   }finally{actionBusy=false;}
 }
 
@@ -407,7 +411,7 @@ auth.onAuthStateChanged(async user=>{
 })();
 </script>
 <script id="cma-central-access-controller">
-window.CMA_ACCESS_VERSION="2026.09.26.23";
+window.CMA_ACCESS_VERSION="2026.09.26.24";
 (function(){
   function isFeatureClick(btn){
     const t=((btn&&btn.textContent)||'').toLowerCase(), id=((btn&&btn.id)||'').toLowerCase();
