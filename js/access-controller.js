@@ -39,3 +39,47 @@ function looksLikeStart(btn){const t=textOf(btn);return t.includes('start practi
 document.addEventListener('click',function(e){const btn=e.target.closest('button,a');if(!btn)return;const a=window.cmaAccessState;if(!a||a.admin||a.paid)return;const f=featureFromClick(btn);if(f&&!featureAllowed(a,f,DEFAULTS.features[f])){e.preventDefault();e.stopImmediatePropagation();showPopup(f+' is not included in your current access. Please buy a subscription to continue.');return}if(looksLikeStart(btn)){const lim=questionLimit(a),count=selectedQuestionCount();if(Number.isFinite(lim)&&count&&count>lim){e.preventDefault();e.stopImmediatePropagation();showPopup('',{questionLimit:lim,selectedQuestions:count});return}if(Number.isFinite(attemptLimit(a))&&attemptLimit(a)<=0){e.preventDefault();e.stopImmediatePropagation();showPopup('Your free attempts are exhausted. Please buy a subscription to continue.');return}}},true);
 initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'));
 })();
+/* UPDATE 6 — unified subject screen routing
+   Keep setup, quiz and result as separate full screens even on legacy subject templates.
+   Some older pages reveal quiz/result with inline display without removing the setup screen. */
+(function(){
+  'use strict';
+  function visible(el){
+    if(!el) return false;
+    const s=getComputedStyle(el);
+    const r=el.getBoundingClientRect();
+    return s.display!=='none' && s.visibility!=='hidden' && (r.width>0 || r.height>0);
+  }
+  function hideScreen(el){
+    if(!el)return;
+    el.classList.remove('active');
+    el.style.setProperty('display','none','important');
+  }
+  function showScreen(el){
+    if(!el)return;
+    el.classList.add('active');
+    el.style.removeProperty('display');
+  }
+  function routeSubjectScreens(){
+    const setup=document.getElementById('setup')||document.getElementById('setupScreen');
+    const quiz=document.getElementById('quiz')||document.getElementById('quizScreen');
+    const result=document.getElementById('results')||document.getElementById('resultScreen');
+    if(!setup&&!quiz&&!result)return;
+    if(result && (result.classList.contains('active') || visible(result) && !!(result.querySelector('.score,.score-num,#score,#finalScore,.results')))){
+      hideScreen(setup); hideScreen(quiz); showScreen(result); return;
+    }
+    if(quiz && (quiz.classList.contains('active') || visible(quiz) && !!(quiz.querySelector('.options,#options,#qOptions,.q-text,#qText')))){
+      hideScreen(setup); hideScreen(result); showScreen(quiz); return;
+    }
+    if(setup) showScreen(setup);
+    if(quiz && !quiz.classList.contains('active')) hideScreen(quiz);
+    if(result && !result.classList.contains('active')) hideScreen(result);
+  }
+  window.CMA_routeSubjectScreens=routeSubjectScreens;
+  document.addEventListener('click',function(){
+    setTimeout(routeSubjectScreens,50);
+    setTimeout(routeSubjectScreens,250);
+  },true);
+  document.addEventListener('DOMContentLoaded',routeSubjectScreens);
+  window.addEventListener('load',routeSubjectScreens);
+})();
