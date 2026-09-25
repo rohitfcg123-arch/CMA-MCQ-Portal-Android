@@ -156,14 +156,48 @@ initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'))
     u.searchParams.set('cmaQuiz','1');
     location.href=u.href;
   },true);
+  function prepareQuizDocument(){
+    if(new URLSearchParams(location.search).get('cmaQuiz')!=='1')return;
+    /* Do not show the setup page at the top while the real Start action is
+       being replayed. The user should land directly on the question viewport. */
+    document.documentElement.classList.add('cma-quiz-loading');
+    if(!document.getElementById('cma-quiz-loading-style')){
+      const s=document.createElement('style');
+      s.id='cma-quiz-loading-style';
+      s.textContent='html.cma-quiz-loading body{visibility:hidden!important}';
+      (document.head||document.documentElement).appendChild(s);
+    }
+  }
+  function revealQuestionViewport(){
+    const quiz=document.getElementById('quiz')||document.getElementById('quizScreen')||document.querySelector('.quiz-screen');
+    document.documentElement.classList.remove('cma-quiz-loading');
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        if(quiz){
+          quiz.scrollIntoView({block:'start',behavior:'instant'});
+        }else{
+          window.scrollTo(0,0);
+        }
+      });
+    });
+  }
   function replayStart(){
     if(new URLSearchParams(location.search).get('cmaQuiz')!=='1')return;
+    prepareQuizDocument();
     const data=restoreSelections();
-    if(!data)return;
+    if(!data){
+      document.documentElement.classList.remove('cma-quiz-loading');
+      return;
+    }
     sessionStorage.setItem('cma_real_start','1');
     const b=findStart(data);
     if(b){
-      setTimeout(()=>b.click(),120);
+      setTimeout(function(){
+        b.click();
+        setTimeout(revealQuestionViewport,120);
+      },80);
+    }else{
+      revealQuestionViewport();
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(replayStart,150));
