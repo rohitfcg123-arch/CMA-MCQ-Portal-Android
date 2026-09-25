@@ -143,39 +143,7 @@ setTimeout(repairGreenBlock,400);
   setTimeout(collapseEmptySetupSpacer,500);
 })();
 </script>
-<style id="cma-blank-overlay-guard-20260925">
-/* Collapse only large EMPTY wrappers. Never affect cards, controls, text or the session/auth UI. */
-body.cma-blank-guard-ready #cmaSessionBar,
-body.cma-blank-guard-ready #cmaAuthOverlay,
-body.cma-blank-guard-ready #cmaAccessNotice{z-index:100000!important}
-</style>
-<script id="cma-blank-overlay-guard-20260925">
-(function(){
-  function hasRealContent(el){
-    if(el.querySelector('input,select,button,textarea,a,img,svg,video,canvas,iframe,table')) return true;
-    return !!(el.innerText||'').replace(/\s+/g,'').trim();
-  }
-  function fix(){
-    document.body.classList.add('cma-blank-guard-ready');
-    document.querySelectorAll('body *').forEach(function(el){
-      if(!el || el.id==='cmaSessionBar'||el.closest('#cmaSessionBar')||
-         el.id==='cmaAuthOverlay'||el.closest('#cmaAuthOverlay')||
-         el.id==='cmaAccessNotice'||el.closest('#cmaAccessNotice')||
-         el.tagName==='SCRIPT'||el.tagName==='STYLE') return;
-      if(hasRealContent(el)) return;
-      var r=el.getBoundingClientRect(), cs=getComputedStyle(el);
-      if(r.width<180 || r.height<180) return;
-      var bg=(cs.backgroundColor||'').replace(/\s/g,'').toLowerCase();
-      var paper=/rgb\(247,245,239\)|rgb\(238,233,220\)|rgba\(247,245,239|rgba\(238,233,220|transparent/.test(bg);
-      if(!paper) return;
-      el.style.setProperty('display','none','important');
-    });
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix();
-  window.addEventListener('load',fix);
-  setTimeout(fix,100);setTimeout(fix,500);setTimeout(fix,1200);
-})();
-</script>
+
 </head><body>
 <div id="cmaSessionBar">
   <div class="cma-session-left"><strong>CMA MCQ Portal</strong><span id="cmaSessionEmail" class="cma-session-email"></span></div>
