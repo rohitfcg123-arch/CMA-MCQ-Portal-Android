@@ -126,7 +126,17 @@ function init(){
    document.body.classList.remove("final-pyq-active");
    const quiz=document.getElementById("fpyqQuiz");if(quiz){quiz.style.display="none";quiz.innerHTML="";}
    const panel=document.getElementById("finalPyqPanel");if(panel)panel.style.display="none";
-   try{if(typeof show==="function")show("setup");}catch(e){}
+   try{
+   if(typeof showScreen==="function")showScreen("setupScreen");
+   else if(typeof show==="function")show("setup");
+   else {
+     const setup=document.getElementById("setupScreen")||document.getElementById("setup");
+     const quiz=document.getElementById("quizScreen")||document.getElementById("quiz");
+     const result=document.getElementById("resultScreen")||document.getElementById("result");
+     [quiz,result].forEach(x=>{if(x)x.classList.remove("active");});
+     if(setup)setup.classList.add("active");
+   }
+ }catch(e){console.warn("CMA PYQ: bank setup restore failed",e)}
    try{
      const start=document.getElementById("startBtn");if(start&&typeof startRound==="function")start.onclick=()=>startRound("normal");
      const wrong=document.getElementById("wrongBtn");if(wrong&&typeof startRound==="function")wrong.onclick=()=>startRound("wrong");
@@ -136,8 +146,15 @@ function init(){
  };
  const setMode=()=>{
    state.source=sel.value;save();
-   if(sel.value==="pyq"){document.body.classList.add("final-pyq-active");renderSetup();}
-   else restoreBank();
+   if(sel.value==="pyq"){
+     document.body.classList.add("final-pyq-active");
+     renderSetup();
+   }else{
+     restoreBank();
+     // Always restore the subject's own setup UI before the user changes anything else.
+     const setup=document.getElementById("setupScreen")||document.getElementById("setup");
+     if(setup)setup.classList.add("active");
+   }
  };
  sel.onchange=setMode;
  document.getElementById("fpyqTerm").value=state.term||"all";
