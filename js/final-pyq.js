@@ -4,7 +4,7 @@ const TERMS=["June 2026","December 2025","June 2025","December 2024","June 2024"
 const path=location.pathname.split("/").pop();
 const byPath=window.CMA_FINAL_PYQ||{};
 const entry=Object.values(byPath).find(x=>x.path===path);
-if(!entry||!entry.rows||entry.rows.length<75)return;
+if(!entry||!Array.isArray(entry.rows)||!entry.rows.length){console.warn("CMA PYQ: no mapping for",path);return;}
 const paper=(entry.rows[0].id||"").split("-")[0];
 const group=paper==="P13"||paper==="P14"||paper==="P15"||paper==="P16"?"Group 3":"Group 4";
 const accent=group==="Group 3"?"#0b6e69":"#7a5c16";
