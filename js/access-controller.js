@@ -137,7 +137,10 @@ initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'))
     return all.find(b=>isStartButton(b) && (!data?.buttonText || b.textContent.trim()===data.buttonText)) ||
            all.find(isStartButton);
   }
-  document.addEventListener('click',function(e){
+  /* Use WINDOW capture so this runs before subject-level access gates
+     that stop document capture propagation. This prevents the first tap from
+     being consumed by the old same-page start handler. */
+  window.addEventListener('click',function(e){
     if(new URLSearchParams(location.search).get('cmaQuiz')==='1')return;
     if(sessionStorage.getItem('cma_real_start')==='1'){
       sessionStorage.removeItem('cma_real_start');
