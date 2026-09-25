@@ -22,7 +22,7 @@ Future<void> main() async {
 }
 class App extends StatelessWidget{
  const App({super.key});
- @override Widget build(BuildContext c)=>MaterialApp(debugShowCheckedModeBanner:false,title:'CMA Zone - MCQ Portal',
+ @override Widget build(BuildContext c)=>MaterialApp(debugShowCheckedModeBanner:false,title:'CMA Zone',
   theme:ThemeData(colorScheme:ColorScheme.fromSeed(seedColor:const Color(0xFF0D3B3E)),useMaterial3:true),home:const AuthGate());
 }
 class AuthGate extends StatelessWidget{
@@ -136,7 +136,7 @@ Widget build(BuildContext c) {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Text(reg ? 'Create your account' : 'CMA Zone — MCQ Portal',
+                      Text(reg ? 'Create your account' : 'CMA Zone',
                         style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: Color(0xFF082627))),
                       const SizedBox(height: 6),
                       Text(reg ? 'Register inside the app. We will verify your email.' : 'Login securely with your verified email and password.',
