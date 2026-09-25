@@ -45,6 +45,11 @@ jobs:
             --org com.taxpath \
             --project-name cma_mcq_portal
 
+      - name: Install ImageMagick for CMA Zone logo generation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
       - name: Generate CMA Zone logo assets and Android launcher icon
         run: |
           mkdir -p assets android/app/src/main/res/drawable
