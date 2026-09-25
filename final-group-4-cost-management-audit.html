@@ -159,7 +159,7 @@ function setupEvents(){
  $('instant').onchange=e=>cfg.instant=e.target.checked;$('random').onchange=e=>cfg.random=e.target.checked;
  $('timerMode').onchange=e=>{cfg.timer=e.target.value;$('questionTimeRow').style.display=cfg.timer==='question'?'flex':'none';$('roundTimeRow').style.display=cfg.timer==='round'?'flex':'none'};
  $('roundTime').onchange=e=>cfg.roundMinutes=+e.target.value;
- $('startBtn').onclick=()=>startRound('normal');$('wrongBtn').onclick=()=>startRound('wrong');$('bookBtn').onclick=()=>startRound('bookmarks');$('retryWrong').onclick=()=>startRound('wrong');$('newRound').onclick=()=>show('setup');
+ $('startBtn').onclick=function(){startRound('normal');};$('wrongBtn').onclick=()=>startRound('wrong');$('bookBtn').onclick=()=>startRound('bookmarks');$('retryWrong').onclick=()=>startRound('wrong');$('newRound').onclick=()=>show('setup');
  $('prev').onclick=()=>nav(-1);$('next').onclick=()=>nav(1);$('end').onclick=()=>finish();$('reveal').onclick=()=>reveal();$('bookmark').onclick=toggleBookmark;
  $('toggleReview').onclick=()=>{const el=$('reviewList');el.style.display=el.style.display==='block'?'none':'block'};
  $('homeBtn').onclick=$('homeResult').onclick=()=>location.href='index.html';
@@ -223,12 +223,17 @@ const auth=firebase.auth(),db=firebase.firestore();
 const provider=new firebase.auth.GoogleAuthProvider();
 provider.setCustomParameters({prompt:"select_account"});
 const persistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>{console.error(e);});
-const authStateReady=Promise.all([
-  persistenceReady,
-  new Promise(resolve=>{
-    let done=false;
-    const unsub=auth.onAuthStateChanged(()=>{if(!done){done=true;unsub();resolve();}});
-  })
+const authStateReady=Promise.race([
+  Promise.all([
+    persistenceReady,
+    new Promise(resolve=>{
+      let done=false;
+      let unsub=null;
+      const finish=()=>{if(done)return;done=true;if(unsub)unsub();resolve();};
+      unsub=auth.onAuthStateChanged(finish);
+    })
+  ]),
+  new Promise(resolve=>setTimeout(resolve,3000))
 ]);
 
 const emailEl=document.getElementById("cmaSessionEmail");
@@ -366,6 +371,10 @@ async function continueAction(btn){
     })();
     if(state.allowed && !state.paid && selectedCount && selectedCount>Number(state.maxQuestions||999999)){
       showNotice("Free access allows only "+state.maxQuestions+" questions. Please reduce the question count or purchase full access.");
+      return;
+    }
+    if(state.allowed && typeof window.startRound==="function" && btn.id==="startBtn" && typeof btn.onclick!=="function"){
+      window.startRound("normal");
       return;
     }
     if(state.allowed && !state.features.reattemptWrong && /wrong/i.test(btn.textContent||"")){
