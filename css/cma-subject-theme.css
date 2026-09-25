@@ -139,3 +139,57 @@ button,.btn,.primary,.secondary,.outline,.home,.danger,.chip{border-radius:10px 
   display:none!important;
   content:none!important;
 }
+
+/* === MOBILE SETUP SPACER FIX 2026-09-25 ===
+   Prevent an empty/hidden setup child from consuming a viewport-sized flex slot.
+   This fixes the large blank area visible between the session bar and Answer Mode. */
+#setup,
+#setupScreen,
+.screen.active{
+  display:block !important;
+  position:static !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  flex:none !important;
+  flex-grow:0 !important;
+  flex-shrink:0 !important;
+  align-self:stretch !important;
+  justify-content:flex-start !important;
+}
+#setup > *,
+#setupScreen > *,
+.screen.active > *{
+  flex:none !important;
+  flex-grow:0 !important;
+  flex-shrink:0 !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+}
+#setup > .spacer,
+#setupScreen > .spacer,
+#setup > .setup-spacer,
+#setupScreen > .setup-spacer,
+#setup > .blank-space,
+#setupScreen > .blank-space,
+#setup > [aria-hidden="true"],
+#setupScreen > [aria-hidden="true"]{
+  display:none !important;
+}
+@media(max-width:700px){
+  #setup,
+  #setupScreen,
+  .screen.active{
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+  #setup > *,
+  #setupScreen > *,
+  .screen.active > *{
+    min-height:0 !important;
+    max-height:none !important;
+  }
+}
