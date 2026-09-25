@@ -258,6 +258,13 @@ async function getSiteSettings(){
 }
 
 let __origSourceQuestions=null;
+/* Compatibility helpers used by the shared access gate. This subject's native
+   quiz uses QUESTIONS directly, so the helpers must never be undefined. */
+function source(){
+  const el=document.getElementById("fpyqSource");
+  return el ? (el.value||"bank").toLowerCase() : "bank";
+}
+window.sourceQuestions=function(){return QUESTIONS.slice();};
 function applyFreePoolCap(poolSize){
   if(!__origSourceQuestions) __origSourceQuestions=window.sourceQuestions;
   window.sourceQuestions=function(){
