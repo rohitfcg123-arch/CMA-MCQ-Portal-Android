@@ -91,3 +91,9 @@ button,.btn,.primary,.secondary,.outline,.home,.danger,.chip{border-radius:10px 
 .card .switch>span{display:block;min-width:0;flex:1;line-height:1.35}
 .card .switch input[type="checkbox"]{position:static;opacity:1;width:20px;height:20px;min-width:20px;margin:0;appearance:auto;accent-color:var(--teal);flex:0 0 auto}
 .card .switch input[type="number"]{position:static;opacity:1;width:130px;height:auto;min-width:0;margin:0;padding:10px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink);flex:0 0 130px}
+
+/* Group 4/mobile layout guard: prevent inherited hero/setup sizing or teal backgrounds from creating a full-screen blank block. */
+.screen.active{display:block!important;height:auto!important;min-height:0!important}
+#setup{height:auto!important;min-height:0!important;background:var(--paper)!important;color:var(--ink)!important}
+#setup .hero{height:auto!important;min-height:0!important;background:transparent!important;color:var(--ink)!important;overflow:visible!important}
+#setup .hero h1,#setup .hero p{color:var(--teal2)!important}
