@@ -124,7 +124,7 @@ Widget build(BuildContext c) {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: Image.asset(
-                          'assets/cma_zone_logo.png',
+                          'assets/cma_zone_logo.webp',
                           width: 104,
                           height: 104,
                           fit: BoxFit.cover,
