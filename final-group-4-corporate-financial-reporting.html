@@ -105,7 +105,7 @@ html,body{background:#f7f5ef!important;min-height:0!important;height:auto!import
 <section id="setup" class="screen active">
 <div class="hero"><h1>Corporate Financial Reporting</h1><p><span id="sourceSummary">395 MCQ Bank questions loaded.</span> Choose the question source, round size, answer mode and timer before starting.</p></div>
 <div class="card"><h2>Question Source</h2><div class="row"><div><div class="label">What do you want to solve?</div><span class="desc">Choose between the regular MCQ Bank and Previous Year Papers.</span></div><select id="sourceSelect" style="max-width:240px"><option value="bank">MCQ Bank</option><option value="pyq">Previous Year Paper</option></select></div></div>
-<div class="card" id="bankCard"><h2>Chapter</h2><select id="chapterSelect"><option value="all">All Chapters</option><option value="1">Chapter 1: Specific Accounting Standards</option><option value="2">Chapter 2: Valuation of Shares (Including Determination of Goodwill, Post-Valuation of Tangible and Intangible Assets)</option><option value="3">Chapter 3: Accounting of Financial Instruments</option><option value="4">Chapter 4: NBFCs – Provisioning Norms, Accounting and Reporting</option><option value="5">Chapter 5: Accounting for Business Combinations and Restructuring</option><option value="6">Chapter 6: Consolidated Financial Statements and Separate Financial Statements</option><option value="7">Chapter 7: Recent Developments in Financial Reporting</option><option value="8">Chapter 8: Government Accounting in India</option></select><span class="desc" id="chapterCount">395 questions available in all chapters.</span></div>
+<div class="card" id="bankCard"><h2>Chapter</h2><select id="chapterSelect"><option value="all">All Chapters</option><option value="1">Chapter 1: Specific Accounting Standards</option><option value="2">Chapter 2: Valuation of Shares (Including Determination of Goodwill, Post-Valuation of Tangible and Intangible Assets)</option><option value="3">Chapter 3: Accounting of Financial Instruments</option><option value="4">Chapter 4: NBFCs – Provisioning Norms, Accounting and Reporting</option><option value="5">Chapter 5: Accounting for Business Combinations and Restructuring</option><option value="6">Chapter 6: Consolidated Financial Statements and Separate Financial Statements</option><option value="7">Chapter 7: Recent Developments in Financial Reporting</option><option value="8">Chapter 8: Government Accounting in India</option></select><span class="desc" id="chapterCount">139 questions available in all chapters.</span></div>
 <div class="card" id="pyqCard" style="display:none"><h2>Previous Year Paper</h2><select id="attemptSelect"><option value="all">All Attempts — 75 Questions</option><option value="June 2026">June 2026 — 15 Questions</option><option value="December 2025">December 2025 — 15 Questions</option><option value="June 2025">June 2025 — 15 Questions</option><option value="December 2024">December 2024 — 15 Questions</option><option value="June 2024">June 2024 — 15 Questions</option></select><span class="desc" id="attemptCount">75 previous-year questions available.</span></div>
 <div class="quick"><button class="outline" id="wrongBtn">↻ Reattempt Wrong <span id="wrongCount"></span></button><button class="outline" id="bookBtn">★ Bookmarked <span id="bookCount"></span></button></div>
 <div class="card"><h2>Round</h2><div class="row"><div><div class="label">Number of questions</div><span class="desc">Choose how many MCQs to attempt.</span></div><div class="stepper"><button id="qDown">−</button><span class="count" id="qCount">20</span><button id="qUp">+</button></div></div><div class="row"><div><div class="label">Marks per question</div><span class="desc">Used for the final score.</span></div><div class="stepper"><button id="mDown">−</button><span class="count" id="mCount">1</span><button id="mUp">+</button></div></div></div>
@@ -126,7 +126,7 @@ function selectedAttempt(){return $('attemptSelect').value}
 function sourceQuestions(){return QUESTIONS.filter(q=>q.source===source())}
 function selectedMaxQuestions(){
  if(source()==='pyq') return selectedAttempt()==='all'?75:15;
- const ch=$('chapterSelect').value; return ch==='all'?395:sourceQuestions().filter(q=>String(q.chapter)===ch).length;
+ const ch=$('chapterSelect').value; return ch==='all'?sourceQuestions().length:sourceQuestions().filter(q=>String(q.chapter)===ch).length;
 }
 function setDefaultRoundForSource(){
  if(source()==='pyq'){
@@ -215,9 +215,9 @@ const firebaseConfig={
   measurementId:"G-TXD74QQE8F"
 };
 const ADMIN_EMAIL="rohit.fcg123@gmail.com";
-const GROUP="inter-group-1";
+const GROUP="final-group-4";
 const GROUP_LABEL="CMA Final Group 4";
-const ACCESS_GROUP="inter-group-1";
+const ACCESS_GROUP="final-group-4";
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(),db=firebase.firestore();
 const provider=new firebase.auth.GoogleAuthProvider();
