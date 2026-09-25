@@ -53,8 +53,8 @@ jobs:
       - name: Generate CMA Zone logo assets and Android launcher icon
         run: |
           mkdir -p assets android/app/src/main/res/drawable
-          magick assets/cma_zone_logo.svg -background none -resize 1024x1024 assets/cma_zone_logo.png
-          magick assets/cma_zone_logo.svg -background none -resize 1024x1024 android/app/src/main/res/drawable/cma_zone_logo.png
+          convert assets/cma_zone_logo.svg -background none -resize 1024x1024 assets/cma_zone_logo.png
+          convert assets/cma_zone_logo.svg -background none -resize 1024x1024 android/app/src/main/res/drawable/cma_zone_logo.png
           python3 - <<'PY'
           from pathlib import Path
           p = Path("android/app/src/main/AndroidManifest.xml")
