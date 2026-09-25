@@ -372,12 +372,62 @@ async function continueAction(btn){
   }finally{actionBusy=false;}
 }
 
-document.addEventListener("click",function(e){
-  const btn=e.target.closest("button");
-  if(!isStartAction(btn) || bypassClick)return;
-  e.preventDefault();e.stopImmediatePropagation();
-  continueAction(btn);
-},true);
+/* Group 4 permanent start handler.
+   Do NOT capture the document click event: the PYQ controller and native MCQ
+   setup use separate controls, and document-level interception caused the
+   MCQ flow to become stuck after switching sources. */
+(function bindGroup4Start(){
+  const btn=document.getElementById("startBtn");
+  if(!btn || btn.__g4Bound)return;
+  const nativeStart=btn.onclick;
+  if(typeof nativeStart!=="function")return;
+  btn.__g4Bound=true;
+  btn.onclick=async function(e){
+    if(e && e.__g4NativeBypass)return;
+    if(actionBusy)return;
+    actionBusy=true;
+    try{
+      await authStateReady;
+      const user=auth.currentUser;
+      if(!user){location.href="index.html";return;}
+      const src=(typeof source==="function"?source():"bank").toLowerCase();
+
+      /* If PYQ is selected, leave the native MCQ screen untouched and let
+         final-pyq.js own its Start Previous Year Paper button. */
+      if(src==="pyq"){
+        showNotice("PYQ selected. Use the 'Start Previous Year Paper' button below.");
+        return;
+      }
+
+      const state=await getAccessState(user);
+      if(!state.allowed){showNotice(state.reason||"Access is not available.");return;}
+
+      const selected=Number(cfg&&cfg.questions)||0;
+      const limit=state.paid||state.admin ? 999999 : Number(state.maxQuestions||state.poolSize||20);
+      if(selected>limit){
+        showNotice("Free access allows only "+limit+" questions. Please reduce the question count or purchase full access.");
+        return;
+      }
+
+      if(state.fixedPool){
+        const n=Math.max(1,Number(state.poolSize)||20);
+        cfg.questions=Math.min(selected||n,n);
+      }
+
+      /* Analytics must never block quiz launch. */
+      recordAttempt(user,"MCQ Bank").catch(err=>console.warn("Attempt logging failed:",err));
+
+      const ev={__g4NativeBypass:true,preventDefault(){},stopPropagation(){}};
+      nativeStart.call(btn,ev);
+    }catch(err){
+      console.error("Group 4 start failed:",err);
+      showNotice("Could not start this practice round. Please try again.");
+    }finally{
+      actionBusy=false;
+    }
+  };
+})();
+
 
 auth.onAuthStateChanged(async user=>{
   if(user){
