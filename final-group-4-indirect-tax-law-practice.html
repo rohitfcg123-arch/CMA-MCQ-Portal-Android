@@ -372,7 +372,7 @@ async function continueAction(btn){
     }
     if(!state.allowed){showNotice("You don't have access to this Group 4 content. Please buy a subscription to continue.");return;}
     if(state.fixedPool) applyFreePoolCap(state.poolSize); else clearFreePoolCap();
-    await recordAttempt(user, (btn.textContent||"").trim().slice(0,80));
+    try{await recordAttempt(user, (btn.textContent||"").trim().slice(0,80));}catch(e){console.warn("Attempt logging failed; continuing with authorized test:",e);}
     bypassClick=true;
     btn.click();
     setTimeout(()=>{bypassClick=false;},0);
