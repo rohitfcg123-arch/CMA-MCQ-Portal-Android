@@ -193,6 +193,17 @@ initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'))
   }
   function replayStart(){
     if(new URLSearchParams(location.search).get('cmaQuiz')!=='1')return;
+    /* UPDATE 13: never hide a modern Foundation/Inter page.
+       These pages already have a native startQuiz() flow. If an old
+       ?cmaQuiz=1 URL is opened/bookmarked, the legacy replay loader must
+       not add cma-quiz-loading and leave the entire page invisible. */
+    if(typeof window.startQuiz==='function' && document.getElementById('setup') && document.getElementById('quiz')){
+      document.documentElement.classList.remove('cma-quiz-loading');
+      const stale=document.getElementById('cma-quiz-loading-style');
+      if(stale) stale.remove();
+      try{sessionStorage.removeItem(NAV_KEY);sessionStorage.removeItem('cma_real_start');}catch(e){}
+      return;
+    }
     prepareQuizDocument();
     const data=restoreSelections();
     if(!data){
