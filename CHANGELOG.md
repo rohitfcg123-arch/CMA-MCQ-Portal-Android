@@ -1,5 +1,9 @@
 # CMA MCQ Portal — Update
 
+## UPDATE 2 — 2026-09-25
+- Applied a final runtime/mobile CSS fix for the oversized blank green/teal block on Intermediate Group 1 and Group 2 subject setup screens.
+
+
 ## UPDATE 1 — 2026-09-25
 - Fixed the large blank/teal mobile block appearing above the Answer Mode and Timer sections on Intermediate Group 1 and Group 2 subject screens.
 - Added a visible Update 1 notice on the home page. Future portal changes will increment this as Update 2, Update 3, and so on.
