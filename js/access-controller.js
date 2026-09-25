@@ -148,6 +148,11 @@ initState();window.dispatchEvent(new CustomEvent('cma-access-controller-ready'))
      being consumed by the old same-page start handler. */
   window.addEventListener('click',function(e){
     if(new URLSearchParams(location.search).get('cmaQuiz')==='1')return;
+    /* UPDATE 12: modern subject pages (Foundation/modern templates) already
+       switch setup -> quiz in the same document. Do NOT force a URL reload on
+       those pages; the reload was causing users to get stuck at a loading state.
+       Legacy templates without native startQuiz() keep the separate-document flow. */
+    if(typeof window.startQuiz==='function' && document.getElementById('setup') && document.getElementById('quiz')) return;
     if(sessionStorage.getItem('cma_real_start')==='1'){
       sessionStorage.removeItem('cma_real_start');
       return;
