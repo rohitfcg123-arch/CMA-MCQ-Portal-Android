@@ -97,3 +97,45 @@ button,.btn,.primary,.secondary,.outline,.home,.danger,.chip{border-radius:10px 
 #setup{height:auto!important;min-height:0!important;background:var(--paper)!important;color:var(--ink)!important}
 #setup .hero{height:auto!important;min-height:0!important;background:transparent!important;color:var(--ink)!important;overflow:visible!important}
 #setup .hero h1,#setup .hero p{color:var(--teal2)!important}
+
+/* ROOT-FLOW FIX 2026-09-25 */
+/* The setup screen is a normal document-flow stack. Do not allow a cached/legacy
+   flex or viewport-height rule to turn any setup block into a screen-sized spacer. */
+#setup.screen.active{
+  display:block!important;
+  position:static!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+#setup.screen.active>.hero,
+#setup.screen.active>.card,
+#setup.screen.active>.quick,
+#setup.screen.active>.start{
+  position:static!important;
+  top:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  left:auto!important;
+  float:none!important;
+  flex:0 0 auto!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+  transform:none!important;
+}
+#setup.screen.active>.hero,
+#setup.screen.active>.hero::before,
+#setup.screen.active>.hero::after{
+  background:transparent!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+#setup.screen.active>.hero::before,
+#setup.screen.active>.hero::after{
+  display:none!important;
+  content:none!important;
+}
