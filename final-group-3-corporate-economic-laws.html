@@ -4,11 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CMA — Corporate & Economic Laws — Paper 13</title>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<link rel="stylesheet" href="css/cma-subject-theme.css?v=20260925rootfix">
-<link rel="stylesheet" href="css/cma-subject-theme.css?v=20260926master">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#17202a;--muted:#65717d;--line:#dfe5ea;--accent:#0b6e69;--accent2:#084c49;--good:#16834b;--bad:#c0392b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:18px}.mast{background:linear-gradient(135deg,#083b39,#0b6e69);color:#fff;border-radius:18px;padding:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 8px 25px #0001}
+.mast h1{margin:0;font-size:1.35rem}.mast .sub{opacity:.82;font-size:.8rem;margin-top:5px}
+button,select,input{font:inherit}button{border:0;border-radius:10px;padding:11px 15px;cursor:pointer}
+.home{background:#fff;color:#084c49;font-weight:700}.screen{display:none}.screen.active{display:block}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}.stat b{display:block;font-size:1.3rem;color:var(--accent2)}.stat span{font-size:.72rem;color:var(--muted)}
+label{font-size:.82rem;color:var(--muted);display:block;margin-bottom:6px}select,input[type=number]{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.primary{background:var(--accent);color:#fff;font-weight:700}.secondary{background:#e9f2f1;color:var(--accent2);font-weight:700}.danger{background:#fdebea;color:var(--bad);font-weight:700}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.question-head{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:.82rem}
+.question{font-size:1.08rem;line-height:1.55;margin:18px 0}.option{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);margin:9px 0;padding:14px;border-radius:11px}.option:hover{border-color:var(--accent)}
+.option.correct{background:#e9f8ef;border-color:#8bd2a8}.option.wrong{background:#fff0ef;border-color:#e7a39d}
+.explain{padding:12px;border-radius:10px;background:#f6f8fa;margin-top:12px;font-size:.9rem}.progress{height:8px;background:#e6eaed;border-radius:99px;overflow:hidden;margin:12px 0}.bar{height:100%;background:var(--accent);width:0}
+.review-item{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}.review-item.ok{border-left:4px solid var(--good)}.review-item.no{border-left:4px solid var(--bad)}.review-item.skip{border-left:4px solid #899}
+.small{font-size:.8rem;color:var(--muted)}.topic-badge{display:inline-block;padding:5px 8px;background:#eef5f4;border-radius:999px;font-size:.72rem;color:var(--accent2)}
+@media(max-width:650px){.grid,.statgrid{grid-template-columns:1fr 1fr}.mast{align-items:flex-start;flex-direction:column}}
+</style>
 <link rel="stylesheet" href="css/cma-subject-theme.css?v=20260926master">
 </head>
 <body>
@@ -106,6 +120,5 @@ fillTopics();renderStats();
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="js/firebase-init.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script><script src="js/firebase-init.js"></script><script src="js/popup-manager.js"></script><script src="js/access-controller.js"></script>
 </body></html>
