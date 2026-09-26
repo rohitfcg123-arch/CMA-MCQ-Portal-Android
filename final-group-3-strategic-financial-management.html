@@ -556,6 +556,7 @@
       <button class="dash-card" id="mockBtn"><b>📝 Full Mock Test</b><span>Exam-style test from the entire bank</span></button>
       <button class="dash-card" id="wrongBtn"><b>🔁 Wrong Questions</b><span>Practice questions you previously missed</span></button>
       <button class="dash-card" id="bookmarkBtn"><b>🔖 Bookmarked</b><span>Revise questions you saved</span></button>
+      <button class="dash-card" id="subjectivePyqBtn"><b>✍️ Subjective PYQ</b><span>Chapter-wise previous-year descriptive questions</span></button>
     </div>
 
     <div class="card">
@@ -578,6 +579,31 @@
     <button class="primary-btn" id="startBtn">Start test</button>
     <div class="utility-row"><button class="ghost-btn" id="statsBtn">📊 Performance</button><button class="ghost-btn" id="resetBtn">Reset progress</button></div>
     <div id="statsPanel" class="card stats-panel" style="display:none;"></div>
+  </section>
+
+  <!-- ============ SUBJECTIVE PYQ SCREEN ============ -->
+  <section id="subjectivePyqScreen" class="screen">
+    <div class="card">
+      <h2>Subjective PYQ — SFM Paper 14</h2>
+      <p class="lede" style="margin-bottom:14px">Select a chapter and attempt. Questions are shown from the uploaded previous-year papers. Suggested answers will be added later when you upload the answer sheet.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <select id="subTopic" class="topic-select">
+          <option value="Bond Valuation">Bond Valuation</option>
+        </select>
+        <select id="subAttempt" class="topic-select">
+          <option value="all">All Attempts</option>
+          <option value="June 2026">June 2026</option>
+          <option value="December 2025">December 2025</option>
+          <option value="June 2025">June 2025</option>
+          <option value="December 2024">December 2024</option>
+          <option value="June 2024">June 2024</option>
+          <option value="December 2023">December 2023</option>
+        </select>
+      </div>
+      <div id="subCount" class="topic-info" style="margin-top:10px"></div>
+    </div>
+    <div id="subList"></div>
+    <button class="ghost-btn" id="subBack">← Back to SFM MCQ</button>
   </section>
 
   <!-- ============ QUIZ SCREEN ============ -->
