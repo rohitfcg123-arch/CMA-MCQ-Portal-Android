@@ -15,7 +15,7 @@ window.SFM_ATTEMPTS=["December 2023","June 2024","December 2024","June 2025","De
 
 window.SFM_SUBJECTIVE_PYQ=[
   {
-    "a":"December 2023","q":"3(b)","t":"Bond Valuation",
+    "a":"December 2023","q":"3(b)","t":"Equity/Share Valuation",
     "html":"<p><b>FIZZLE Limited’s</b> earnings and dividends have been growing at a rate of <b>18 per cent per annum</b>. This growth rate is expected to continue for <b>4 years</b>. After that the growth rate will fall to <b>12 per cent</b> for the next <b>4 years</b>. Thereafter, the growth rate is expected to be <b>6 per cent forever</b>. The last dividend per share was <b>₹ 2.00</b> and the investors’ required rate of return on FIZZLE’s equity is <b>15 per cent</b>.</p><p><b>Required:</b><br>Assess the value of Equity share using a <b>3-step procedure</b>.</p>"
   },
   {
