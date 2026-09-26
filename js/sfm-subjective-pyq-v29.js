@@ -9,7 +9,11 @@ window.SFM_CHAPTERS=[
   "Foreign Exchange",
   "Investment Decisions",
   "Evaluation of Risky Proposals",
-  "Leasing Decision"
+  "Leasing Decision",
+  "Investment Decisions, Project Planning and Control",
+  "Evaluation of Risky Proposal for Investment Decisions",
+  "Leasing Decisions",
+  "Securitization"
 ];
 window.SFM_ATTEMPTS=["December 2023","June 2024","December 2024","June 2025","December 2025","June 2026"];
 
