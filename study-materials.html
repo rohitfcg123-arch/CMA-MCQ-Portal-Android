@@ -74,7 +74,7 @@ final3:[
 ["Corporate & Economic Laws","final-group-3-corporate-economic-laws.html"]
 ],
 final4:[
-["Entrepreneurship & Startup — P20C","study-materials/p20c.html"]
+["Entrepreneurship & Startup — P20C","study-materials/P20C_new.pdf"]
 ]
 };
 const picker=document.getElementById("groupPicker"),panel=document.getElementById("subjectPanel"),empty=document.getElementById("empty");
@@ -86,7 +86,7 @@ function render(key){
   const a=document.createElement("a");
   a.className="subject";
   a.href=item[1];
-  a.innerHTML='<div class="num">'+String(i+1).padStart(2,"0")+'</div><div class="copy"><h3>'+item[0]+'</h3><p>Study Material · PDF · Download available</p></div><span class="open">OPEN →</span>';
+  a.setAttribute("download",""); a.target="_self"; a.innerHTML='<div class="num">'+String(i+1).padStart(2,"0")+'</div><div class="copy"><h3>'+item[0]+'</h3><p>Study Material · PDF · Direct Download</p></div><span class="open">OPEN →</span>';
   panel.appendChild(a);
  });
 }
