@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>CMA Student Hub | CMA Zone</title>
+<style>
+:root{--cream:#faf6ee;--paper:#fffdf8;--paper2:#f2ecdf;--teal:#0d3b3e;--dark:#082627;--gold:#c8a24a;--gold2:#ead39b;--text:#22302f;--muted:#65716f;--border:#e3dbc9;--shadow:0 12px 35px rgba(8,38,39,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--text);font-family:Inter,'Segoe UI',Roboto,Arial,sans-serif}
+a{text-decoration:none;color:inherit}.top{background:var(--teal);color:#fff;padding:14px 18px;position:sticky;top:0;z-index:20;box-shadow:0 5px 20px rgba(8,38,39,.15)}.topin{max-width:1120px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:900;font-size:20px}.brand span{color:var(--gold)}.back{border:1px solid rgba(255,255,255,.2);padding:8px 12px;border-radius:9px;font-size:12px;font-weight:800;background:rgba(255,255,255,.08)}
+main{max-width:1120px;margin:auto;padding:22px 16px 55px}.hero{background:linear-gradient(135deg,var(--teal),var(--dark));color:#fff;border-radius:22px;padding:32px 30px;position:relative;overflow:hidden;box-shadow:var(--shadow)}.hero:after{content:"";position:absolute;width:260px;height:260px;border:1px solid rgba(234,211,155,.22);border-radius:50%;right:-90px;top:-100px}.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);font-weight:900}.hero h1{margin:7px 0 8px;font-size:34px;position:relative;z-index:1}.hero p{margin:0;max-width:720px;color:#d7e3e1;line-height:1.6;font-size:14px;position:relative;z-index:1}.hero-note{display:inline-flex;margin-top:17px;padding:8px 11px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);font-size:11px;font-weight:800;position:relative;z-index:1}
+.section{margin-top:18px}.section-title{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:11px}.section-title h2{margin:0;color:var(--dark);font-size:21px}.section-title p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:var(--paper);border:1px solid var(--border);border-radius:17px;padding:19px;min-height:150px;box-shadow:0 5px 18px rgba(8,38,39,.04);transition:.18s}.card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(8,38,39,.08);border-color:#d1c092}.icon{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;background:var(--paper2);color:var(--teal);font-size:20px;margin-bottom:12px}.card h3{margin:0 0 6px;color:var(--teal);font-size:15px}.card p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}.card .arrow{display:block;margin-top:13px;color:#9a741e;font-size:12px;font-weight:900}
+.group{background:var(--paper);border:1px solid var(--border);border-radius:18px;padding:19px}.group-list{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.group-list a{background:#fff;border:1px solid var(--border);border-radius:11px;padding:12px 8px;text-align:center;color:var(--teal);font-size:11px;font-weight:850}.group-list a:hover{border-color:var(--gold);background:var(--paper2)}
+.notice{margin-top:18px;background:var(--paper2);border:1px solid var(--border);border-radius:16px;padding:16px}.notice strong{color:var(--teal)}.notice p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+footer{text-align:center;color:#77817f;font-size:11px;padding:0 16px 30px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.group-list{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){main{padding:15px 12px 45px}.hero{padding:25px 20px;border-radius:18px}.hero h1{font-size:28px}.grid{grid-template-columns:1fr}.group-list{grid-template-columns:1fr 1fr}.card{min-height:125px;padding:16px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to CMA Zone</a></div></header>
+<main>
+<section class="hero">
+<span class="eyebrow">CMA STUDENT RESOURCE CENTRE</span>
+<h1>CMA Student Hub</h1>
+<p>One place for CMA students to access study material, MCQ practice, previous-year papers, answers, exam updates, revision resources and CMA career opportunities.</p>
+<span class="hero-note">🎓 For CMA Students · Foundation · Intermediate · Final</span>
+</section>
+
+<section class="section">
+<div class="section-title"><div><h2>Study & Practice</h2><p>Core academic resources in one place.</p></div></div>
+<div class="grid">
+<a class="card" href="index.html"><div class="icon">📚</div><h3>Study Materials</h3><p>Subject-wise notes, books, revision material and other CMA documents.</p><span class="arrow">OPEN RESOURCE CENTRE →</span></a>
+<a class="card" href="index.html#cmaSubjectPicker"><div class="icon">📝</div><h3>MCQ Bank</h3><p>Practice MCQs through the existing CMA Zone MCQ system.</p><span class="arrow">START MCQ PRACTICE →</span></a>
+<a class="card" href="previous-year-papers.html"><div class="icon">📄</div><h3>Previous Year Papers</h3><p>Attempt-wise question papers, organised by CMA level and subject.</p><span class="arrow">VIEW PAPERS →</span></a>
+<a class="card" href="previous-year-answers.html"><div class="icon">✅</div><h3>Previous Year Answers</h3><p>Suggested answers and answer resources for previous examinations.</p><span class="arrow">VIEW ANSWERS →</span></a>
+<a class="card" href="cma-updates.html"><div class="icon">🔔</div><h3>CMA Updates</h3><p>Exam forms, notifications, results, announcements and important notices.</p><span class="arrow">VIEW UPDATES →</span></a>
+<a class="card" href="cma-revision.html"><div class="icon">⚡</div><h3>Amendments & Revision</h3><p>Exam-relevant amendments, revision notes and last-minute resources.</p><span class="arrow">VIEW REVISION →</span></a>
+</div>
+</section>
+
+<section class="section">
+<div class="section-title"><div><h2>CMA Career</h2><p>Career resources specifically relevant to CMA students and professionals.</p></div></div>
+<div class="grid">
+<a class="card" href="cma-jobs.html"><div class="icon">💼</div><h3>CMA Jobs</h3><p>Job opportunities, internships and CMA-related openings in one dedicated section.</p><span class="arrow">VIEW CMA JOBS →</span></a>
+<a class="card" href="cma-updates.html#career"><div class="icon">📢</div><h3>Career Updates</h3><p>Important career and placement announcements can be highlighted here.</p><span class="arrow">VIEW CAREER UPDATES →</span></a>
+<a class="card" href="cma-revision.html"><div class="icon">🎯</div><h3>Exam Resources</h3><p>Quick-access resources to help students prepare for upcoming attempts.</p><span class="arrow">OPEN EXAM RESOURCES →</span></a>
+</div>
+</section>
+
+<section class="section group">
+<div class="section-title"><div><h2>Browse by CMA Level</h2><p>Documents will be organised level → group → subject → resource type.</p></div></div>
+<div class="group-list">
+<a href="index.html#cmaSubjectPicker">Foundation</a>
+<a href="index.html#cmaSubjectPicker">Intermediate G1</a>
+<a href="index.html#cmaSubjectPicker">Intermediate G2</a>
+<a href="index.html#cmaSubjectPicker">Final G3</a>
+<a href="index.html#cmaSubjectPicker">Final G4</a>
+</div>
+</section>
+
+<div class="notice"><strong>📌 Resource upload structure</strong><p>When new documents are added, they will be organised as <b>CMA Level → Group → Subject → Category</b>, so the portal does not become a random list of PDFs. The interface is ready now; actual study files can be added later.</p></div>
+</main>
+<footer>© 2026 CMA Zone · CMA Student Hub</footer>
+</body>
+</html>
