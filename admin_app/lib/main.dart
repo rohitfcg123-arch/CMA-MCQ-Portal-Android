@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'firebase_options.dart';
 
 const superAdminEmail = 'rohit.fcg123@gmail.com';
@@ -233,7 +234,7 @@ class Dashboard extends StatelessWidget {
         Text('CMA MCQ Portal',style:TextStyle(fontWeight:FontWeight.w800)),
         Text('Admin Control Center',style:TextStyle(fontSize:10,letterSpacing:1.2,color:Color(0xFFEAD39B)))
       ]),
-      actions:[IconButton(tooltip:'Logout',onPressed:()=>FirebaseAuth.instance.signOut(),icon:const Icon(Icons.logout)),const SizedBox(width:6)],
+      actions:[IconButton(tooltip:'Refresh Dashboard',onPressed:()=>Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>Dashboard(staffPermissions:staffPermissions))),icon:const Icon(Icons.refresh)),IconButton(tooltip:'Logout',onPressed:()=>FirebaseAuth.instance.signOut(),icon:const Icon(Icons.logout)),const SizedBox(width:6)],
     ),
     body: StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
       stream:FirebaseFirestore.instance.collection('portalUsers').snapshots(),
@@ -276,6 +277,7 @@ class Dashboard extends StatelessWidget {
               if (_can('reports.read')) _action(context,'Reports','Excel, PDF & CSV',Icons.file_download_outlined,const ReportsPage()),
               if (_can('payments.read')) _action(context,'Payments','Verify subscriptions',Icons.payments_outlined,const PaymentsPage()),
               if (_can('staff.read')) _action(context,'Staff Management','Roles & permissions',Icons.manage_accounts_outlined,const StaffPage()),
+              _questionUploaderAction(context),
             ],
           ),
           const SizedBox(height:14),
@@ -289,6 +291,20 @@ class Dashboard extends StatelessWidget {
       },
     ),
   );
+
+  Widget _questionUploaderAction(BuildContext context) => Card(margin:EdgeInsets.zero,child:InkWell(
+    borderRadius:BorderRadius.circular(14),
+    onTap:() async {
+      final uri=Uri.parse('https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/question-uploader.html');
+      final ok=await launchUrl(uri,mode:LaunchMode.externalApplication);
+      if(!ok && context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Could not open Question Uploader.')));
+    },
+    child:Padding(padding:const EdgeInsets.all(13),child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[
+      Container(width:38,height:38,decoration:BoxDecoration(color:const Color(0xFFEAD39B),borderRadius:BorderRadius.circular(11)),child:const Icon(Icons.upload_file_outlined,color:Color(0xFF0D3B3E),size:21)),
+      const SizedBox(height:9),const Text('Question Uploader',style:TextStyle(fontWeight:FontWeight.w800,fontSize:13,color:Color(0xFF0D3B3E))),
+      const SizedBox(height:4),const Text('Upload PYQ & JSON',style:TextStyle(fontSize:12,color:Color(0xFF65716F))),
+    ]),),
+  ));
 
   Widget _metric(String title,int value,IconData icon) => SizedBox(
     width: 180,
