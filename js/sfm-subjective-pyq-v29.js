@@ -1,7 +1,7 @@
-/* UPDATE #30 — SFM subjective page: type the Bond Valuation PYQs directly on the portal. */
+/* UPDATE #31 — SFM subjective page: add all six Equity/Share Valuation PYQs as typed text with tables. */
 window.SFM_CHAPTERS=[
   "Security Analysis",
-  "Equity और Share Valuation",
+  "Equity/Share Valuation",
   "Bond Valuation",
   "Mutual Funds",
   "Portfolio Management",
@@ -15,8 +15,33 @@ window.SFM_ATTEMPTS=["December 2023","June 2024","December 2024","June 2025","De
 
 window.SFM_SUBJECTIVE_PYQ=[
   {
+    "a":"December 2023","q":"3(b)","t":"Bond Valuation",
+    "html":"<p><b>FIZZLE Limited’s</b> earnings and dividends have been growing at a rate of <b>18 per cent per annum</b>. This growth rate is expected to continue for <b>4 years</b>. After that the growth rate will fall to <b>12 per cent</b> for the next <b>4 years</b>. Thereafter, the growth rate is expected to be <b>6 per cent forever</b>. The last dividend per share was <b>₹ 2.00</b> and the investors’ required rate of return on FIZZLE’s equity is <b>15 per cent</b>.</p><p><b>Required:</b><br>Assess the value of Equity share using a <b>3-step procedure</b>.</p>"
+  },
+  {
+    "a":"June 2024","q":"3(b)","t":"Equity/Share Valuation",
+    "html":"<p>The earnings and dividend on equity share of <b>RAXON Ltd.</b> have been growing at a rate of <b>10% per annum for 4 years</b>. After four years the growing rate of dividend is expected to decline linearly to <b>7%</b>. After six years, the growing rate will fall and stabilize at <b>7% forever (infinitely)</b>. The last dividend per share was <b>₹ 3</b> and the investors’ required rate of return on the stock of RAXON Ltd. is <b>16%</b>.</p><p><b>Required:</b><br>Analyze and assess how much the value per share of RAXON Ltd.’s equity stock should be. (using <b>Three-Phase Model</b>)</p><table><tr><th>Year</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr><tr><th>PVIF (16%, Yrs.)</th><td>0.862</td><td>0.743</td><td>0.641</td><td>0.552</td><td>0.476</td><td>0.410</td><td>0.354</td><td>0.305</td><td>0.263</td><td>0.227</td></tr></table>"
+  },
+  {
+    "a":"December 2024","q":"3(b)","t":"Equity/Share Valuation",
+    "html":"<p><b>TEXTON Ltd.</b> is a major player in the textile industry of the country. The industry is expected to maintain high growth for a period of <b>5 years</b> after which it is expected to drop down. Currently the company is distributing <b>40% of its profit as dividend</b> to Shareholders. The dividend payout ratio of the company is expected to remain at the current level for a period of next 5 years after which it is expected to increase to <b>55%</b>.</p><p>The net profit margin of the company is currently <b>8%</b> and is expected to remain at the same level for next 5 years, after which it is expected to decrease to <b>5.7%</b>. Currently the company is able to generate sales of <b>₹ 2.50 for every 1 rupee of assets employed</b> and it is expected to remain the same for the next 5 years, and after that the company is expected to generate sales of <b>₹ 3.50 for every 1 rupee of assets employed</b>. <b>50% of the assets</b> of the company are financed with equity capital, and it is expected to remain same in the future.</p><p>At present the risk free rate of return is <b>7%</b> and market risk premium is <b>15.5%</b>. The Beta of the company is currently <b>1.2</b>. Current net worth of the company is <b>₹ 250 lakhs</b> and numbers of shares outstanding is <b>2 Lakhs</b>. Assuming that the market is in equilibrium.</p><p><i>Calculation to be rounded off to 3 decimals.</i></p><table><tr><th>Year</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr><tr><th>PVIF (20%)</th><td>0.833</td><td>0.694</td><td>0.579</td><td>0.482</td><td>0.402</td></tr><tr><th>PVIF (24%)</th><td>0.806</td><td>0.650</td><td>0.524</td><td>0.423</td><td>0.341</td></tr><tr><th>PVIF (25%)</th><td>0.800</td><td>0.640</td><td>0.512</td><td>0.410</td><td>0.328</td></tr><tr><th>PVIF (25.6%)</th><td>0.796</td><td>0.634</td><td>0.505</td><td>0.402</td><td>0.320</td></tr></table><p><b>Required:</b><br>Analyze and assess the price per share of Texton Ltd., using <b>Dividend Discount Model (DDM)</b>.</p>"
+  },
+  {
+    "a":"June 2025","q":"3(b)","t":"Equity/Share Valuation",
+    "html":"<p>An investor is considering to purchase equity shares of <b>DELTA Ltd.</b> whose current market price is <b>₹ 172.45 per share</b>. The company is proposing a dividend of <b>₹ 6</b> for the year ending <b>31st March, 2025</b>. Delta Ltd. is expected to grow @ <b>20% per annum for the next four years</b>. Thereafter, the growth, over the next three years, will decline linearly by <b>1% per annum</b>. Thereafter, it will stabilize at a certain growth rate per annum infinitely.</p><p>The required rate of return for the investor is <b>20%</b>.</p><p><i>Dividend value is to be taken in 2 decimal points only.</i></p><table><tr><th>Period</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr><tr><th>PVIF (20%, n)</th><td>0.8333</td><td>0.6944</td><td>0.5787</td><td>0.4823</td><td>0.4019</td><td>0.3349</td><td>0.2791</td></tr></table><p><b>Required:</b></p><ol><li>Assess the stable growth rate of DELTA Ltd. after the end of 7 years.</li><li>Advise whether it is worth to purchase the share at this price if the investor has a stable target growth rate of 15% per annum.</li></ol>"
+  },
+  {
+    "a":"December 2025","q":"3(b)","t":"Equity/Share Valuation",
+    "html":"<p><b>LMN Ltd.</b> is evaluating its share value with the following information:</p><p>The current dividend per share is <b>₹ 25</b>, and the current market price is <b>₹ 550</b>. The company’s return on equity (ROE) stands at <b>18%</b>, with a retention ratio of <b>50%</b>. The required rate of return is <b>14%</b>. The expected growth rates are <b>12% for the first year</b>, <b>10% for the second year</b>, and <b>sustainable growth rate (by considering the retention ratio) for the third year and beyond</b>.</p><table><tr><th>Year</th><th>1</th><th>2</th><th>3</th><th>4</th></tr><tr><th>PVIF (14%)</th><td>0.877</td><td>0.769</td><td>0.675</td><td>0.592</td></tr><tr><th>PVIF (18%)</th><td>0.847</td><td>0.718</td><td>0.609</td><td>0.516</td></tr></table><p><b>Required:</b></p><ol><li>Assess the intrinsic value of the share using the <b>Dividend Discount Model</b>.</li><li>Analyze the intrinsic value with the current market price to determine if the share is overvalued or undervalued.</li></ol>"
+  },
+  {
+    "a":"June 2026","q":"3(b)","t":"Equity/Share Valuation",
+    "html":"<p><b>Zenith Systems Ltd.</b> has recently paid a dividend of <b>₹ 3.60 per share</b>. The company follows a policy of retaining <b>40% of its earnings</b> and has a return on equity (ROE) of <b>15%</b>. Due to expansion plans, the company expects dividends to grow at <b>12% per annum for the next 2 years</b>, after which the growth (S.G) rate will stabilize based on its retention policy. The required rate of return for equity shareholders is <b>12%</b>. The current earnings per share (EPS) of the company is <b>₹ 6</b>, and shares of comparable companies are trading at an average <b>P/E ratio of 14</b>.</p><table><tr><th>Year</th><th>1</th><th>2</th><th>3</th></tr><tr><th>PVIF (12%)</th><td>0.893</td><td>0.797</td><td>0.712</td></tr><tr><th>PVIF (15%)</th><td>0.870</td><td>0.756</td><td>0.658</td></tr></table><p><b>Required:</b></p><ol><li>Assess the intrinsic value of the share using the <b>multi-stage Dividend Growth Model</b>.</li><li>Analyze the current market price of the Company’s share.</li></ol>"
+  },
+
+  {
     "a":"December 2023","q":"4(a)","t":"Bond Valuation",
-    "html":"<p>Following information is related to the Convertible Bond of SONTA Ltd. which is currently priced at <b>₹ 1,060 per Bond</b>:</p><ul><li>Conversion Parity Price = <b>₹ 53</b></li><li>Conversion Premium = <b>10.41667%</b></li><li>Percentage of Downside Risk with respect to Straight Value of Bond = <b>12.766%</b></li></ul><p><b>Required:</b></p><ol><li>Calculate No. of shares on Conversion.</li><li>Analyse Current Market Price Per Share of SONTA Ltd.</li><li>Assess the Straight Value of Bond.</li></ol>"
+    "html":"<p>Following information is related to the Convertible Bond of SONTA Ltd. which is currently priced at <b>₹ 1060 per Bond</b>:</p><ul><li>Conversion Parity Price = <b>₹ 53</b></li><li>Conversion Premium = <b>10.41667%</b></li><li>Percentage of Downside Risk with respect to Straight Value of Bond = <b>12.766%</b></li></ul><p><b>Required:</b></p><ol><li>Calculate No. of shares on Conversion.</li><li>Analyse Current Market Price Per Share of SONTA Ltd.</li><li>Assess the Straight Value of Bond.</li></ol>"
   },
   {
     "a":"June 2024","q":"4(a)","t":"Bond Valuation",
