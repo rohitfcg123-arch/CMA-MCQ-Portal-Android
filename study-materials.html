@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Study Material | CMA Zone</title>
+<style>
+:root{--cream:#faf6ee;--paper:#fffdf8;--paper2:#f2ecdf;--teal:#0d3b3e;--dark:#082627;--gold:#c8a24a;--gold2:#ead39b;--text:#22302f;--muted:#65716f;--border:#e3dbc9;--shadow:0 12px 35px rgba(8,38,39,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--text);font-family:Inter,'Segoe UI',Roboto,Arial,sans-serif}a{text-decoration:none;color:inherit}
+.top{background:var(--teal);color:#fff;padding:14px 18px;position:sticky;top:0;z-index:20;box-shadow:0 5px 20px rgba(8,38,39,.15)}.topin{max-width:980px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:900;font-size:20px}.brand span{color:var(--gold)}.back{border:1px solid rgba(255,255,255,.2);padding:8px 12px;border-radius:9px;font-size:12px;font-weight:800;background:rgba(255,255,255,.08)}
+main{max-width:980px;margin:auto;padding:20px 14px 50px}.hero{background:linear-gradient(135deg,var(--teal),var(--dark));color:#fff;border-radius:20px;padding:25px 22px;box-shadow:var(--shadow)}.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);font-weight:900}.hero h1{margin:6px 0 7px;font-size:30px}.hero p{margin:0;color:#d7e3e1;line-height:1.55;font-size:13px}
+.update{margin:12px 0;padding:9px 12px;border:1px solid var(--border);border-radius:11px;background:var(--paper2);color:var(--teal);font-size:11px;font-weight:800;text-align:center}.update b{color:#9a741e}
+.selector{margin-top:16px;background:var(--paper);border:1px solid var(--border);border-radius:18px;padding:17px;box-shadow:0 5px 18px rgba(8,38,39,.04)}.selector-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:11px}.selector h2{margin:0;color:var(--dark);font-size:19px}.selector p{margin:3px 0 0;color:var(--muted);font-size:11.5px}
+select{width:100%;padding:13px 12px;border:1px solid var(--border);border-radius:11px;background:#fff;color:var(--teal);font-size:13px;font-weight:850;outline:none}
+.subject-panel{margin-top:13px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.subject{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:11px;min-height:88px;transition:.18s}.subject:hover{transform:translateY(-2px);border-color:#d1c092;box-shadow:0 9px 20px rgba(8,38,39,.07)}.num{width:36px;height:36px;border-radius:10px;background:var(--paper2);display:grid;place-items:center;color:var(--teal);font-weight:900;font-size:11px;flex:0 0 36px}.copy{min-width:0;flex:1}.copy h3{margin:0 0 5px;color:var(--teal);font-size:13px;line-height:1.3}.copy p{margin:0;color:var(--muted);font-size:10.5px;line-height:1.35}.open{color:#9a741e;font-size:11px;font-weight:900;white-space:nowrap}
+.empty{margin-top:13px;border:1px dashed #d3c8ae;border-radius:14px;padding:22px;text-align:center;color:var(--muted);font-size:12px;background:#fff}.empty strong{display:block;color:var(--teal);font-size:14px;margin-bottom:5px}
+.note{margin-top:14px;padding:13px 15px;border-radius:14px;background:var(--paper2);border:1px solid var(--border);color:var(--muted);font-size:11px;line-height:1.5}.note b{color:var(--teal)}
+@media(max-width:600px){main{padding:14px 11px 40px}.hero{padding:22px 18px}.hero h1{font-size:26px}.subject-panel{grid-template-columns:1fr}.subject{min-height:80px}.open{font-size:10px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="cma-student-hub.html">← Student Hub</a></div></header>
+<main>
+<section class="hero">
+<span class="eyebrow">CMA STUDY MATERIAL</span>
+<h1>Choose Your CMA Group</h1>
+<p>Select Foundation, Intermediate Group 1/2, or Final Group 3/4. Only that group's four subjects will appear, so you do not have to scroll through the whole syllabus.</p>
+</section>
+
+<div class="update"><b>UPDATE 26</b> — Study Material is now organised Group → Subject → PDF.</div>
+
+<section class="selector">
+<div class="selector-head"><div><h2>Select Group</h2><p>Choose one group to view its four subjects.</p></div></div>
+<select id="groupPicker" aria-label="Select CMA Group">
+<option value="">Select CMA Group</option>
+<option value="foundation">CMA Foundation</option>
+<option value="inter1">CMA Intermediate Group 1</option>
+<option value="inter2">CMA Intermediate Group 2</option>
+<option value="final3">CMA Final Group 3</option>
+<option value="final4">CMA Final Group 4</option>
+</select>
+<div id="subjectPanel" class="subject-panel"></div>
+<div id="empty" class="empty"><strong>Choose a group</strong>Four subject options will appear here.</div>
+</section>
+
+<div class="note"><b>How it works:</b> Select a group → four subject cards appear → open/download the available study material for that subject. New PDFs can be added later without changing this layout.</div>
+</main>
+<footer style="text-align:center;color:#77817f;font-size:11px;padding:0 12px 28px">© 2026 CMA Zone · Study Material</footer>
+
+<script>
+const groups={
+foundation:[
+["Fundamentals of Law and Business Communication","foundation-fundamentals-law-business-communication.html"],
+["Fundamentals of Financial and Cost Accounting","foundation-fundamentals-financial-cost-accounting.html"],
+["Fundamentals of Business Mathematics and Statistics","foundation-fundamentals-business-mathematics-statistics.html"],
+["Fundamentals of Business Economics and Management","foundation-fundamentals-business-economics-management.html"]
+],
+inter1:[
+["Business Law and Ethics","inter-group-1-business-law-and-ethics.html"],
+["Financial Accounting","inter-group-1-financial-accounting.html"],
+["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation.html"],
+["Cost Accounting","inter-group-1-cost-accounting.html"]
+],
+inter2:[
+["Operation Management and Strategic Management","inter-group-2-operation-management-strategic-management.html"],
+["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing.html"],
+["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics.html"],
+["Management Accounting","inter-group-2-management-accounting.html"]
+],
+final3:[
+["Strategic Cost Management","final-group-3-strategic-cost-management.html"],
+["Strategic Financial Management","final-group-3-strategic-financial-management.html"],
+["Direct Tax & International Laws","final-group-3-direct-tax-international-laws.html"],
+["Corporate & Economic Laws","final-group-3-corporate-economic-laws.html"]
+],
+final4:[
+["Corporate Financial Reporting","final-group-4-corporate-financial-reporting.html"],
+["Cost Management & Audit","final-group-4-cost-management-audit.html"],
+["Indirect Tax Law & Practice","final-group-4-indirect-tax-law-practice.html"],
+["Strategic Performance Management","final-group-4-strategic-performance-management.html"]
+]
+};
+const picker=document.getElementById("groupPicker"),panel=document.getElementById("subjectPanel"),empty=document.getElementById("empty");
+function render(key){
+ panel.innerHTML="";
+ const items=groups[key]||[];
+ empty.style.display=items.length?"none":"block";
+ items.forEach((item,i)=>{
+  const a=document.createElement("a");
+  a.className="subject";
+  a.href=item[1];
+  a.innerHTML='<div class="num">'+String(i+1).padStart(2,"0")+'</div><div class="copy"><h3>'+item[0]+'</h3><p>Study Material · PDF resources</p></div><span class="open">OPEN →</span>';
+  panel.appendChild(a);
+ });
+}
+picker.addEventListener("change",()=>render(picker.value));
+</script>
+</body>
+</html>
