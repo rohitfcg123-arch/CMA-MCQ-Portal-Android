@@ -54,6 +54,8 @@ const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomai
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(),db=firebase.firestore(),provider=new firebase.auth.GoogleAuthProvider();
 provider.setCustomParameters({prompt:"select_account"});
+provider.addScope("email");
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
 const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();const SUBJECTS={
   foundation:[
     "Fundamentals of Business Laws and Business Communication",
@@ -97,9 +99,68 @@ function populateSubjects(group,selected){
 let DATA=[];
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function fmt(v){if(!v)return"";if(v.toDate)return v.toDate().toLocaleString("en-IN");return new Date(v).toLocaleString("en-IN")}
-async function login(){try{await auth.signInWithPopup(provider)}catch(e){$("loginMsg").textContent=e.message}}
-$("loginBtn").onclick=login;$("logout").onclick=()=>auth.signOut();\n$("group").onchange=()=>populateSubjects($("group").value);\npopulateSubjects($("group").value,"Strategic Financial Management");
-auth.onAuthStateChanged(async u=>{if(!u||norm(u.email)!==ADMIN_EMAIL){$("login").classList.remove("hidden");$("app").classList.add("hidden");return}$("login").classList.add("hidden");$("app").classList.remove("hidden");$("who").textContent=u.email;await loadQuestions()});
+function showLoginError(e){
+  const code=e&&e.code?e.code:"";
+  const raw=e&&e.message?e.message:String(e||"Login failed");
+  $("loginMsg").className="msg err";
+  $("loginMsg").textContent=code ? code+" — "+raw : raw;
+}
+async function login(){
+  const btn=$("loginBtn");
+  btn.disabled=true; btn.textContent="Opening Google…";
+  $("loginMsg").className="msg";
+  $("loginMsg").textContent="Google sign-in is opening. Please select rohit.fcg123@gmail.com.";
+  try{
+    const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(isMobile){
+      await auth.signInWithRedirect(provider);
+      return;
+    }
+    await auth.signInWithPopup(provider);
+  }catch(e){
+    showLoginError(e);
+    btn.disabled=false; btn.textContent="Continue with Google";
+  }
+}
+async function logout(){
+  try{
+    await auth.signOut();
+    window.location.replace(window.location.pathname+"?loggedout=1");
+  }catch(e){
+    showLoginError(e);
+  }
+}
+$("loginBtn").onclick=login;
+$("logout").onclick=logout;
+auth.getRedirectResult().then(r=>{
+  if(r&&r.user) return;
+}).catch(showLoginError);\n$("group").onchange=()=>populateSubjects($("group").value);\npopulateSubjects($("group").value,"Strategic Financial Management");
+auth.onAuthStateChanged(async u=>{
+  if(!u){
+    $("login").classList.remove("hidden");
+    $("app").classList.add("hidden");
+    $("who").textContent="";
+    $("loginBtn").disabled=false;
+    $("loginBtn").textContent="Continue with Google";
+    return;
+  }
+  if(norm(u.email)!==ADMIN_EMAIL){
+    $("login").classList.remove("hidden");
+    $("app").classList.add("hidden");
+    $("loginMsg").className="msg err";
+    $("loginMsg").textContent="This Google account is not authorised. Please sign in with "+ADMIN_EMAIL+".";
+    await auth.signOut();
+    return;
+  }
+  $("login").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("who").textContent=u.email;
+  $("loginMsg").textContent="";
+  try{await loadQuestions()}catch(e){
+    $("msg").className="msg err";
+    $("msg").textContent="Could not load questions: "+(e.message||e);
+  }
+});
 async function loadQuestions(){
  const snap=await db.collection("subjectiveQuestions").get();
  DATA=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.attempt||"").localeCompare(b.attempt||"")||(a.sort||0)-(b.sort||0));
