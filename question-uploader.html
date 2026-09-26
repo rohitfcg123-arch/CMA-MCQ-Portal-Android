@@ -101,7 +101,8 @@ function populateSubjects(group,selected){
 let DATA=[];
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function fmt(v){if(!v)return"";if(v.toDate)return v.toDate().toLocaleString("en-IN");return new Date(v).toLocaleString("en-IN")}
-function setBusy(btn,busy,label){if(!btn)return;if(busy){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>'+label}else{btn.disabled=false;btn.textContent=label}}\nfunction showLoginError(e){
+function setBusy(btn,busy,label){if(!btn)return;if(busy){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>'+label}else{btn.disabled=false;btn.textContent=label}}
+function showLoginError(e){
   const code=e&&e.code?e.code:"";
   const raw=e&&e.message?e.message:String(e||"Login failed");
   $("loginMsg").className="msg err";
@@ -162,7 +163,9 @@ auth.onAuthStateChanged(async u=>{
   $("loginMsg").textContent="";
   try{await loadQuestions()}catch(e){
     $("msg").className="msg err";
-    $("msg").textContent="Could not load questions: "+(e.message||e)+" If you just published Firestore Rules, refresh this page and sign in again with rohit.fcg123@gmail.com.";\n    $("jsonMsg").className="msg err";\n    $("jsonMsg").textContent="Firestore access is still denied. The JSON file is loaded correctly; check that the published Firebase Rules are for project cma-mcq-portal-cf33f and that you are signed in with rohit.fcg123@gmail.com.";
+    $("msg").textContent="Could not load questions: "+(e.message||e)+" If you just published Firestore Rules, refresh this page and sign in again with rohit.fcg123@gmail.com.";
+    $("jsonMsg").className="msg err";
+    $("jsonMsg").textContent="Firestore access is still denied. The JSON file is loaded correctly; check that the published Firebase Rules are for project cma-mcq-portal-cf33f and that you are signed in with rohit.fcg123@gmail.com.";
   }
 });
 async function loadQuestions(){
