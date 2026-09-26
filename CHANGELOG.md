@@ -1,5 +1,11 @@
 # CMA MCQ Portal — Update
 
+## UPDATE 3 — 2026-09-26
+- Added SFM Paper 14 Subjective PYQ section for the six Syllabus 2022 attempts from December 2023 through June 2026.
+- Added optional Chapter and Attempt filters; selecting a chapter returns all mapped PYQ attempts for that chapter.
+- Added attempt labels to every subjective PYQ result.
+- Added direct original-paper page links so tables/figures can be checked against the unchanged source page.
+
 ## UPDATE 2 — 2026-09-25
 - Applied a final runtime/mobile CSS fix for the oversized blank green/teal block on Intermediate Group 1 and Group 2 subject setup screens.
 
