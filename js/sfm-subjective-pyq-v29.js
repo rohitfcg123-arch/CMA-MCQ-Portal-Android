@@ -113,4 +113,6 @@ window.SFM_SUBJECTIVE_PYQ=[
   {"a":"June 2026","q":"8(a)","t":"Digital Finance","html":"<p><b>“The Digital Finance Cube captures various technology-enabled financial activities through its business function dimension.”</b></p><p><b>Required:</b> In this context, explain the constituents of digital finance business functions.</p>"},
   {"a":"June 2026","q":"8(b)","t":"The International Financial Environment","html":"<p><b>“Global Depository Receipt (GDR) is a tool for Global Capital.”</b></p><p><b>Required:</b> In this context, explain the key features of Global Depository Receipts (GDRs).</p>"},
 
+  {"a":"June 2026","q":"8(c)","t":"Securitization","html":"<p><b>“Securitization involves multiple participants working together to convert financial assets into tradable securities.”</b></p><p><b>Required:</b> In this context, align the parties involved in a securitization process. (Any Four)</p>"},
+
 ];
