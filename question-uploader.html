@@ -26,7 +26,7 @@
 <div class="note"><b>Permanent system:</b> questions uploaded here are saved in Firebase Firestore. The user portal reads the same collection automatically, so you do not need to edit JavaScript for every new question. Existing hard-coded questions remain untouched.</div>
 <div class="grid" style="margin-top:14px">
 <div class="field"><label>Group</label><select id="group"><option value="final3">CMA Final Group 3</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final4">CMA Final Group 4</option></select></div>
-<div class="field"><label>Subject</label><input id="subject" value="Strategic Financial Management"></div>
+<div class="field"><label>Subject</label><select id="subject"></select></div>
 <div class="field"><label>Chapter</label><select id="chapter">
 <option>Security Analysis</option><option>Equity/Share Valuation</option><option>Bond Valuation</option><option>Mutual Funds</option><option>Portfolio Management</option><option>Derivatives</option><option>Foreign Exchange</option><option>Investment Decisions</option><option>Evaluation of Risky Proposals</option><option>Leasing Decision</option>
 </select></div>
@@ -54,12 +54,51 @@ const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomai
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(),db=firebase.firestore(),provider=new firebase.auth.GoogleAuthProvider();
 provider.setCustomParameters({prompt:"select_account"});
-const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();
+const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();const SUBJECTS={
+  foundation:[
+    "Fundamentals of Business Laws and Business Communication",
+    "Fundamentals of Financial and Cost Accounting",
+    "Fundamentals of Business Mathematics and Statistics",
+    "Fundamentals of Business Economics and Management"
+  ],
+  inter1:[
+    "Business Laws and Ethics",
+    "Financial Accounting",
+    "Direct and Indirect Taxation",
+    "Cost Accounting"
+  ],
+  inter2:[
+    "Operations Management and Strategic Management",
+    "Corporate Accounting and Auditing",
+    "Financial Management and Business Data Analytics",
+    "Management Accounting"
+  ],
+  final3:[
+    "Corporate and Economic Laws",
+    "Strategic Financial Management",
+    "Direct Tax Laws and International Taxation",
+    "Strategic Cost Management"
+  ],
+  final4:[
+    "Cost and Management Audit",
+    "Corporate Financial Reporting",
+    "Indirect Tax Laws and Practice",
+    "Strategic Performance Management and Business Valuation",
+    "Risk Management in Banking and Insurance",
+    "Entrepreneurship and Startup"
+  ]
+};
+function populateSubjects(group,selected){
+  const list=SUBJECTS[group]||[];
+  $("subject").innerHTML=list.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join("");
+  if(selected&&list.includes(selected))$("subject").value=selected;
+}
+
 let DATA=[];
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function fmt(v){if(!v)return"";if(v.toDate)return v.toDate().toLocaleString("en-IN");return new Date(v).toLocaleString("en-IN")}
 async function login(){try{await auth.signInWithPopup(provider)}catch(e){$("loginMsg").textContent=e.message}}
-$("loginBtn").onclick=login;$("logout").onclick=()=>auth.signOut();
+$("loginBtn").onclick=login;$("logout").onclick=()=>auth.signOut();\n$("group").onchange=()=>populateSubjects($("group").value);\npopulateSubjects($("group").value,"Strategic Financial Management");
 auth.onAuthStateChanged(async u=>{if(!u||norm(u.email)!==ADMIN_EMAIL){$("login").classList.remove("hidden");$("app").classList.add("hidden");return}$("login").classList.add("hidden");$("app").classList.remove("hidden");$("who").textContent=u.email;await loadQuestions()});
 async function loadQuestions(){
  const snap=await db.collection("subjectiveQuestions").get();
@@ -72,14 +111,14 @@ function renderRows(){
 }
 window.removeQ=async id=>{const x=DATA.find(q=>q.id===id);if(!x||!confirm("Delete "+x.attempt+" "+x.q+"?"))return;await db.collection("subjectiveQuestions").doc(id).delete();await loadQuestions()};
 function payload(){
- const data={group:$("group").value,subject:$("subject").value.trim(),chapter:$("chapter").value,attempt:$("attempt").value,q:$("qno").value.trim(),html:$("html").value.trim(),sort:Number($("sort").value)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
+ const data={group:$("group").value,subject:$("subject").value,chapter:$("chapter").value,attempt:$("attempt").value,q:$("qno").value.trim(),html:$("html").value.trim(),sort:Number($("sort").value)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
  if(!data.subject||!data.chapter||!data.attempt||!data.q||!data.html)throw Error("Fill Group, Subject, Chapter, Attempt, Question No. and Question Text.");
  return data;
 }
 $("previewBtn").onclick=()=>{try{$("preview").innerHTML=$("html").value;$("preview").classList.remove("hidden")}catch(e){}};
 $("clearBtn").onclick=()=>{["qno","sort","html"].forEach(id=>$(id).value="");$("preview").classList.add("hidden");$("msg").textContent=""};
 $("saveBtn").onclick=async()=>{try{const d=payload();await db.collection("subjectiveQuestions").add(d);$("msg").textContent="Question uploaded successfully. It will appear in the user portal automatically.";$("msg").className="msg ok";$("clearBtn").click();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}};
-$("importBtn").onclick=async()=>{try{const arr=JSON.parse($("json").value);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must be a non-empty array.");const batch=db.batch();arr.forEach((x,i)=>{if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required fields.");const ref=db.collection("subjectiveQuestions").doc();batch.set(ref,{group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,html:x.html,sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL})});await batch.commit();$("jsonMsg").textContent=arr.length+" question(s) imported successfully.";$("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}};
+$("importBtn").onclick=async()=>{try{const arr=JSON.parse($("json").value);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must be a non-empty array.");const batch=db.batch();arr.forEach((x,i)=>{if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required fields.");if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+x.group+". Use the exact subject from the dropdown.");const ref=db.collection("subjectiveQuestions").doc();batch.set(ref,{group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,html:x.html,sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL})});await batch.commit();$("jsonMsg").textContent=arr.length+" question(s) imported successfully.";$("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}};
 $("exportBtn").onclick=()=>{const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 </script>
 </body></html>
