@@ -24,13 +24,13 @@ select{width:100%;padding:13px 12px;border:1px solid var(--border);border-radius
 <section class="hero">
 <span class="eyebrow">CMA STUDY MATERIAL</span>
 <h1>Choose Your CMA Group</h1>
-<p>Select Foundation, Intermediate Group 1/2, or Final Group 3/4. Only that group's four subjects will appear, so you do not have to scroll through the whole syllabus.</p>
+<p>Select Foundation, Intermediate Group 1/2, or Final Group 3/4. Only the available subjects for that group will appear, so you do not have to scroll through the whole syllabus.</p>
 </section>
 
 <div class="update"><b>UPDATE 26</b> — Study Material is now organised Group → Subject → PDF.</div>
 
 <section class="selector">
-<div class="selector-head"><div><h2>Select Group</h2><p>Choose one group to view its four subjects.</p></div></div>
+<div class="selector-head"><div><h2>Select Group</h2><p>Choose a group to view its available study-material subjects.</p></div></div>
 <select id="groupPicker" aria-label="Select CMA Group">
 <option value="">Select CMA Group</option>
 <option value="foundation">CMA Foundation</option>
@@ -74,10 +74,7 @@ final3:[
 ["Corporate & Economic Laws","final-group-3-corporate-economic-laws.html"]
 ],
 final4:[
-["Corporate Financial Reporting","final-group-4-corporate-financial-reporting.html"],
-["Cost Management & Audit","final-group-4-cost-management-audit.html"],
-["Indirect Tax Law & Practice","final-group-4-indirect-tax-law-practice.html"],
-["Strategic Performance Management","final-group-4-strategic-performance-management.html"]
+["Entrepreneurship & Startup — P20C","study-materials/p20c.html"]
 ]
 };
 const picker=document.getElementById("groupPicker"),panel=document.getElementById("subjectPanel"),empty=document.getElementById("empty");
@@ -89,7 +86,7 @@ function render(key){
   const a=document.createElement("a");
   a.className="subject";
   a.href=item[1];
-  a.innerHTML='<div class="num">'+String(i+1).padStart(2,"0")+'</div><div class="copy"><h3>'+item[0]+'</h3><p>Study Material · PDF resources</p></div><span class="open">OPEN →</span>';
+  a.innerHTML='<div class="num">'+String(i+1).padStart(2,"0")+'</div><div class="copy"><h3>'+item[0]+'</h3><p>Study Material · PDF · Download available</p></div><span class="open">OPEN →</span>';
   panel.appendChild(a);
  });
 }
