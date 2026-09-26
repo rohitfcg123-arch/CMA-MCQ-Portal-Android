@@ -31,7 +31,7 @@ window.SFM_ATTEMPTS.forEach(x=>{const o=document.createElement("option");o.value
 const update=()=>render();
 function fill(el,items,placeholder){el.innerHTML='<option value="">'+placeholder+'</option>';items.forEach(x=>{const o=document.createElement("option");o.value=x[1]||x;o.textContent=x[0]||x;el.appendChild(o);});el.disabled=false;}
 g.addEventListener("change",function(){results.innerHTML="";status.textContent="";note.textContent="";s.disabled=true;t.disabled=true;s.innerHTML="";t.innerHTML="";at.value="";fill(s,groups[g.value]||[],"Select Subject");});
-s.addEventListener("change",function(){results.innerHTML="";status.textContent="";note.textContent="";t.disabled=true;t.innerHTML="";at.value="";if(!s.value)return;const subject=s.options[s.selectedIndex].textContent;if(subject==="Strategic Financial Management"){fill(t,window.SFM_CHAPTERS.map(x=>[x,x]),"All Chapters");t.value="";note.textContent="Bond Valuation contains the six typed Bond Valuation subjective PYQs. Other chapters are available in the dropdown but currently have no published questions."}else{fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");t.value="all";note.textContent="Subjective PYQ data for this subject will appear here once its papers are added.";render();}});
+s.addEventListener("change",function(){results.innerHTML="";status.textContent="";note.textContent="";t.disabled=true;t.innerHTML="";at.value="";if(!s.value)return;const subject=s.options[s.selectedIndex].textContent;if(subject==="Strategic Financial Management"){fill(t,[["All Chapters","all"],...window.SFM_CHAPTERS.map(x=>[x,x])],"Select Chapter");t.value="all";note.textContent="Select All Chapters to view every uploaded SFM subjective PYQ. Individual chapters can be selected for focused practice."}else{fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");t.value="all";note.textContent="Subjective PYQ data for this subject will appear here once its papers are added.";render();}});
 t.addEventListener("change",update);at.addEventListener("change",update);
 function render(){
  results.innerHTML="";
@@ -39,7 +39,7 @@ function render(){
  const topic=t.value||"";
  const attempt=at.value||"";
  if(subject!=="Strategic Financial Management"){status.textContent=subject?( "No SFM subjective data is assigned to this subject yet."):"Choose a subject to begin.";return;}
- let rows=window.SFM_SUBJECTIVE_PYQ.filter(x=>(!topic||x.t===topic)&&(!attempt||x.a===attempt));
+ let rows=window.SFM_SUBJECTIVE_PYQ.filter(x=>(!topic||topic==="all"||x.t===topic)&&(!attempt||x.a===attempt));
  status.textContent=rows.length+" subjective PYQ"+(rows.length===1?"":"s")+" found"+(topic?" for "+topic:"")+(attempt?" · "+attempt:"");
  if(!rows.length){results.innerHTML='<div class="empty">No questions match the selected chapter and attempt.</div>';return;}
  rows.forEach(x=>{
