@@ -1,0 +1,21 @@
+CMA Zone — Firestore rule for the Question Uploader
+================================================
+
+Add this match block INSIDE your existing:
+match /databases/{database}/documents {
+
+  match /subjectiveQuestions/{questionId} {
+    // Subjective question content is readable by the portal.
+    allow read: if true;
+
+    // Only the CMA Zone administrator can upload, edit or delete questions.
+    allow create, update, delete: if request.auth != null
+      && request.auth.token.email == "rohit.fcg123@gmail.com";
+  }
+
+}
+
+IMPORTANT:
+- Do not replace your existing Firestore rules with this snippet unless you have reviewed all existing rules.
+- If an existing broader rule already grants write access, that broader rule can still grant access. Firebase evaluates overlapping matching rules independently.
+- The uploader itself also checks the administrator email in the UI, but the Firestore rule is the actual database-side protection.
