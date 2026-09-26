@@ -59,14 +59,57 @@ const db=firebase.firestore();
 const key=x=>[x.a,x.q,x.t].join("|").toLowerCase();
 async function loadUploadedQuestions(){
   try{
-    const snap=await db.collection("subjectiveQuestions").where("subject","==","Strategic Financial Management").get();
-    const remote=snap.docs.map(d=>d.data()).filter(x=>x.group==="final3");
-    const merged=new Map((window.SFM_SUBJECTIVE_PYQ||[]).map(x=>[key(x),x]));
-    remote.forEach(x=>merged.set(key(x),{a:x.attempt,q:x.q,t:x.chapter,html:x.html}));
-    window.SFM_SUBJECTIVE_PYQ=Array.from(merged.values());
+    // Read the complete collection first, then filter locally.
+    // This avoids losing uploaded questions because of query/filter
+    // mismatches and also keeps duplicate question numbers from
+    // different uploaded records.
+    const snap=await db.collection("subjectiveQuestions").get();
+    const remote=snap.docs
+      .map(d=>({id:d.id,...d.data()}))
+      .filter(x=>
+        String(x.group||"").toLowerCase()==="final3" &&
+        String(x.subject||"").trim().toLowerCase()==="strategic financial management"
+      );
+
+    const staticRows=Array.isArray(window.SFM_SUBJECTIVE_PYQ)
+      ? window.SFM_SUBJECTIVE_PYQ.slice()
+      : [];
+
+    const remoteRows=[];
+    const replacedStatic=new Set();
+
+    remote.forEach(x=>{
+      const row={a:x.attempt,q:x.q,t:x.chapter,html:x.html};
+      const k=key(row);
+
+      // If an uploaded question corresponds exactly to a hard-coded
+      // question, replace that hard-coded version once.
+      const staticIndex=staticRows.findIndex((s,i)=>!replacedStatic.has(i)&&key(s)===k);
+
+      if(staticIndex>=0){
+        staticRows[staticIndex]=row;
+        replacedStatic.add(staticIndex);
+      }else{
+        // Every separate Firestore document is preserved.
+        remoteRows.push(row);
+      }
+    });
+
+    window.SFM_SUBJECTIVE_PYQ=staticRows.concat(remoteRows);
+
+    console.info(
+      "SFM PYQ sync:",
+      "Firestore documents =", remote.length,
+      "Static questions =", staticRows.length,
+      "Additional uploaded =", remoteRows.length,
+      "Total displayed =", window.SFM_SUBJECTIVE_PYQ.length
+    );
+
     const topic=document.getElementById("topic");
     if(topic)topic.dispatchEvent(new Event("change"));
-  }catch(e){console.warn("Question uploader sync failed:",e.message)}
+  }catch(e){
+    console.warn("Question uploader sync failed:",e.message);
+  }
 }
 loadUploadedQuestions();
 })();
