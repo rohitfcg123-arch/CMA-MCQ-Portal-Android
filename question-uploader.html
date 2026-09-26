@@ -28,7 +28,7 @@
 <div class="field"><label>Group</label><select id="group"><option value="final3">CMA Final Group 3</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label>Subject</label><select id="subject"></select></div>
 <div class="field"><label>Chapter</label><select id="chapter">
-<option>Security Analysis</option><option>Equity/Share Valuation</option><option>Bond Valuation</option><option>Mutual Funds</option><option>Portfolio Management</option><option>Derivatives</option><option>Foreign Exchange</option><option>Investment Decisions</option><option>Evaluation of Risky Proposals</option><option>Leasing Decision</option>
+<option>Security Analysis</option><option>Equity/Share Valuation</option><option>Bond Valuation</option><option>Mutual Funds</option><option>Portfolio Management</option><option>Derivatives</option><option>Foreign Exchange</option><option>Investment Decisions</option><option>Evaluation of Risky Proposals</option><option>Leasing Decision</option><optgroup label="SFM — Investment / Risk / Theory Section"><option>Investment Decisions, Project Planning and Control</option><option>Evaluation of Risky Proposal for Investment Decisions</option><option>Leasing Decisions</option><option>Securitization</option></optgroup>
 </select></div>
 <div class="field"><label>Attempt</label><select id="attempt"><option>December 2023</option><option>June 2024</option><option>December 2024</option><option>June 2025</option><option>December 2025</option><option>June 2026</select></div>
 <div class="field"><label>Question Number</label><input id="qno" placeholder="4(b)"></div>
@@ -40,7 +40,7 @@
 </div></section>
 
 <section class="panel"><h2>JSON Upload / Backup</h2><div class="body">
-<div class="note">You can also paste multiple questions as a JSON array. This is useful for bulk uploading a whole attempt/chapter. Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Example: <code>[{"group":"final3","subject":"Strategic Financial Management","chapter":"Mutual Funds","attempt":"June 2026","q":"4(b)","html":"&lt;p&gt;Question...&lt;/p&gt;"}]</code></div>
+<div class="note">You can also paste multiple questions as a JSON array. This is useful for bulk uploading a whole attempt/chapter. For the new SFM section, use the exact chapter names from the dropdown: Investment Decisions, Project Planning and Control; Evaluation of Risky Proposal for Investment Decisions; Leasing Decisions; Securitization. Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Example: <code>[{"group":"final3","subject":"Strategic Financial Management","chapter":"Mutual Funds","attempt":"June 2026","q":"4(b)","html":"&lt;p&gt;Question...&lt;/p&gt;"}]</code></div>
 <input id="jsonFile" type="file" accept=".json,application/json" style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <div class="count" style="margin-top:6px">Select the JSON file directly, or paste JSON below.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste JSON array here...'></textarea>
