@@ -16,7 +16,10 @@
 <div id="status" class="status">Choose a group, subject and topic to begin.</div>
 <section id="results"></section>
 </main>
-<div class="update-strip"><b>UPDATE #32 — SFM Subjective Questions updated</b> · Bond Valuation questions are now typed directly on the portal; no PDF viewer is used.</div><script src="js/sfm-subjective-pyq-v29.js?v=20260927u32"></script>
+<div class="update-strip"><b>UPDATE #32 — SFM Subjective Questions updated</b> · Bond Valuation questions are now typed directly on the portal; no PDF viewer is used.</div><script src="js/sfm-subjective-pyq-v29.js?v=20260927u33"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 (function(){
 const groups={"foundation":[["Fundamentals of Law and Business Communication","foundation-fundamentals-law-business-communication"],["Fundamentals of Financial and Cost Accounting","foundation-fundamentals-financial-cost-accounting"],["Fundamentals of Business Mathematics and Statistics","foundation-fundamentals-business-mathematics-statistics"],["Fundamentals of Business Economics and Management","foundation-fundamentals-business-economics-management"]],"inter1":[["Business Law and Ethics","inter-group-1-business-law-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operation Management and Strategic Management","inter-group-2-operation-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Strategic Cost Management","final-group-3-strategic-cost-management"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax & International Laws","final-group-3-direct-tax-international-laws"],["Corporate & Economic Laws","final-group-3-corporate-economic-laws"]],"final4":[["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Cost Management & Audit","final-group-4-cost-management-audit"],["Indirect Tax Law & Practice","final-group-4-indirect-tax-law-practice"],["Entrepreneurship & Startup","final-group-4-entrepreneurship-startup"],["Risk Management, Banking & Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance & Business Valuation","final-group-4-strategic-performance-business-valuation"]]};
@@ -46,5 +49,25 @@ function render(){
  });
 }
 g.dispatchEvent(new Event("change"));
+})();
+</script>
+<script>
+(function(){
+const firebaseConfig={apiKey:"AIzaSyCDQRVXC2HxZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+const key=x=>[x.a,x.q,x.t].join("|").toLowerCase();
+async function loadUploadedQuestions(){
+  try{
+    const snap=await db.collection("subjectiveQuestions").where("subject","==","Strategic Financial Management").get();
+    const remote=snap.docs.map(d=>d.data()).filter(x=>x.group==="final3");
+    const merged=new Map((window.SFM_SUBJECTIVE_PYQ||[]).map(x=>[key(x),x]));
+    remote.forEach(x=>merged.set(key(x),{a:x.attempt,q:x.q,t:x.chapter,html:x.html}));
+    window.SFM_SUBJECTIVE_PYQ=Array.from(merged.values());
+    const topic=document.getElementById("topic");
+    if(topic)topic.dispatchEvent(new Event("change"));
+  }catch(e){console.warn("Question uploader sync failed:",e.message)}
+}
+loadUploadedQuestions();
 })();
 </script></body></html>
