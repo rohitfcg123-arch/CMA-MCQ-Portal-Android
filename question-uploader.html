@@ -134,7 +134,9 @@ $("loginBtn").onclick=login;
 $("logout").onclick=logout;
 auth.getRedirectResult().then(r=>{
   if(r&&r.user) return;
-}).catch(showLoginError);\n$("group").onchange=()=>populateSubjects($("group").value);\npopulateSubjects($("group").value,"Strategic Financial Management");
+}).catch(showLoginError);
+$("group").onchange=()=>populateSubjects($("group").value);
+populateSubjects($("group").value,"Strategic Financial Management");
 auth.onAuthStateChanged(async u=>{
   if(!u){
     $("login").classList.remove("hidden");
