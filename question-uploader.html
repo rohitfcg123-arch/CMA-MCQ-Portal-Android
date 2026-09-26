@@ -46,7 +46,7 @@
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
 <div class="toolbar"><button class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button></div><div id="jsonMsg" class="msg"></div>
 <div style="height:1px;background:var(--line);margin:18px 0"></div>
-<div class="note"><b>Solution JSON Update</b> — Use this for an answer-only JSON. It updates the existing question by matching <code>group + subject + chapter + attempt + q</code>; it does <b>not</b> create a duplicate question.</div>
+<div class="note"><b>Solution JSON Update</b> — Use this for an answer-only JSON. It matches existing Firestore questions <b>and</b> the hard-coded SFM questions already in the user portal. Matching uses <code>group + subject + attempt + q</code> with chapter as an additional exact match when available. If a question exists only in the hard-coded SFM file, the system creates one Firestore copy carrying the same question + solution, so the solution appears without creating a duplicate in the user portal.</div>
 <input id="solutionJsonFile" type="file" accept=".json,application/json" style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <div class="count" style="margin-top:6px">Select the Solution JSON file directly, or paste the solution array below.</div>
 <textarea id="solutionJson" style="margin-top:12px;min-height:180px" placeholder='Paste Solution JSON array here...'></textarea>
@@ -196,28 +196,91 @@ $("clearBtn").onclick=()=>{["qno","sort","html","solution"].forEach(id=>$(id).va
 $("saveBtn").onclick=async()=>{const btn=$("saveBtn");try{setBusy(btn,true,"Uploading…");const d=payload();await db.collection("subjectiveQuestions").add(d);$("msg").textContent="Question uploaded successfully. It will appear in the user portal automatically.";$("msg").className="msg ok";$("clearBtn").click();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{setBusy(btn,false,"Upload Question")}};
 async function applySolutionArray(arr){
  if(!Array.isArray(arr)||!arr.length)throw Error("Solution JSON must be a non-empty array.");
+
  const docsByFull=new Map(),docsByBasic=new Map();
  DATA.forEach(x=>{
    const full=(String(x.group||"")+"|"+String(x.subject||"")+"|"+String(x.chapter||"")+"|"+String(x.attempt||"")+"|"+String(x.q||"")).toLowerCase();
    const basic=(String(x.group||"")+"|"+String(x.subject||"")+"|"+String(x.attempt||"")+"|"+String(x.q||"")).toLowerCase();
-   docsByFull.set(full,x); docsByBasic.set(basic,x);
+   docsByFull.set(full,x);
+   if(!docsByBasic.has(basic))docsByBasic.set(basic,x);
  });
- const batch=db.batch(); let updated=0,missing=[];
+
+ const staticRows=Array.isArray(window.SFM_SUBJECTIVE_PYQ)?window.SFM_SUBJECTIVE_PYQ:[];
+ const staticByFull=new Map(),staticByBasic=new Map();
+ staticRows.forEach((x,i)=>{
+   const full=("final3|Strategic Financial Management|"+String(x.t||"")+"|"+String(x.a||"")+"|"+String(x.q||"")).toLowerCase();
+   const basic=("final3|Strategic Financial Management|"+String(x.a||"")+"|"+String(x.q||"")).toLowerCase();
+   const row={...x,_staticIndex:i};
+   staticByFull.set(full,row);
+   if(!staticByBasic.has(basic))staticByBasic.set(basic,row);
+ });
+
+ const batch=db.batch();
+ let updated=0,created=0,missing=[];
+
  arr.forEach((x,i)=>{
-   if(!x.group||!x.subject||!x.attempt||!x.q||!String(x.solutionHtml||"").trim())throw Error("Solution item "+(i+1)+" is missing required fields. Required: group, subject, attempt, q, solutionHtml.");
+   if(!x.group||!x.subject||!x.attempt||!x.q||!String(x.solutionHtml||"").trim()){
+     throw Error("Solution item "+(i+1)+" is missing required fields. Required: group, subject, attempt, q, solutionHtml.");
+   }
+
    const full=(String(x.group)+"|"+String(x.subject)+"|"+String(x.chapter||"")+"|"+String(x.attempt)+"|"+String(x.q)).toLowerCase();
    const basic=(String(x.group)+"|"+String(x.subject)+"|"+String(x.attempt)+"|"+String(x.q)).toLowerCase();
-   const existing=docsByFull.get(full)||docsByBasic.get(basic);
-   if(!existing){missing.push(x.attempt+" "+x.q+" — "+(x.chapter||""));return;}
-   batch.update(db.collection("subjectiveQuestions").doc(existing.id),{solutionHtml:String(x.solutionHtml).trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL});
-   updated++;
+
+   // Prefer an exact Firestore match, then an exact static match, then a basic Firestore/static match.
+   const existing=docsByFull.get(full);
+   const staticExact=staticByFull.get(full);
+   const basicDoc=docsByBasic.get(basic);
+   const staticBasic=staticByBasic.get(basic);
+
+   if(existing){
+     batch.update(db.collection("subjectiveQuestions").doc(existing.id),{
+       solutionHtml:String(x.solutionHtml).trim(),
+       updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+       updatedBy:ADMIN_EMAIL
+     });
+     updated++;
+     return;
+   }
+
+   if(staticExact||staticBasic){
+     const s=staticExact||staticBasic;
+     const ref=db.collection("subjectiveQuestions").doc();
+     batch.set(ref,{
+       group:"final3",
+       subject:"Strategic Financial Management",
+       chapter:String(s.t||x.chapter||"").trim(),
+       attempt:String(s.a||x.attempt).trim(),
+       q:String(s.q||x.q).trim(),
+       html:String(s.html||"").trim(),
+       solutionHtml:String(x.solutionHtml).trim(),
+       sort:Number(s.sort)||0,
+       updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+       updatedBy:ADMIN_EMAIL
+     });
+     created++;
+     return;
+   }
+
+   if(basicDoc){
+     batch.update(db.collection("subjectiveQuestions").doc(basicDoc.id),{
+       solutionHtml:String(x.solutionHtml).trim(),
+       updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+       updatedBy:ADMIN_EMAIL
+     });
+     updated++;
+     return;
+   }
+
+   missing.push(x.attempt+" "+x.q+" — "+(x.chapter||""));
  });
- if(missing.length)throw Error("No matching uploaded question found for: "+missing.join("; "));
+
+ if(missing.length)throw Error("No matching question found in Firestore or the SFM question file for: "+missing.join("; "));
+
  await batch.commit();
- return updated;
+ return {updated,created};
 }
-$("importBtn").onclick=async()=>{const btn=$("importBtn");try{setBusy(btn,true,"Importing…");const raw=$("json").value.trim();if(!raw)throw Error("Please select a JSON file above or paste the JSON array in the box first.");const arr=JSON.parse(raw);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must be a non-empty array.");if(arr[0]&&arr[0].solutionHtml&&!arr[0].html){const updated=await applySolutionArray(arr);$("jsonMsg").textContent=updated+" existing question(s) updated with solutions. Answer-only JSON was automatically detected."; $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions();return;}const batch=db.batch();arr.forEach((x,i)=>{if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+x.group+". Use the exact subject from the dropdown.");const ref=db.collection("subjectiveQuestions").doc();batch.set(ref,{group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL})});await batch.commit();$("jsonMsg").textContent=arr.length+" question(s) imported successfully.";$("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Questions JSON")}};
-$("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const updated=await applySolutionArray(arr);$("solutionJsonMsg").textContent=updated+" existing question(s) updated with solutions. No duplicate questions were created.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
+$("importBtn").onclick=async()=>{const btn=$("importBtn");try{setBusy(btn,true,"Importing…");const raw=$("json").value.trim();if(!raw)throw Error("Please select a JSON file above or paste the JSON array in the box first.");const arr=JSON.parse(raw);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must be a non-empty array.");if(arr[0]&&arr[0].solutionHtml&&!arr[0].html){const result=await applySolutionArray(arr);$("jsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). Answer-only JSON was automatically detected."; $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions();return;}const batch=db.batch();arr.forEach((x,i)=>{if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+x.group+". Use the exact subject from the dropdown.");const ref=db.collection("subjectiveQuestions").doc();batch.set(ref,{group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL})});await batch.commit();$("jsonMsg").textContent=arr.length+" question(s) imported successfully.";$("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Questions JSON")}};
+$("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). No duplicate question content was created.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
 </script>
 </body></html>
