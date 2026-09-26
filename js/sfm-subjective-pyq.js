@@ -36,6 +36,7 @@ window.SFM_SUBJECTIVE_PYQ = [
 ];
 
 (function(){
+  if(!document.getElementById("subjectivePyqScreen")) return;
   function byId(id){return document.getElementById(id);}
   function showSubjective(){
     document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
