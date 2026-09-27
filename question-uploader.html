@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #169</b> — Question JSON importer now accepts both top-level arrays and wrapped {rows:[...]} exports.</div>
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #176</b> — Uploaded Questions list now has separate Questions / Answers views; Answers shows only uploaded answers, keeps Answer No., Subject, Attempt and provides Edit / Answer.</div>
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -54,7 +54,7 @@
 </div></section>
 
 <section class="panel"><h2>Uploaded Questions <span class="count" id="count"></span></h2><div class="body">
-<div class="note" style="margin-bottom:12px"><b>Find a question quickly:</b> use any combination of Group, Subject, Attempt, Chapter/Topic and Question No., or type in Search. Filters and search work together.</div>
+<div class="view-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="btn gold view-tab active" id="questionsViewBtn" type="button">📚 Questions <span id="questionViewCount"></span></button><button class="btn gray view-tab" id="answersViewBtn" type="button">📖 Answers <span id="answerViewCount"></span></button></div><div class="note" style="margin-bottom:12px"><b>Find a question quickly:</b> use any combination of Group, Subject, Attempt, Chapter/Topic and Question No., or type in Search. Filters and search work together.</div>
 <div class="question-filters">
 <div class="field"><label>Group</label><select id="listGroup"><option value="">All Groups</option></select></div>
 <div class="field"><label>Subject</label><select id="listSubject"><option value="">All Subjects</option></select></div>
@@ -76,7 +76,7 @@
 <div class="field"><label>Uploaded To</label><input id="uploadedTo" type="datetime-local"></div>
 </div>
 <div class="note" style="margin-top:10px">Time filter uses the Firestore <b>updatedAt</b> timestamp. After filtering, use <b>Select All Visible → Delete Selected</b> to remove the matching questions in one operation.</div>
-<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th><input id="selectAllBox" type="checkbox" title="Select all visible"></th><th>Attempt</th><th>Question</th><th>Marks</th><th>Group</th><th>Subject</th><th>Chapter</th><th>Updated</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="tablewrap" style="margin-top:12px"><table><thead id="rowsHead"><tr><th><input id="selectAllBox" type="checkbox" title="Select all visible"></th><th>Attempt</th><th>Question</th><th>Marks</th><th>Group</th><th>Subject</th><th>Chapter</th><th>Updated</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table></div>
 </div></section>
 
 <div id="editModal" class="edit-modal hidden" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
@@ -164,7 +164,7 @@ function populateSubjects(group,selected){
   if(selected&&list.includes(selected))$("subject").value=selected;
 }
 
-let DATA=[];
+let DATA=[];\nlet listMode="questions";
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function fmt(v){if(!v)return"";if(v.toDate)return v.toDate().toLocaleString("en-IN");return new Date(v).toLocaleString("en-IN")}
 function setBusy(btn,busy,label){if(!btn)return;if(busy){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>'+label}else{btn.disabled=false;btn.textContent=label}}
@@ -281,9 +281,49 @@ function updateSelectedCount(){
  const boxes=[...document.querySelectorAll(".rowCheck")];
  $("selectAllBox").checked=boxes.length>0&&boxes.every(b=>b.checked);
 }
+function answerVersionsFor(x){
+ const vals=[];
+ if(Array.isArray(x.solutionHtmls))vals.push(...x.solutionHtmls);
+ if(String(x.solutionHtml||"").trim())vals.push(String(x.solutionHtml||"").trim());
+ return [...new Set(vals.map(v=>String(v||"").trim()).filter(Boolean))];
+}
+function filteredAnswers(){
+ return filteredQuestions().filter(x=>answerVersionsFor(x).length);
+}
+function setListMode(mode){
+ listMode=mode==="answers"?"answers":"questions";
+ $("questionsViewBtn").classList.toggle("active",listMode==="questions");
+ $("answersViewBtn").classList.toggle("active",listMode==="answers");
+ $("questionsViewBtn").classList.toggle("gold",listMode==="questions");
+ $("questionsViewBtn").classList.toggle("gray",listMode!=="questions");
+ $("answersViewBtn").classList.toggle("gold",listMode==="answers");
+ $("answersViewBtn").classList.toggle("gray",listMode!=="answers");
+ $("selectAllVisible").style.display=listMode==="questions"?"inline-block":"none";
+ $("clearSelected").style.display=listMode==="questions"?"inline-block":"none";
+ $("bulkDelete").style.display=listMode==="questions"?"inline-block":"none";
+ $("selectAllBox").parentElement.style.display=listMode==="questions"?"table-cell":"none";
+ $("rowsHead").innerHTML=listMode==="questions"
+   ? '<tr><th><input id="selectAllBox" type="checkbox" title="Select all visible"></th><th>Attempt</th><th>Question</th><th>Marks</th><th>Group</th><th>Subject</th><th>Chapter</th><th>Updated</th><th>Action</th></tr>'
+   : '<tr><th>Answer No.</th><th>Attempt</th><th>Subject</th><th>Group</th><th>Chapter</th><th>Answer Preview</th><th>Updated</th><th>Action</th></tr>';
+ if(listMode==="questions") $("selectAllBox").onchange=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=$("selectAllBox").checked);updateSelectedCount()};
+ renderRows();
+}
 function renderRows(){
  const filtered=filteredQuestions();
+ const answers=filteredAnswers();
  $("count").textContent="("+DATA.length+")";
+ $("questionViewCount").textContent=" ("+DATA.length+")";
+ $("answerViewCount").textContent=" ("+DATA.filter(x=>answerVersionsFor(x).length).length+")";
+ if(listMode==="answers"){
+   $("filterCount").textContent=answers.length+" answer-bearing questions";
+   $("rows").innerHTML=answers.flatMap(x=>answerVersionsFor(x).map((ans,index)=>'<tr>'+
+     '<td><b>Q'+esc(x.q||"—")+'</b><br><span class="count">Answer '+(index+1)+'</span></td>'+
+     '<td>'+esc(x.attempt)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.chapter)+'</td>'+
+     '<td><div class="solution-list-preview">'+esc(String(ans).replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim().slice(0,220))+(String(ans).length>220?"…":"")+'</div></td>'+
+     '<td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn gold" onclick="openMetadataEditor(\''+x.id+'\')">Edit / Answer</button></td></tr>')).join("")||
+     '<tr><td colspan="8">No uploaded answers match the selected filters.</td></tr>';
+   return;
+ }
  $("filterCount").textContent=filtered.length===DATA.length?filtered.length+" questions":filtered.length+" matching / "+DATA.length+" total";
  $("rows").innerHTML=filtered.map(x=>'<tr><td><input class="rowCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt)+'</td><td><b>'+esc(x.q)+'</b></td><td>'+esc(x.marks==null||x.marks===""?"":x.marks)+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.chapter)+'</td><td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn gold" onclick="openMetadataEditor(\''+x.id+'\')">Edit / Answer</button> <button class="btn red" onclick="removeQ(\''+x.id+'\')">Delete</button></td></tr>').join("")||'<tr><td colspan="9">No matching questions found. Try Clear Filters.</td></tr>';
  document.querySelectorAll(".rowCheck").forEach(b=>b.onchange=updateSelectedCount);
@@ -380,7 +420,7 @@ $("saveMetadata").onclick=async()=>{
   }
 };
 function resetQuestionListFilters(){$("listGroup").value="";$("listSubject").value="";$("listAttempt").value="";$("listChapter").value="";$("listQno").value="";$("listSearch").value="";$("uploadedFrom").value="";$("uploadedTo").value="";updateQuestionListFilters()}
-$("listGroup").onchange=updateQuestionListFilters;
+$("listGroup").onchange=updateQuestionListFilters;\nsetTimeout(()=>setListMode("questions"),0);
 $("listSubject").onchange=updateQuestionListFilters;
 $("listAttempt").onchange=updateQuestionListFilters;
 $("listChapter").onchange=renderRows;
@@ -388,7 +428,7 @@ $("listQno").oninput=renderRows;
 $("listSearch").oninput=renderRows;
 $("uploadedFrom").onchange=renderRows;
 $("uploadedTo").onchange=renderRows;
-$("clearListFilters").onclick=resetQuestionListFilters;
+$("clearListFilters").onclick=resetQuestionListFilters;\n$("questionsViewBtn").onclick=()=>setListMode("questions");\n$("answersViewBtn").onclick=()=>setListMode("answers");
 $("selectAllBox").onchange=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=$("selectAllBox").checked);updateSelectedCount()};
 $("selectAllVisible").onclick=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=true);updateSelectedCount()};
 $("clearSelected").onclick=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=false);updateSelectedCount()};
