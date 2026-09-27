@@ -100,12 +100,17 @@ function render(){
   if(!rows.length){results.innerHTML='<div class="empty">No questions match the selected chapter and attempt.</div>';return;}
   rows.forEach(x=>{
     const card=document.createElement("article");card.className="question";
-    card.innerHTML='<div class="qhead"><div><h2 class="qtitle">Question '+(x.q||"—")+'</h2><div class="topic-note"><b>Subject:</b> Strategic Cost Management</div><div class="topic-note"><b>Chapter:</b> '+(x.t||"Chapter not specified")+'</div></div><span class="attempt">'+(x.a||"Attempt not specified")+' Attempt</span></div><div class="pyq-question">'+x.html+'</div>';
+    card.innerHTML='<div class="qhead"><div><h2 class="qtitle">Question '+(x.q||"—")+'</h2><div class="topic-note"><b>Subject:</b> '+subject+'</div><div class="topic-note"><b>Chapter:</b> '+(x.t||"Chapter not specified")+'</div></div><span class="attempt">'+(x.a||"Attempt not specified")+' Attempt</span></div><div class="pyq-question">'+x.html+'</div>';
     if(String(x.solutionHtml||"").trim()){
       const btn=document.createElement("button");btn.className="solution-toggle";btn.type="button";btn.textContent="📖 View Institute Solution";
       const box=document.createElement("div");box.className="solution-box";box.innerHTML="<b>Institute Suggested Answer / Solution</b>"+x.solutionHtml;
       btn.onclick=()=>{const open=box.classList.toggle("open");btn.textContent=open?"✕ Close Solution":"📖 View Institute Solution"};
       card.appendChild(btn);card.appendChild(box);
+    }else{
+      const noAnswer=document.createElement("div");
+      noAnswer.className="topic-note";
+      noAnswer.textContent="Institute Suggested Answer: Not uploaded yet.";
+      card.appendChild(noAnswer);
     }
     results.appendChild(card);
   });
@@ -133,13 +138,42 @@ async function loadUploadedQuestions(){
     const staticRows=Array.isArray(window.SFM_SUBJECTIVE_PYQ)?window.SFM_SUBJECTIVE_PYQ.slice():[];
     const replacedStatic=new Set();
     const remoteSfmRows=[];
+    const sfmCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+    const sfmQuestionKey=(x)=>[
+      "final3",
+      "strategicfinancialmanagement",
+      String(x.attempt||x.a||""),
+      String(x.q||x.question||x.questionNumber||x.questionNo||"")
+    ].map(sfmCanon).join("|");
 
+    // Firebase is the source of truth. Merge uploaded SFM records into the
+    // existing hard-coded SFM question bank using group + subject + attempt + Q.
+    // Chapter is intentionally ignored here so corrected chapter names do not
+    // hide an uploaded answer.
     sfmRemote.forEach(x=>{
-      const row={a:String(x.attempt||x.a||"").trim(),q:String(x.q||"").trim(),t:String(x.chapter||x.t||"").trim(),html:String(x.html||""),solutionHtml:String(x.solutionHtml||"").trim()};
-      const k=key(row);
-      const staticIndex=staticRows.findIndex((s,i)=>!replacedStatic.has(i)&&key(s)===k);
-      if(staticIndex>=0){staticRows[staticIndex]=row;replacedStatic.add(staticIndex);}
-      else remoteSfmRows.push(row);
+      const row={
+        a:String(x.attempt||x.a||"").trim(),
+        q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),
+        t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
+        html:String(x.html||x.questionHtml||x.qHtml||""),
+        solutionHtml:String(x.solutionHtml||"").trim()
+      };
+      const k=sfmQuestionKey(row);
+      const staticIndex=staticRows.findIndex((s,i)=>!replacedStatic.has(i)&&sfmQuestionKey(s)===k);
+      if(staticIndex>=0){
+        const base=staticRows[staticIndex];
+        staticRows[staticIndex]={
+          ...base,
+          a:row.a||base.a,
+          q:row.q||base.q,
+          t:row.t||base.t,
+          html:row.html||base.html,
+          solutionHtml:row.solutionHtml||String(base.solutionHtml||"").trim()
+        };
+        replacedStatic.add(staticIndex);
+      }else{
+        remoteSfmRows.push(row);
+      }
     });
 
     window.SFM_SUBJECTIVE_PYQ=staticRows.concat(remoteSfmRows);
