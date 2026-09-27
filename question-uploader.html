@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #98</b> — SCM clean JSON identity + bulk delete with Select All and upload-time filtering.</div>
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #169</b> — Question JSON importer now accepts both top-level arrays and wrapped {rows:[...]} exports.</div>
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -314,6 +314,14 @@ function payload(){
 $("previewBtn").onclick=()=>{try{$("preview").innerHTML="<h3 style=\"margin:0 0 8px;color:var(--teal)\">Question Preview</h3>"+$("html").value+($("solution").value.trim()?"<div class=\"solution-preview\"><b>Institute Solution Preview</b>"+$("solution").value+"</div>":"");$("preview").classList.remove("hidden")}catch(e){}};
 $("clearBtn").onclick=()=>{["qno","sort","html","solution"].forEach(id=>$(id).value="");$("preview").classList.add("hidden");$("msg").textContent=""};
 $("saveBtn").onclick=async()=>{const btn=$("saveBtn");try{setBusy(btn,true,"Uploading…");const d=payload();await db.collection("subjectiveQuestions").add(d);$("msg").textContent="Question uploaded successfully. It will appear in the user portal automatically.";$("msg").className="msg ok";$("clearBtn").click();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{setBusy(btn,false,"Upload Question")}};
+function normalizeQuestionJsonPayload(raw){
+  const parsed=JSON.parse(raw);
+  if(Array.isArray(parsed)) return parsed;
+  if(parsed&&Array.isArray(parsed.rows)) return parsed.rows;
+  if(parsed&&Array.isArray(parsed.questions)) return parsed.questions;
+  if(parsed&&Array.isArray(parsed.data)) return parsed.data;
+  throw Error("JSON must be a non-empty array, or an object containing a rows[], questions[] or data[] array.");
+}
 async function applySolutionArray(arr){
  if(!Array.isArray(arr)||!arr.length)throw Error("Solution JSON must be a non-empty array.");
 
@@ -399,7 +407,7 @@ async function applySolutionArray(arr){
  await batch.commit();
  return {updated,created};
 }
-$("importBtn").onclick=async()=>{const btn=$("importBtn");try{setBusy(btn,true,"Importing…");const raw=$("json").value.trim();if(!raw)throw Error("Please select a JSON file above or paste the JSON array in the box first.");const arr=JSON.parse(raw);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must be a non-empty array.");if(arr[0]&&arr[0].solutionHtml&&!arr[0].html){const result=await applySolutionArray(arr);$("jsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). Answer-only JSON was automatically detected."; $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions();return;}let importItems=[];
+$("importBtn").onclick=async()=>{const btn=$("importBtn");try{setBusy(btn,true,"Importing…");const raw=$("json").value.trim();if(!raw)throw Error("Please select a JSON file above or paste the JSON array in the box first.");const arr=normalizeQuestionJsonPayload(raw);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must contain at least one question.");if(arr[0]&&arr[0].solutionHtml&&!arr[0].html){const result=await applySolutionArray(arr);$("jsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). Answer-only JSON was automatically detected."; $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions();return;}let importItems=[];
 if(arr.length&&arr[0]&&Array.isArray(arr[0].questions)){
   arr.forEach((section,si)=>{
     if(!section.chapter||!Array.isArray(section.questions))throw Error("Chapter section "+(si+1)+" is invalid. Required: chapter and questions[].");
