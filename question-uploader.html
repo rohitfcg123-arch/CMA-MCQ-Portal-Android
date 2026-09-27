@@ -503,9 +503,32 @@ function renderBulkNumberPreview(){
   const rows=$("bulkNumRows");rows.innerHTML="";
   const candidates=bulkNumberFiltered().map(x=>{const old=String(x.q||"").trim(),nw=extractCleanQuestionNumber(old);return {x,old,nw};});
   const groups=new Map();
-  candidates.forEach(r=>{const key=[norm(r.x.group),norm(r.x.subject),norm(r.x.attempt)].join("|");if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
+  candidates.forEach(r=>{
+    const key=[norm(r.x.group),norm(r.x.subject),norm(r.x.attempt)].join("|");
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push(r);
+  });
   const duplicateIds=new Set();
-  groups.forEach(list=>{const counts={};list.forEach(r=>{if(r.nw)counts[r.nw]=(counts[r.nw]||0)+1});list.forEach(r=>{if(r.nw&&counts[r.nw]>1)duplicateIds.add(r.x.id)})});
+  const contentCanon=v=>String(v||"").toLowerCase()
+    .replace(/<[^>]*>/g," ")
+    .replace(/&nbsp;/g," ")
+    .replace(/[^a-z0-9]+/g," ")
+    .replace(/\\s+/g," ")
+    .trim();
+  groups.forEach(list=>{
+    const byNumber=new Map();
+    list.filter(r=>r.nw).forEach(r=>{
+      if(!byNumber.has(r.nw))byNumber.set(r.nw,[]);
+      byNumber.get(r.nw).push(r);
+    });
+    byNumber.forEach(rows=>{
+      if(rows.length<2)return;
+      const uniqueContent=new Set(rows.map(r=>contentCanon(r.x.html||r.old)));
+      if(uniqueContent.size>1){
+        rows.forEach(r=>duplicateIds.add(r.x.id));
+      }
+    });
+  });
   bulkNumberPreview=candidates.map(r=>{
     let status="Ready";
     if(!r.nw)status="Review Required — number not detected";
