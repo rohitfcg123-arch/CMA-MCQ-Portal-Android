@@ -7,7 +7,7 @@
 <header class="topbar"><div class="topbar-inner"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to Index</a></div></header>
 <div class="madeby">✨ Made by CMA Students, for CMA Students ✨</div>
 <main>
-<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #97</b> — SCM chapter dropdown, Firebase question loading, and chapter-wise filtering fixed; bulk-uploaded SCM PYQs are rendered from Firebase.</div><h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
+<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #98</b> — SCM subject identity normalized, chapter-wise filtering hardened, and duplicate Firebase records hidden by canonical question identity.</div><h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
 <section class="filters">
 <div class="field"><label for="group">1. Choose CMA Group</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label for="subject">2. Choose Subject</label><select id="subject" disabled><option value="">First choose group</option></select></div>
@@ -16,7 +16,7 @@
 <div id="status" class="status">Choose a group, subject and topic to begin.</div><div id="scmLoadStatus" class="status" style="display:none"></div>
 <section id="results"></section>
 </main>
-<div class="update-strip"><b>UPDATE #96 — Subject / Chapter / Firebase sync fixed</b> · SCM now always loads all 26 chapters, normalizes chapter matching, and refreshes results after Firebase data arrives.</div>
+<div class="update-strip"><b>UPDATE #98 — Subject / Chapter / Firebase sync fixed</b> · SCM now always loads all 26 chapters, normalizes chapter matching, and refreshes results after Firebase data arrives.</div>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
@@ -117,7 +117,11 @@ async function loadUploadedQuestions(){
     const snap=await db.collection("subjectiveQuestions").get();
     const remote=snap.docs.map(d=>({id:d.id,...d.data()}));
     const sfmRemote=remote.filter(x=>String(x.group||"").toLowerCase()==="final3"&&String(x.subject||"").trim().toLowerCase()==="strategic financial management");
-    const scmRemote=remote.filter(x=>String(x.group||"").toLowerCase()==="final3"&&String(x.subject||"").trim().toLowerCase()==="strategic cost management");
+    const scmRemote=remote.filter(x=>{
+      const g=String(x.group||"").trim().toLowerCase();
+      const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+      return g==="final3"&&(s==="strategiccostmanagement"||s==="scm");
+    });
 
     const staticRows=Array.isArray(window.SFM_SUBJECTIVE_PYQ)?window.SFM_SUBJECTIVE_PYQ.slice():[];
     const replacedStatic=new Set();
@@ -135,11 +139,16 @@ async function loadUploadedQuestions(){
     const scmUnique=new Map();
     const scmCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
     scmRemote.forEach(x=>{
-      const k=[x.group,x.subject,x.attempt,x.q].map(scmCanon).join("|");
-      // If old Firebase data contains a duplicate with the same question identity,
-      // show only one in the portal. The newest upload wins because Firestore returns
-      // the current collection and this map keeps the last matching record.
-      scmUnique.set(k,{id:x.id,a:x.attempt,q:x.q,t:x.chapter,html:String(x.html||""),solutionHtml:String(x.solutionHtml||"")});
+      const k=["final3","Strategic Cost Management",x.attempt,x.q].map(scmCanon).join("|");
+      // Canonical identity is group + subject + attempt + question number.
+      // This deliberately ignores chapter so a corrected chapter never creates
+      // a second visible question.
+      const prev=scmUnique.get(k);
+      const prevTime=prev&&prev.updatedAt?new Date(prev.updatedAt):null;
+      const curTime=x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0);
+      if(!prev || (curTime>prevTime)){
+        scmUnique.set(k,{id:x.id,a:x.attempt,q:x.q,t:x.chapter,html:String(x.html||""),solutionHtml:String(x.solutionHtml||""),updatedAt:curTime});
+      }
     });
     window.SCM_SUBJECTIVE_PYQ=[...scmUnique.values()];
 
