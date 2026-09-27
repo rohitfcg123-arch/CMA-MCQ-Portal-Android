@@ -128,7 +128,7 @@ async function loadUploadedQuestions(){
     const remoteSfmRows=[];
 
     sfmRemote.forEach(x=>{
-      const row={a:x.attempt,q:x.q,t:x.chapter,html:x.html,solutionHtml:String(x.solutionHtml||"").trim()};
+      const row={a:String(x.attempt||x.a||"").trim(),q:String(x.q||"").trim(),t:String(x.chapter||x.t||"").trim(),html:String(x.html||""),solutionHtml:String(x.solutionHtml||"").trim()};
       const k=key(row);
       const staticIndex=staticRows.findIndex((s,i)=>!replacedStatic.has(i)&&key(s)===k);
       if(staticIndex>=0){staticRows[staticIndex]=row;replacedStatic.add(staticIndex);}
@@ -139,7 +139,7 @@ async function loadUploadedQuestions(){
     const scmUnique=new Map();
     const scmCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
     scmRemote.forEach(x=>{
-      const k=["final3","Strategic Cost Management",x.attempt,x.q].map(scmCanon).join("|");
+      const k=["final3","Strategic Cost Management",String(x.attempt||x.a||""),String(x.q||"")].map(scmCanon).join("|");
       // Canonical identity is group + subject + attempt + question number.
       // This deliberately ignores chapter so a corrected chapter never creates
       // a second visible question.
@@ -147,7 +147,7 @@ async function loadUploadedQuestions(){
       const prevTime=prev&&prev.updatedAt?new Date(prev.updatedAt):null;
       const curTime=x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0);
       if(!prev || (curTime>prevTime)){
-        scmUnique.set(k,{id:x.id,a:x.attempt,q:x.q,t:x.chapter,html:String(x.html||""),solutionHtml:String(x.solutionHtml||""),updatedAt:curTime});
+        scmUnique.set(k,{id:x.id,a:String(x.attempt||x.a||"").trim(),q:String(x.q||"").trim(),t:String(x.chapter||x.t||"").trim(),html:String(x.html||""),solutionHtml:String(x.solutionHtml||""),updatedAt:curTime});
       }
     });
     window.SCM_SUBJECTIVE_PYQ=[...scmUnique.values()];
