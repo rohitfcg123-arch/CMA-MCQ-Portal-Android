@@ -71,7 +71,7 @@ s.addEventListener("change",function(){
 t.addEventListener("change",update);at.addEventListener("change",update);
 function getRowsForSubject(subject){
   if(subject==="Strategic Financial Management"){
-    return (window.SFM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:String(x.solutionHtml||"").trim()}));
+    return (window.SFM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]}));
   }
   if(subject==="Strategic Cost Management"){
     return (window.SCM_SUBJECTIVE_PYQ||[]).map(x=>({
@@ -101,11 +101,15 @@ function render(){
   rows.forEach(x=>{
     const card=document.createElement("article");card.className="question";
     card.innerHTML='<div class="qhead"><div><h2 class="qtitle">Question '+(x.q||"—")+'</h2><div class="topic-note"><b>Subject:</b> '+subject+'</div><div class="topic-note"><b>Chapter:</b> '+(x.t||"Chapter not specified")+'</div></div><span class="attempt">'+(x.a||"Attempt not specified")+' Attempt</span></div><div class="pyq-question">'+x.html+'</div>';
-    if(String(x.solutionHtml||"").trim()){
-      const btn=document.createElement("button");btn.className="solution-toggle";btn.type="button";btn.textContent="📖 View Institute Solution";
-      const box=document.createElement("div");box.className="solution-box";box.innerHTML="<b>Institute Suggested Answer / Solution</b>"+x.solutionHtml;
-      btn.onclick=()=>{const open=box.classList.toggle("open");btn.textContent=open?"✕ Close Solution":"📖 View Institute Solution"};
-      card.appendChild(btn);card.appendChild(box);
+    const answerVersions=[...(Array.isArray(x.solutionHtmls)?x.solutionHtmls:[]),String(x.solutionHtml||"")].map(v=>String(v||"").trim()).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i);
+    if(answerVersions.length){
+      answerVersions.forEach((answer,index)=>{
+        const btn=document.createElement("button");btn.className="solution-toggle";btn.type="button";
+        btn.textContent=answerVersions.length===1?"📖 View Institute Solution":(index===0?"📖 View Institute Solution":"📖 View Alternative Answer "+(index+1));
+        const box=document.createElement("div");box.className="solution-box";box.innerHTML="<b>"+(answerVersions.length===1?"Institute Suggested Answer / Solution":(index===0?"Institute Suggested Answer / Solution":"Alternative Suggested Answer "+(index+1)))+"</b>"+answer;
+        btn.onclick=()=>{const open=box.classList.toggle("open");btn.textContent=open?"✕ Close Solution":(answerVersions.length===1?"📖 View Institute Solution":(index===0?"📖 View Institute Solution":"📖 View Alternative Answer "+(index+1)))}; 
+        card.appendChild(btn);card.appendChild(box);
+      });
     }else{
       const noAnswer=document.createElement("div");
       noAnswer.className="topic-note";
