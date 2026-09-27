@@ -7,7 +7,7 @@
 <header class="topbar"><div class="topbar-inner"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to Index</a></div></header>
 <div class="madeby">✨ Made by CMA Students, for CMA Students ✨</div>
 <main>
-<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #98</b> — SCM subject identity normalized, chapter-wise filtering hardened, and duplicate Firebase records hidden by canonical question identity.</div><h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
+<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #168</b> — SCM subject identity normalized, chapter-wise filtering hardened, and duplicate Firebase records hidden by canonical question identity.</div><h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
 <section class="filters">
 <div class="field"><label for="group">1. Choose CMA Group</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label for="subject">2. Choose Subject</label><select id="subject" disabled><option value="">First choose group</option></select></div>
@@ -20,7 +20,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="js/sfm-subjective-pyq-v29.js?v=20260927u51"></script>
+<script src="js/sfm-subjective-pyq-v29.js?v=20260927u52"></script>
 <script>
 window.SCM_CHAPTERS=["COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"];
 window.SCM_SUBJECTIVE_PYQ=[];
@@ -74,7 +74,14 @@ function getRowsForSubject(subject){
     return (window.SFM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:String(x.solutionHtml||"").trim()}));
   }
   if(subject==="Strategic Cost Management"){
-    return (window.SCM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.attempt,q:x.q,t:x.chapter,html:x.html,solutionHtml:String(x.solutionHtml||"").trim()}));
+    return (window.SCM_SUBJECTIVE_PYQ||[]).map(x=>({
+      s:"Strategic Cost Management",
+      a:String(x.attempt||x.a||x.pyqTerm||x.term||x.exam||x.examTerm||x.year||"").trim(),
+      q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),
+      t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
+      html:String(x.html||x.questionHtml||x.qHtml||""),
+      solutionHtml:String(x.solutionHtml||"").trim()
+    }));
   }
   return [];
 }
@@ -93,7 +100,7 @@ function render(){
   if(!rows.length){results.innerHTML='<div class="empty">No questions match the selected chapter and attempt.</div>';return;}
   rows.forEach(x=>{
     const card=document.createElement("article");card.className="question";
-    card.innerHTML='<div class="qhead"><h2 class="qtitle">Question '+x.q+'</h2><span class="attempt">'+x.a+' Attempt</span></div><div class="topic-note"><b>Chapter:</b> '+x.t+'</div><div class="pyq-question">'+x.html+'</div>';
+    card.innerHTML='<div class="qhead"><div><h2 class="qtitle">Question '+(x.q||"—")+'</h2><div class="topic-note"><b>Subject:</b> Strategic Cost Management</div><div class="topic-note"><b>Chapter:</b> '+(x.t||"Chapter not specified")+'</div></div><span class="attempt">'+(x.a||"Attempt not specified")+' Attempt</span></div><div class="pyq-question">'+x.html+'</div>';
     if(String(x.solutionHtml||"").trim()){
       const btn=document.createElement("button");btn.className="solution-toggle";btn.type="button";btn.textContent="📖 View Institute Solution";
       const box=document.createElement("div");box.className="solution-box";box.innerHTML="<b>Institute Suggested Answer / Solution</b>"+x.solutionHtml;
@@ -147,7 +154,7 @@ async function loadUploadedQuestions(){
       const prevTime=prev&&prev.updatedAt?new Date(prev.updatedAt):null;
       const curTime=x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0);
       if(!prev || (curTime>prevTime)){
-        scmUnique.set(k,{id:x.id,a:String(x.attempt||x.a||"").trim(),q:String(x.q||"").trim(),t:String(x.chapter||x.t||"").trim(),html:String(x.html||""),solutionHtml:String(x.solutionHtml||""),updatedAt:curTime});
+        scmUnique.set(k,{id:x.id,a:String(x.attempt||x.a||x.pyqTerm||x.term||x.exam||x.examTerm||x.year||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||""),updatedAt:curTime});
       }
     });
     window.SCM_SUBJECTIVE_PYQ=[...scmUnique.values()];
