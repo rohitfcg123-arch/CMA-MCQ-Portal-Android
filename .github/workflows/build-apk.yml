@@ -1,0 +1,192 @@
+name: Build CMA Zone Android
+# CMA Zone native Firebase email-auth build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'lib/**'
+      - 'android/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'google-services.json'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android project
+        run: |
+          flutter create . \
+            --platforms=android \
+            --org com.taxpath \
+            --project-name cma_mcq_portal
+
+      - name: Use CMA Zone logo for app and launcher
+        run: |
+          mkdir -p android/app/src/main/res/drawable
+          test -s assets/cma_zone_logo.webp
+          cp assets/cma_zone_logo.webp android/app/src/main/res/drawable/cma_zone_logo.webp
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          import re
+          s = re.sub(r'android:label="[^"]*"', 'android:label="CMA Zone"', s, count=1)
+          s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/cma_zone_logo"')
+          s = s.replace('android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@drawable/cma_zone_logo"')
+          p.write_text(s)
+          PY
+
+      - name: Configure Android release build
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/build.gradle.kts")
+          s = p.read_text()
+          s = s.replace("minSdk = flutter.minSdkVersion", "minSdk = 23")
+          s = s.replace("compileSdk = flutter.compileSdkVersion", "compileSdk = 36")
+          s = s.replace("targetSdk = flutter.targetSdkVersion", "targetSdk = 36")
+          p.write_text(s)
+          PY
+
+      - name: Restore release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import base64
+          import re
+          from pathlib import Path
+
+          value = os.environ["KEYSTORE_BASE64"]
+
+          # Remove whitespace and any accidental non-Base64 characters.
+          value = re.sub(r"[^A-Za-z0-9+/=]", "", value)
+
+          # Add missing Base64 padding if necessary.
+          value += "=" * (-len(value) % 4)
+
+          keystore = base64.b64decode(value, validate=True)
+
+          output = Path("android/app/cma-release-key.jks")
+          output.write_bytes(keystore)
+
+          if output.stat().st_size == 0:
+              raise RuntimeError("Keystore file is empty")
+
+          print(f"Keystore restored successfully: {output.stat().st_size} bytes")
+          PY
+
+      - name: Configure release signing
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/build.gradle.kts")
+          s = p.read_text()
+
+          signing_block = """
+              signingConfigs {
+                  create("release") {
+                      storeFile = file("cma-release-key.jks")
+                      storePassword = System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias = "cma_mcq"
+                      keyPassword = System.getenv("KEYSTORE_PASSWORD")
+                  }
+              }
+
+          """
+
+          if 'create("release")' not in s:
+              s = s.replace(
+                  "    buildTypes {",
+                  signing_block + "    buildTypes {",
+                  1
+              )
+
+          s = s.replace(
+              'signingConfig = signingConfigs.getByName("debug")',
+              'signingConfig = signingConfigs.getByName("release")'
+          )
+
+          p.write_text(s)
+          PY
+
+      - name: Add Internet permission
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+
+          permission = '<uses-permission android:name="android.permission.INTERNET"/>'
+
+          if permission not in s:
+              s = s.replace(
+                  "</manifest>",
+                  permission + "\n</manifest>"
+              )
+
+          p.write_text(s)
+          PY
+
+      - name: Verify release signing certificate
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          keytool -list -v -keystore android/app/cma-release-key.jks -storepass "$KEYSTORE_PASSWORD" -alias cma_mcq | grep -E "Alias name:|SHA1:|SHA256:"
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: flutter build appbundle --release
+
+      - name: Upload Play Store App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: CMA-Zone-AAB
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Build APK for direct testing
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: flutter build apk --release
+
+      - name: Upload APK for testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: CMA-Zone-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
