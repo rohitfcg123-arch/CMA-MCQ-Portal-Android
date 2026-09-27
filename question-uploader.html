@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #178</b> — Fixed the uploader JavaScript syntax error that was preventing the Google Login button and Logout button from running.</div>
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #180</b> — Added safe bulk question-number cleanup: extracts only the number/part from question titles, validates duplicates/unclear formats, previews changes, and updates only the q field.
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -51,6 +51,27 @@
 <div class="count" style="margin-top:6px">Select the Solution JSON file directly, or paste the solution array below.</div>
 <textarea id="solutionJson" style="margin-top:12px;min-height:180px" placeholder='Paste Solution JSON array here...'></textarea>
 <div class="toolbar"><button class="btn gold" id="importSolutionsBtn">Import Answers JSON</button><button class="btn gray" id="exportSolutionsBtn">Export Answers JSON</button></div><div id="solutionJsonMsg" class="msg"></div>
+</div></section>
+
+<section class="panel">
+<h2>🔢 Bulk Fix Question Numbers</h2>
+<div class="body">
+<div class="note"><b>Safe numbering cleanup:</b> this tool reads the existing question <b>q</b> value and extracts only the question number/part. Example: <code>Question 8(B) — Business Forecasting</code> → <b>8(B)</b>. It never changes question HTML, solutions, alternative answers, chapter, attempt or subject. Unclear formats and duplicate numbers are blocked from Apply.</div>
+<div class="grid" style="margin-top:14px">
+<div class="field"><label>Group</label><select id="bulkNumGroup"><option value="">All Groups</option></select></div>
+<div class="field"><label>Subject</label><select id="bulkNumSubject"><option value="">All Subjects</option></select></div>
+<div class="field"><label>Attempt</label><select id="bulkNumAttempt"><option value="">All Attempts</option></select></div>
+<div class="field"><label>Chapter / Topic</label><select id="bulkNumChapter"><option value="">All Chapters / Topics</option></select></div>
+<div class="field"><label>Search (optional)</label><input id="bulkNumSearch" placeholder="Search current question text / number"></div>
+</div>
+<div class="toolbar">
+<button class="btn" id="previewNumberFix">Preview Number Changes</button>
+<button class="btn gold" id="applyNumberFix" disabled>Apply Selected Changes</button>
+<button class="btn gray" id="clearNumberFix">Clear Preview</button>
+<span class="count" id="bulkNumStatus"></span>
+</div>
+<div class="tablewrap" style="margin-top:12px"><table style="min-width:900px"><thead><tr><th><input id="bulkNumSelectAll" type="checkbox"></th><th>Attempt</th><th>Current q</th><th>New q</th><th>Subject</th><th>Chapter</th><th>Status</th></tr></thead><tbody id="bulkNumRows"></tbody></table></div>
+<div id="bulkNumMsg" class="msg"></div>
 </div></section>
 
 <section class="panel"><h2>Uploaded Questions <span class="count" id="count"></span></h2><div class="body">
@@ -253,7 +274,7 @@ auth.onAuthStateChanged(async u=>{
     $("jsonMsg").textContent="Firestore access is still denied. The JSON file is loaded correctly; check that the published Firebase Rules are for project cma-mcq-portal-cf33f and that you are signed in with rohit.fcg123@gmail.com.";
   }
 });
-async function loadQuestions(){
+async function loadQuestions(){populateBulkNumberFilters();
  const snap=await db.collection("subjectiveQuestions").get();
  DATA=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.attempt||"").localeCompare(b.attempt||"")||(a.sort||0)-(b.sort||0));
  fillSelect("listGroup",DATA.map(x=>x.group),"All Groups");
@@ -445,6 +466,78 @@ $("saveMetadata").onclick=async()=>{
   }finally{
     setBusy(btn,false,"Save Metadata");
   }
+};
+function populateBulkNumberFilters(){
+  const groups=Object.keys(SUBJECTS);
+  $("bulkNumGroup").innerHTML='<option value="">All Groups</option>'+groups.map(g=>'<option value="'+esc(g)+'">'+esc(g)+'</option>').join("");
+  $("bulkNumAttempt").innerHTML='<option value="">All Attempts</option>'+[...new Set(DATA.map(x=>x.attempt).filter(Boolean))].sort().map(a=>'<option>'+esc(a)+'</option>').join("");
+  $("bulkNumGroup").onchange=()=>{const g=$("bulkNumGroup").value;const subs=g?(SUBJECTS[g]||[]):[...new Set(DATA.map(x=>x.subject).filter(Boolean))].sort();$("bulkNumSubject").innerHTML='<option value="">All Subjects</option>'+subs.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join("");populateBulkChapterFilter();};
+  $("bulkNumSubject").onchange=populateBulkChapterFilter;
+}
+function populateBulkChapterFilter(){
+  const s=$("bulkNumSubject").value;
+  const list=s?(CHAPTERS_BY_SUBJECT[s]||[...new Set(DATA.filter(x=>!$("bulkNumGroup").value||x.group===$("bulkNumGroup").value).map(x=>x.chapter).filter(Boolean))]):[...new Set(DATA.map(x=>x.chapter).filter(Boolean))].sort();
+  $("bulkNumChapter").innerHTML='<option value="">All Chapters / Topics</option>'+list.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+}
+function extractCleanQuestionNumber(raw){
+  const s=String(raw||"").trim();
+  let m=s.match(/^Question\s*(\d+)\s*(?:[\(\[]\s*([A-Za-z])\s*[\)\]])?/i);
+  if(!m)m=s.match(/^(\d+)\s*(?:[\(\[]\s*([A-Za-z])\s*[\)\]])?/);
+  if(m)return m[1]+(m[2]?'('+m[2].toUpperCase()+')':'');
+  m=s.match(/^Question\s*(\d+)\s*([A-Za-z])(?:\s*[—\-:.]|\s*$)/i);
+  if(m)return m[1]+'('+m[2].toUpperCase()+')';
+  m=s.match(/^(\d+)\s*([A-Za-z])(?:\s*[—\-:.]|\s*$)/i);
+  if(m)return m[1]+'('+m[2].toUpperCase()+')';
+  return "";
+}
+let bulkNumberPreview=[];
+function bulkNumberFiltered(){
+  const g=$("bulkNumGroup").value,s=$("bulkNumSubject").value,a=$("bulkNumAttempt").value,ch=$("bulkNumChapter").value,search=norm($("bulkNumSearch").value);
+  return DATA.filter(x=>{
+    if(g&&x.group!==g)return false;if(s&&x.subject!==s)return false;if(a&&x.attempt!==a)return false;if(ch&&x.chapter!==ch)return false;
+    if(search){const hay=norm([x.q,x.html,x.chapter,x.subject,x.attempt].join(" "));if(!hay.includes(search))return false}
+    return true;
+  });
+}
+function renderBulkNumberPreview(){
+  const rows=$("bulkNumRows");rows.innerHTML="";
+  const candidates=bulkNumberFiltered().map(x=>{const old=String(x.q||"").trim(),nw=extractCleanQuestionNumber(old);return {x,old,nw};});
+  const groups=new Map();
+  candidates.forEach(r=>{const key=[norm(r.x.group),norm(r.x.subject),norm(r.x.attempt)].join("|");if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
+  const duplicateIds=new Set();
+  groups.forEach(list=>{const counts={};list.forEach(r=>{if(r.nw)counts[r.nw]=(counts[r.nw]||0)+1});list.forEach(r=>{if(r.nw&&counts[r.nw]>1)duplicateIds.add(r.x.id)})});
+  bulkNumberPreview=candidates.map(r=>{
+    let status="Ready";
+    if(!r.nw)status="Review Required — number not detected";
+    else if(r.old===r.nw)status="Already clean";
+    else if(duplicateIds.has(r.x.id))status="Blocked — duplicate number in same subject/attempt";
+    return {...r,status};
+  });
+  bulkNumberPreview.forEach((r,i)=>{
+    const selectable=r.nw&&r.old!==r.nw&&r.status==="Ready";
+    rows.insertAdjacentHTML("beforeend",'<tr><td><input class="bulkNumCheck" type="checkbox" value="'+esc(r.x.id)+'" '+(selectable?'checked':'disabled')+'></td><td>'+esc(r.x.attempt||"")+'</td><td>'+esc(r.old)+'</td><td><b>'+esc(r.nw||"—")+'</b></td><td>'+esc(r.x.subject||"")+'</td><td>'+esc(r.x.chapter||"")+'</td><td>'+esc(r.status)+'</td></tr>');
+  });
+  $("applyNumberFix").disabled=!bulkNumberPreview.some(r=>r.status==="Ready"&&r.old!==r.nw);
+  $("bulkNumStatus").textContent=bulkNumberPreview.filter(r=>r.status==="Ready"&&r.old!==r.nw).length+" safe change(s), "+bulkNumberPreview.filter(r=>r.status.startsWith("Blocked")).length+" blocked, "+bulkNumberPreview.filter(r=>r.status.startsWith("Review")).length+" for review.";
+}
+$("previewNumberFix").onclick=()=>{try{renderBulkNumberPreview();$("bulkNumMsg").className="msg ok";$("bulkNumMsg").textContent="Preview generated. Only rows marked Ready can be applied."}catch(e){$("bulkNumMsg").className="msg err";$("bulkNumMsg").textContent=e.message}};
+$("clearNumberFix").onclick=()=>{$("bulkNumRows").innerHTML="";bulkNumberPreview=[];$("applyNumberFix").disabled=true;$("bulkNumStatus").textContent="";$("bulkNumMsg").textContent=""};
+$("bulkNumSelectAll").onchange=()=>document.querySelectorAll(".bulkNumCheck:not(:disabled)").forEach(x=>x.checked=$("bulkNumSelectAll").checked);
+$("applyNumberFix").onclick=async()=>{
+  const ids=[...document.querySelectorAll(".bulkNumCheck:checked")].map(x=>x.value);
+  const changes=bulkNumberPreview.filter(r=>ids.includes(r.x.id)&&r.status==="Ready"&&r.old!==r.nw);
+  if(!changes.length){$("bulkNumMsg").className="msg err";$("bulkNumMsg").textContent="No valid numbering changes selected.";return}
+  if(!confirm("Apply "+changes.length+" question-number changes? Only the q field will be changed. Question HTML and all answers will remain untouched."))return;
+  const btn=$("applyNumberFix");setBusy(btn,true,"Applying…");
+  try{
+    for(let i=0;i<changes.length;i+=450){
+      const batch=db.batch();changes.slice(i,i+450).forEach(r=>batch.update(db.collection("subjectiveQuestions").doc(r.x.id),{q:r.nw,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL}));
+      await batch.commit();
+    }
+    $("bulkNumMsg").className="msg ok";$("bulkNumMsg").textContent=changes.length+" question number(s) cleaned successfully. Answers and question content were not changed.";
+    await loadQuestions();renderBulkNumberPreview();
+  }catch(e){$("bulkNumMsg").className="msg err";$("bulkNumMsg").textContent="Numbering update stopped: "+(e.message||e)}
+  finally{setBusy(btn,false,"Apply Selected Changes")}
 };
 function resetQuestionListFilters(){$("listGroup").value="";$("listSubject").value="";$("listAttempt").value="";$("listChapter").value="";$("listQno").value="";$("listSearch").value="";$("uploadedFrom").value="";$("uploadedTo").value="";updateQuestionListFilters()}$("listGroup").onchange=updateQuestionListFilters;
 setTimeout(()=>setListMode("questions"),0);
