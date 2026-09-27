@@ -217,8 +217,7 @@ async function logout(){
     setBusy(btn,false,"Logout");
   }
 }
-$("loginBtn").onclick=login;
-$("logout").onclick=logout;
+$("loginBtn").onclick=login;$("logout").onclick=logout;
 auth.getRedirectResult().then(r=>{
   if(r&&r.user) return;
 }).catch(showLoginError);
@@ -263,8 +262,9 @@ async function loadQuestions(){
 function uniqueSorted(values){return [...new Set(values.map(v=>String(v||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}))}
 function fillSelect(id,values,allLabel){const el=$(id),current=el.value;el.innerHTML='<option value="">'+esc(allLabel)+'</option>'+uniqueSorted(values).map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");if(uniqueSorted(values).includes(current))el.value=current}
 function updateQuestionListFilters(){
+ const sourceRows=listMode==="answers"?DATA.filter(x=>answerVersionsFor(x).length):DATA;
  const group=$("listGroup").value;
- const groupRows=group?DATA.filter(x=>String(x.group||"")===group):DATA;
+ const groupRows=group?sourceRows.filter(x=>String(x.group||"")===group):sourceRows;
  fillSelect("listSubject",groupRows.map(x=>x.subject),"All Subjects");
  const subject=$("listSubject").value;
  const subjectRows=subject?groupRows.filter(x=>String(x.subject||"")===subject):groupRows;
@@ -275,7 +275,7 @@ function updateQuestionListFilters(){
  renderRows();
 }
 function uploadedDate(x){if(!x||!x.updatedAt)return null;if(x.updatedAt.toDate)return x.updatedAt.toDate();const d=new Date(x.updatedAt);return isNaN(d)?null:d}
-function filteredQuestions(){
+function filteredQuestions(includeAnswers=false){
  const group=$("listGroup").value,subject=$("listSubject").value,attempt=$("listAttempt").value,chapter=$("listChapter").value,qno=norm($("listQno").value),search=norm($("listSearch").value);
  const from=$("uploadedFrom").value?new Date($("uploadedFrom").value):null;
  const to=$("uploadedTo").value?new Date($("uploadedTo").value):null;
@@ -286,7 +286,11 @@ function filteredQuestions(){
   if(attempt&&String(x.attempt||"")!==attempt)return false;
   if(chapter&&String(x.chapter||"")!==chapter)return false;
   if(qno&&!norm(x.q).includes(qno))return false;
-  if(search){const hay=[x.id,x.q,x.html,x.group,x.subject,x.chapter,x.attempt].map(v=>norm(v)).join(" ");if(!hay.includes(search))return false}
+  if(search){
+    const answerText=includeAnswers?answerVersionsFor(x):[];
+    const hay=[x.id,x.q,x.html,x.group,x.subject,x.chapter,x.attempt,...answerText].map(v=>norm(v)).join(" ");
+    if(!hay.includes(search))return false;
+  }
   const d=uploadedDate(x);
   if(from&&(!d||d<from))return false;
   if(to&&(!d||d>to))return false;
@@ -294,9 +298,9 @@ function filteredQuestions(){
  });
 }
 function updateSelectedCount(){
- const n=document.querySelectorAll(".rowCheck:checked").length;
+ const n=document.querySelectorAll(".selectionCheck:checked").length;
  $("selectedCount").textContent=n?n+" selected":"";
- const boxes=[...document.querySelectorAll(".rowCheck")];
+ const boxes=[...document.querySelectorAll(".selectionCheck")];
  $("selectAllBox").checked=boxes.length>0&&boxes.every(b=>b.checked);
 }
 function answerVersionsFor(x){
@@ -306,7 +310,7 @@ function answerVersionsFor(x){
  return [...new Set(vals.map(v=>String(v||"").trim()).filter(Boolean))];
 }
 function filteredAnswers(){
- return filteredQuestions().filter(x=>answerVersionsFor(x).length);
+ return filteredQuestions(true).filter(x=>answerVersionsFor(x).length);
 }
 function setListMode(mode){
  listMode=mode==="answers"?"answers":"questions";
@@ -316,15 +320,16 @@ function setListMode(mode){
  $("questionsViewBtn").classList.toggle("gray",listMode!=="questions");
  $("answersViewBtn").classList.toggle("gold",listMode==="answers");
  $("answersViewBtn").classList.toggle("gray",listMode!=="answers");
- $("selectAllVisible").style.display=listMode==="questions"?"inline-block":"none";
- $("clearSelected").style.display=listMode==="questions"?"inline-block":"none";
- $("bulkDelete").style.display=listMode==="questions"?"inline-block":"none";
- $("selectAllBox").parentElement.style.display=listMode==="questions"?"table-cell":"none";
+ $("selectAllVisible").style.display="inline-block";
+ $("clearSelected").style.display="inline-block";
+ $("bulkDelete").style.display="inline-block";
+ $("selectAllVisible").textContent=listMode==="questions"?"Select All Visible Questions":"Select All Visible Answers";
+ $("bulkDelete").textContent=listMode==="questions"?"Delete Selected Questions":"Delete Selected Answers";
  $("rowsHead").innerHTML=listMode==="questions"
-   ? '<tr><th><input id="selectAllBox" type="checkbox" title="Select all visible"></th><th>Attempt</th><th>Question</th><th>Marks</th><th>Group</th><th>Subject</th><th>Chapter</th><th>Updated</th><th>Action</th></tr>'
-   : '<tr><th>Answer No.</th><th>Attempt</th><th>Subject</th><th>Group</th><th>Chapter</th><th>Answer Preview</th><th>Updated</th><th>Action</th></tr>';
- if(listMode==="questions") $("selectAllBox").onchange=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=$("selectAllBox").checked);updateSelectedCount()};
- renderRows();
+   ? '<tr><th><input id="selectAllBox" type="checkbox" title="Select all visible questions"></th><th>Attempt</th><th>Question</th><th>Marks</th><th>Group</th><th>Subject</th><th>Chapter</th><th>Updated</th><th>Action</th></tr>'
+   : '<tr><th><input id="selectAllBox" type="checkbox" title="Select all visible answers"></th><th>Answer No.</th><th>Attempt</th><th>Subject</th><th>Group</th><th>Chapter</th><th>Answer Preview</th><th>Updated</th><th>Action</th></tr>';
+ $("selectAllBox").onchange=()=>{document.querySelectorAll(".selectionCheck").forEach(b=>b.checked=$("selectAllBox").checked);updateSelectedCount()};
+ updateQuestionListFilters();
 }
 function renderRows(){
  const filtered=filteredQuestions();
@@ -333,18 +338,22 @@ function renderRows(){
  $("questionViewCount").textContent=" ("+DATA.length+")";
  $("answerViewCount").textContent=" ("+DATA.filter(x=>answerVersionsFor(x).length).length+")";
  if(listMode==="answers"){
-   $("filterCount").textContent=answers.length+" answer-bearing questions";
+   const totalAnswerVersions=DATA.reduce((n,x)=>n+answerVersionsFor(x).length,0);
+   $("filterCount").textContent=answers.reduce((n,x)=>n+answerVersionsFor(x).length,0)+" matching answers / "+totalAnswerVersions+" total";
    $("rows").innerHTML=answers.flatMap(x=>answerVersionsFor(x).map((ans,index)=>'<tr>'+
+     '<td><input class="selectionCheck answerCheck" type="checkbox" value="'+esc(x.id+"::"+index)+'"></td>'+
      '<td><b>Q'+esc(x.q||"—")+'</b><br><span class="count">Answer '+(index+1)+'</span></td>'+
      '<td>'+esc(x.attempt)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.chapter)+'</td>'+
-     '<td><div class="solution-list-preview">'+esc(String(ans).replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim().slice(0,220))+(String(ans).length>220?"…":"")+'</div></td>'+
+     '<td><div class="solution-list-preview">'+esc(String(ans).replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,220))+(String(ans).length>220?"…":"")+'</div></td>'+
      '<td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn gold" onclick="openMetadataEditor(\''+x.id+'\')">Edit / Answer</button></td></tr>')).join("")||
-     '<tr><td colspan="8">No uploaded answers match the selected filters.</td></tr>';
+     '<tr><td colspan="9">No uploaded answers match the selected filters.</td></tr>';
+   document.querySelectorAll(".selectionCheck").forEach(b=>b.onchange=updateSelectedCount);
+   updateSelectedCount();
    return;
  }
  $("filterCount").textContent=filtered.length===DATA.length?filtered.length+" questions":filtered.length+" matching / "+DATA.length+" total";
- $("rows").innerHTML=filtered.map(x=>'<tr><td><input class="rowCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt)+'</td><td><b>'+esc(x.q)+'</b></td><td>'+esc(x.marks==null||x.marks===""?"":x.marks)+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.chapter)+'</td><td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn gold" onclick="openMetadataEditor(\''+x.id+'\')">Edit / Answer</button> <button class="btn red" onclick="removeQ(\''+x.id+'\')">Delete</button></td></tr>').join("")||'<tr><td colspan="9">No matching questions found. Try Clear Filters.</td></tr>';
- document.querySelectorAll(".rowCheck").forEach(b=>b.onchange=updateSelectedCount);
+ $("rows").innerHTML=filtered.map(x=>'<tr><td><input class="selectionCheck rowCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt)+'</td><td><b>'+esc(x.q)+'</b></td><td>'+esc(x.marks==null||x.marks===""?"":x.marks)+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.chapter)+'</td><td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn gold" onclick="openMetadataEditor(\''+x.id+'\')">Edit / Answer</button> <button class="btn red" onclick="removeQ(\''+x.id+'\')">Delete</button></td></tr>').join("")||'<tr><td colspan="9">No matching questions found. Try Clear Filters.</td></tr>';
+ document.querySelectorAll(".selectionCheck").forEach(b=>b.onchange=updateSelectedCount);
  updateSelectedCount();
 }
 let editingQuestionId=null;
@@ -437,8 +446,7 @@ $("saveMetadata").onclick=async()=>{
     setBusy(btn,false,"Save Metadata");
   }
 };
-function resetQuestionListFilters(){$("listGroup").value="";$("listSubject").value="";$("listAttempt").value="";$("listChapter").value="";$("listQno").value="";$("listSearch").value="";$("uploadedFrom").value="";$("uploadedTo").value="";updateQuestionListFilters()}
-$("listGroup").onchange=updateQuestionListFilters;
+function resetQuestionListFilters(){$("listGroup").value="";$("listSubject").value="";$("listAttempt").value="";$("listChapter").value="";$("listQno").value="";$("listSearch").value="";$("uploadedFrom").value="";$("uploadedTo").value="";updateQuestionListFilters()}$("listGroup").onchange=updateQuestionListFilters;
 setTimeout(()=>setListMode("questions"),0);
 $("listSubject").onchange=updateQuestionListFilters;
 $("listAttempt").onchange=updateQuestionListFilters;
@@ -450,35 +458,69 @@ $("uploadedTo").onchange=renderRows;
 $("clearListFilters").onclick=resetQuestionListFilters;
 $("questionsViewBtn").onclick=()=>setListMode("questions");
 $("answersViewBtn").onclick=()=>setListMode("answers");
-$("selectAllBox").onchange=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=$("selectAllBox").checked);updateSelectedCount()};
-$("selectAllVisible").onclick=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=true);updateSelectedCount()};
-$("clearSelected").onclick=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=false);updateSelectedCount()};
+$("selectAllBox").onchange=()=>{document.querySelectorAll(".selectionCheck").forEach(b=>b.checked=$("selectAllBox").checked);updateSelectedCount()};
+$("selectAllVisible").onclick=()=>{document.querySelectorAll(".selectionCheck").forEach(b=>b.checked=true);updateSelectedCount()};
+$("clearSelected").onclick=()=>{document.querySelectorAll(".selectionCheck").forEach(b=>b.checked=false);updateSelectedCount()};
 window.bulkDeleteSelected=async()=>{
- const ids=[...document.querySelectorAll(".rowCheck:checked")].map(b=>b.value);
- if(!ids.length){alert("Please select at least one question.");return}
- const filtered=filteredQuestions().filter(x=>ids.includes(x.id));
- const msg="Delete "+ids.length+" selected question(s)? This permanently removes them from Firestore.\n\n"+filtered.slice(0,12).map(x=>x.attempt+" — Q"+x.q+" — "+x.subject).join("\n")+(ids.length>12?"\n…":"");
- if(!confirm(msg))return;
- const btn=$("bulkDelete");setBusy(btn,true,"Deleting "+ids.length+"…");
+ const selected=[...document.querySelectorAll(".selectionCheck:checked")].map(b=>b.value);
+ if(!selected.length){alert(listMode==="answers"?"Please select at least one answer.":"Please select at least one question.");return}
+ const btn=$("bulkDelete");setBusy(btn,true,listMode==="answers"?"Deleting Answers…":"Deleting Questions…");
  try{
-   // Delete in Firestore batches (max 500 writes per batch) instead of
-   // waiting for one network request per question.
-   const chunks=[];
-   for(let i=0;i<ids.length;i+=450)chunks.push(ids.slice(i,i+450));
-   let deleted=0;
-   for(const chunk of chunks){
+   if(listMode==="questions"){
+     const ids=selected;
+     const filtered=filteredQuestions().filter(x=>ids.includes(x.id));
+     const msg="Delete "+ids.length+" selected question(s)? This permanently removes them from Firestore.\n\n"+filtered.slice(0,12).map(x=>x.attempt+" — Q"+x.q+" — "+x.subject).join("\n")+(ids.length>12?"\n…":"");
+     if(!confirm(msg))return;
+     const chunks=[];
+     for(let i=0;i<ids.length;i+=450)chunks.push(ids.slice(i,i+450));
+     let deleted=0;
+     for(const chunk of chunks){
+       const batch=db.batch();
+       chunk.forEach(id=>batch.delete(db.collection("subjectiveQuestions").doc(id)));
+       await batch.commit();
+       deleted+=chunk.length;
+     }
+     $("msg").className="msg ok";
+     $("msg").textContent=deleted+" question(s) deleted successfully.";
+   }else{
+     const groups=new Map();
+     selected.forEach(key=>{
+       const p=key.split("::"),id=p[0],index=Number(p[1]);
+       if(!groups.has(id))groups.set(id,new Set());
+       groups.get(id).add(index);
+     });
+     const preview=[];
+     groups.forEach((indexes,id)=>{
+       const x=DATA.find(q=>q.id===id);
+       if(x)preview.push(x.attempt+" — Q"+x.q+" — "+indexes.size+" answer(s)");
+     });
+     if(!confirm("Delete "+selected.length+" selected answer(s) only? The question will remain.\n\n"+preview.slice(0,12).join("\n")+(preview.length>12?"\n…":"")))return;
      const batch=db.batch();
-     chunk.forEach(id=>batch.delete(db.collection("subjectiveQuestions").doc(id)));
+     groups.forEach((indexes,id)=>{
+       const x=DATA.find(q=>q.id===id);
+       if(!x)return;
+       const remaining=answerVersionsFor(x).filter((_,i)=>!indexes.has(i));
+       const updates={updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
+       if(remaining.length){
+         updates.solutionHtml=remaining[0];
+         updates.solutionHtmls=remaining;
+       }else{
+         updates.solutionHtml=firebase.firestore.FieldValue.delete();
+         updates.solutionHtmls=firebase.firestore.FieldValue.delete();
+       }
+       batch.update(db.collection("subjectiveQuestions").doc(id),updates);
+     });
      await batch.commit();
-     deleted+=chunk.length;
+     $("msg").className="msg ok";
+     $("msg").textContent=selected.length+" answer(s) deleted. Questions were kept.";
    }
-   $("msg").className="msg ok";
-   $("msg").textContent=deleted+" question(s) deleted successfully.";
    await loadQuestions();
  }catch(e){
    $("msg").className="msg err";
    $("msg").textContent="Bulk delete stopped: "+(e.message||e);
- }finally{setBusy(btn,false,"Delete Selected")}
+ }finally{
+   setBusy(btn,false,listMode==="answers"?"Delete Selected Answers":"Delete Selected Questions");
+ }
 };
 $("bulkDelete").onclick=bulkDeleteSelected;
 $("jsonFile").onchange=async()=>{const file=$("jsonFile").files&&$("jsonFile").files[0];if(!file)return;try{$("jsonMsg").className="msg";$("jsonMsg").textContent="Reading "+file.name+"…";$("json").value=await file.text();JSON.parse($("json").value);$("jsonMsg").textContent="JSON file loaded. Tap Import Questions JSON.";$("jsonMsg").className="msg ok"}catch(e){$("jsonMsg").textContent="Invalid JSON file: "+(e.message||e);$("jsonMsg").className="msg err"}};
