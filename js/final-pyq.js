@@ -7,13 +7,17 @@ const entry=Object.values(byPath).find(x=>x.path===path);
 if(!entry||!Array.isArray(entry.rows)||!entry.rows.length){console.warn("CMA PYQ: no mapping for",path);return;}
 const paper=(entry.rows[0].id||"").split("-")[0];
 const group=paper==="P13"||paper==="P14"||paper==="P15"||paper==="P16"?"Group 3":"Group 4";
-const SUBJECTS={P13:"Corporate & Economic Laws",P14:"Strategic Cost Management",P15:"Strategic Financial Management",P16:"Direct Taxation & International Taxation",P17:"Corporate Financial Reporting",P18:"Cost Management & Audit",P19:"Indirect Tax Laws & Practice",P20A:"Strategic Performance & Business Valuation",P20B:"Risk Management in Banking & Insurance",P20C:"Entrepreneurship & Startup"};
+const SUBJECTS={P13:"Corporate & Economic Laws",P14:"Strategic Financial Management",P15:"Direct Taxation & International Taxation",P16:"Strategic Cost Management",P17:"Corporate Financial Reporting",P18:"Cost Management & Audit",P19:"Indirect Tax Laws & Practice",P20A:"Strategic Performance & Business Valuation",P20B:"Risk Management in Banking & Insurance",P20C:"Entrepreneurship & Startup"};
 function meta(q){
  const raw=q||{};
  const attempt=raw.pyqTerm??raw.attempt??raw.term??raw.year??raw.exam??raw.examTerm??"";
  const chapter=raw.chapter??raw.chapterName??raw.topic??raw.subjectChapter??"";
  const question=raw.q??raw.question??raw.questionText??"";
  const subject=raw.subject??raw.subjectName??SUBJECTS[paper]??"";
+ const scmChapters={1:"Cost of Quality",2:"Pareto Analysis",3:"Decision Making – CVP Analysis",4:"Decision Making – Limiting Factor",5:"Decision Making – Make or Buy",6:"Decision Making – Subcontracting",7:"Decision Making – Service Costing",8:"Transfer Pricing",9:"Relevant Costing",10:"Target Costing",11:"Product Life Cycle Costing",12:"Decision Making – Probability",13:"Activity Based Costing",14:"Just-in-Time (JIT)",15:"Throughput Accounting",16:"Back-Flush Accounting",17:"Standard Costing and Variance Analysis",18:"Linear Programming",19:"Transportation",20:"Assignment",21:"Game Theory",22:"Simulation",23:"Project Management",24:"Learning Curve",25:"Business Application of Maxima and Minima",26:"Business Forecasting Models"};
+ let chapterValue=String(chapter||"").trim();
+ if(paper==="P16" && /^\\d+$/.test(chapterValue)) chapterValue=scmChapters[Number(chapterValue)]||chapterValue;
+ if(paper==="P16" && (!chapterValue || chapterValue==="PYQ-based practice")) chapterValue="PYQ-based practice";
  return {attempt:String(attempt||"").trim()||"Unidentified Attempt",chapter:String(chapter||"").trim()||"Unidentified Chapter",question:String(question||"").trim(),subject:String(subject||"").trim()||"Unidentified Subject"};
 }
 const accent=group==="Group 3"?"#0b6e69":"#7a5c16";
