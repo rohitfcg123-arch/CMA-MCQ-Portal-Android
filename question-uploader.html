@@ -481,13 +481,24 @@ function populateBulkChapterFilter(){
 }
 function extractCleanQuestionNumber(raw){
   const s=String(raw||"").trim();
-  let m=s.match(/^Question\s*(\d+)\s*(?:[\(\[]\s*([A-Za-z])\s*[\)\]])?/i);
-  if(!m)m=s.match(/^(\d+)\s*(?:[\(\[]\s*([A-Za-z])\s*[\)\]])?/);
-  if(m)return m[1]+(m[2]?'('+m[2].toUpperCase()+')':'');
-  m=s.match(/^Question\s*(\d+)\s*([A-Za-z])(?:\s*[—\-:.]|\s*$)/i);
+  // Supported examples:
+  // Question 8(B) — ...  -> 8(B)
+  // Question 8B — ...     -> 8(B)
+  // 8A — Exports — ...    -> 8(A)
+  // 6A — Exports — Least Squares Trend -> 6(A)
+  // 5 — ...               -> 5
+  let m=s.match(/^Question\s*(\d+)\s*[\(\[]\s*([A-Za-z])\s*[\)\]]/i);
   if(m)return m[1]+'('+m[2].toUpperCase()+')';
-  m=s.match(/^(\d+)\s*([A-Za-z])(?:\s*[—\-:.]|\s*$)/i);
+  m=s.match(/^Question\s*(\d+)\s*([A-Za-z])(?=\s*(?:[—\-:.]|$))/i);
   if(m)return m[1]+'('+m[2].toUpperCase()+')';
+  m=s.match(/^Question\s*(\d+)(?=\s*(?:[—\-:.]|$))/i);
+  if(m)return m[1];
+  m=s.match(/^(\d+)\s*[\(\[]\s*([A-Za-z])\s*[\)\]]/i);
+  if(m)return m[1]+'('+m[2].toUpperCase()+')';
+  m=s.match(/^(\d+)\s*([A-Za-z])(?=\s*(?:[—\-:.]|$))/i);
+  if(m)return m[1]+'('+m[2].toUpperCase()+')';
+  m=s.match(/^(\d+)(?=\s*(?:[—\-:.]|$))/i);
+  if(m)return m[1];
   return "";
 }
 let bulkNumberPreview=[];
