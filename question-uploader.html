@@ -505,16 +505,6 @@ async function applySolutionArray(arr){
      return;
    }
 
-   if(basicDoc){
-     batch.update(db.collection("subjectiveQuestions").doc(basicDoc.id),{
-       solutionHtml:String(x.solutionHtml).trim(),
-       updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-       updatedBy:ADMIN_EMAIL
-     });
-     updated++;
-     return;
-   }
-
    missing.push(x.attempt+" "+x.q+" — "+(x.chapter||""));
  });
 
