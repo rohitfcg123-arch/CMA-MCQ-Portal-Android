@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #94</b> — SCM 26-chapter dropdown + bulk PYQ JSON support aligned to the supplied chapter list.</div>
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #97</b> — SCM 26-chapter dropdown + bulk PYQ JSON support aligned to the supplied chapter list.</div>
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -347,24 +347,29 @@ if(arr.length&&arr[0]&&Array.isArray(arr[0].questions)){
   });
 }else importItems=arr;
 const existingSnap=await db.collection("subjectiveQuestions").get();
+const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+const canonicalKey=x=>[x.group,x.subject,x.attempt,x.q].map(canon).join("|");
 const existing=new Map();
 existingSnap.docs.forEach(d=>{
-  const x=d.data();
-  const key=[x.group,x.subject,x.chapter,x.attempt,x.q].map(v=>String(v||"").trim().toLowerCase()).join("|");
-  existing.set(key,{id:d.id});
+  const x=d.data(), key=canonicalKey(x);
+  if(!existing.has(key))existing.set(key,{id:d.id,data:x});
 });
-const batch=db.batch();
-let added=0,updated=0;
+const incoming=new Map();
 importItems.forEach((x,i)=>{
   if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");
   if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+x.group+". Use the exact subject from the dropdown.");
-  const key=[x.group,x.subject,x.chapter,x.attempt,x.q].map(v=>String(v||"").trim().toLowerCase()).join("|");
+  incoming.set(canonicalKey(x),x);
+});
+const batch=db.batch();
+let added=0,updated=0;
+incoming.forEach(x=>{
+  const key=canonicalKey(x);
   const data={group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
   if(existing.has(key)){batch.set(db.collection("subjectiveQuestions").doc(existing.get(key).id),data,{merge:true});updated++}
   else{batch.set(db.collection("subjectiveQuestions").doc(),data);added++}
 });
 await batch.commit();
-$("jsonMsg").textContent=importItems.length+" question(s) processed — "+added+" added, "+updated+" existing matching question(s) overwritten. No duplicate created.";
+$("jsonMsg").textContent=incoming.size+" unique question(s) processed — "+added+" added, "+updated+" existing questions overwritten. Matching now ignores chapter, so corrected chapter data replaces the old record instead of creating another one.";
 $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Questions JSON")}};
 $("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). No duplicate question content was created.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
