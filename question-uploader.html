@@ -81,7 +81,7 @@
 
 <div id="editModal" class="edit-modal hidden" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
   <div class="edit-card">
-    <h2 id="editModalTitle">Edit Question Metadata</h2>
+    <h2 id="editModalTitle">Edit Question / Answer</h2>
     <div class="body">
       <div class="note" style="margin-bottom:12px"><b>Question content is locked.</b> Question HTML cannot be edited here. Metadata and the Institute Suggested Answer / Explanation can be updated separately.</div>
       <div class="grid">
@@ -96,7 +96,7 @@
       <div class="field" style="margin-top:12px"><label>Institute Suggested Answer / Explanation</label><textarea id="editSolution" style="min-height:220px" placeholder="Paste the suggested answer / explanation in HTML."></textarea><div class="count" style="margin-top:6px">This field is editable. Leave blank to remove the answer from the user portal.</div></div>
       <div class="edit-actions">
         <button class="btn gray" id="cancelEdit">Cancel</button>
-        <button class="btn gold" id="saveMetadata">Save Metadata</button>
+        <button class="btn gold" id="saveMetadata">Save Question / Answer</button>
       </div>
       <div id="editMsg" class="msg"></div>
     </div>
@@ -284,7 +284,7 @@ function renderRows(){
  const filtered=filteredQuestions();
  $("count").textContent="("+DATA.length+")";
  $("filterCount").textContent=filtered.length===DATA.length?filtered.length+" questions":filtered.length+" matching / "+DATA.length+" total";
- $("rows").innerHTML=filtered.map(x=>'<tr><td><input class="rowCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt)+'</td><td><b>'+esc(x.q)+'</b></td><td>'+esc(x.marks==null||x.marks===""?"":x.marks)+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.chapter)+'</td><td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn gold" onclick="openMetadataEditor(\''+x.id+'\')">Edit</button> <button class="btn red" onclick="removeQ(\''+x.id+'\')">Delete</button></td></tr>').join("")||'<tr><td colspan="9">No matching questions found. Try Clear Filters.</td></tr>';
+ $("rows").innerHTML=filtered.map(x=>'<tr><td><input class="rowCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt)+'</td><td><b>'+esc(x.q)+'</b></td><td>'+esc(x.marks==null||x.marks===""?"":x.marks)+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.chapter)+'</td><td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn gold" onclick="openMetadataEditor(\''+x.id+'\')">Edit / Answer</button> <button class="btn red" onclick="removeQ(\''+x.id+'\')">Delete</button></td></tr>').join("")||'<tr><td colspan="9">No matching questions found. Try Clear Filters.</td></tr>';
  document.querySelectorAll(".rowCheck").forEach(b=>b.onchange=updateSelectedCount);
  updateSelectedCount();
 }
@@ -427,21 +427,36 @@ function normalizeQuestionJsonPayload(raw){
 async function applySolutionArray(arr){
  if(!Array.isArray(arr)||!arr.length)throw Error("Solution JSON must be a non-empty array.");
 
- const docsByFull=new Map(),docsByBasic=new Map();
+ const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+ const subjectCanon=v=>{
+   const n=canon(v);
+   if(n==="sfm"||n==="strategicfinancialmanagement")return "strategicfinancialmanagement";
+   return n;
+ };
+ const groupCanon=v=>{
+   const n=canon(v);
+   if(n==="final3"||n==="finalgroup3"||n==="cmifinalgroup3"||n==="cmafinalgroup3")return "final3";
+   return n;
+ };
+ const questionKey=(x,includeChapter=false)=>[
+   groupCanon(x.group||"final3"),
+   subjectCanon(x.subject||""),
+   includeChapter?canon(x.chapter||x.t||""):"",
+   canon(x.attempt||x.a||""),
+   canon(x.q||x.question||x.questionNumber||x.questionNo||"")
+ ].join("|");
+
+ const docsByBasic=new Map();
  DATA.forEach(x=>{
-   const full=(String(x.group||"")+"|"+String(x.subject||"")+"|"+String(x.chapter||"")+"|"+String(x.attempt||"")+"|"+String(x.q||"")).toLowerCase();
-   const basic=(String(x.group||"")+"|"+String(x.subject||"")+"|"+String(x.attempt||"")+"|"+String(x.q||"")).toLowerCase();
-   docsByFull.set(full,x);
+   const basic=questionKey(x,false);
    if(!docsByBasic.has(basic))docsByBasic.set(basic,x);
  });
 
  const staticRows=Array.isArray(window.SFM_SUBJECTIVE_PYQ)?window.SFM_SUBJECTIVE_PYQ:[];
- const staticByFull=new Map(),staticByBasic=new Map();
+ const staticByBasic=new Map();
  staticRows.forEach((x,i)=>{
-   const full=("final3|Strategic Financial Management|"+String(x.t||"")+"|"+String(x.a||"")+"|"+String(x.q||"")).toLowerCase();
-   const basic=("final3|Strategic Financial Management|"+String(x.a||"")+"|"+String(x.q||"")).toLowerCase();
-   const row={...x,_staticIndex:i};
-   staticByFull.set(full,row);
+   const row={...x,_staticIndex:i,group:"final3",subject:"Strategic Financial Management"};
+   const basic=questionKey(row,false);
    if(!staticByBasic.has(basic))staticByBasic.set(basic,row);
  });
 
@@ -453,13 +468,11 @@ async function applySolutionArray(arr){
      throw Error("Solution item "+(i+1)+" is missing required fields. Required: group, subject, attempt, q, solutionHtml.");
    }
 
-   const full=(String(x.group)+"|"+String(x.subject)+"|"+String(x.chapter||"")+"|"+String(x.attempt)+"|"+String(x.q)).toLowerCase();
-   const basic=(String(x.group)+"|"+String(x.subject)+"|"+String(x.attempt)+"|"+String(x.q)).toLowerCase();
+   const basic=questionKey(x,false);
 
-   // Prefer an exact Firestore match, then an exact static match, then a basic Firestore/static match.
-   const existing=docsByFull.get(full);
-   const staticExact=staticByFull.get(full);
-   const basicDoc=docsByBasic.get(basic);
+   // Answers are matched canonically by Group + Subject + Attempt + Question No.
+   // Chapter is deliberately ignored because chapter names may be corrected later.
+   const existing=docsByBasic.get(basic);
    const staticBasic=staticByBasic.get(basic);
 
    if(existing){
@@ -472,13 +485,13 @@ async function applySolutionArray(arr){
      return;
    }
 
-   if(staticExact||staticBasic){
-     const s=staticExact||staticBasic;
+   if(staticBasic){
+     const s=staticBasic;
      const ref=db.collection("subjectiveQuestions").doc();
      batch.set(ref,{
        group:"final3",
        subject:"Strategic Financial Management",
-       chapter:String(s.t||x.chapter||"").trim(),
+       chapter:String(x.chapter||s.t||"").trim(),
        attempt:String(s.a||x.attempt).trim(),
        q:String(s.q||x.q).trim(),
        html:String(s.html||"").trim(),
@@ -565,7 +578,7 @@ $("exportSolutionsBtn").onclick=async()=>{
     $("solutionJsonMsg").textContent="Could not export answers: "+(e.message||e);
   }
 };
-$("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). No duplicate question content was created.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
+$("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" answer(s) applied — "+result.updated+" existing question(s) updated, "+result.created+" SFM question(s) added. Answers are now editable from Edit / Answer.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
 </script>
 </body></html>
