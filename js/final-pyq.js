@@ -14,11 +14,32 @@ function meta(q){
  const chapter=raw.chapter??raw.chapterName??raw.topic??raw.subjectChapter??"";
  const question=raw.q??raw.question??raw.questionText??"";
  const subject=raw.subject??raw.subjectName??SUBJECTS[paper]??"";
- const scmChapters={1:"Cost of Quality",2:"Pareto Analysis",3:"Decision Making – CVP Analysis",4:"Decision Making – Limiting Factor",5:"Decision Making – Make or Buy",6:"Decision Making – Subcontracting",7:"Decision Making – Service Costing",8:"Transfer Pricing",9:"Relevant Costing",10:"Target Costing",11:"Product Life Cycle Costing",12:"Decision Making – Probability",13:"Activity Based Costing",14:"Just-in-Time (JIT)",15:"Throughput Accounting",16:"Back-Flush Accounting",17:"Standard Costing and Variance Analysis",18:"Linear Programming",19:"Transportation",20:"Assignment",21:"Game Theory",22:"Simulation",23:"Project Management",24:"Learning Curve",25:"Business Application of Maxima and Minima",26:"Business Forecasting Models"};
+ const scmChapters={
+   0:"Strategic Cost Management – General / Value Chain & Cost Management",
+   1:"Cost of Quality",2:"Pareto Analysis",3:"Decision Making – CVP Analysis",
+   4:"Decision Making – Limiting Factor",5:"Decision Making – Make or Buy",
+   6:"Decision Making – Subcontracting",7:"Decision Making – Service Costing",
+   8:"Transfer Pricing",9:"Relevant Costing",10:"Target Costing",
+   11:"Product Life Cycle Costing",12:"Decision Making – Probability",
+   13:"Activity Based Costing",14:"Just-in-Time (JIT)",15:"Throughput Accounting",
+   16:"Back-Flush Accounting",17:"Standard Costing and Variance Analysis",
+   18:"Linear Programming",19:"Transportation",20:"Assignment",21:"Game Theory",
+   22:"Simulation",23:"Project Management",24:"Learning Curve",
+   25:"Business Application of Maxima and Minima",26:"Business Forecasting Models"
+ };
  let chapterValue=String(chapter||"").trim();
- if(paper==="P16" && /^\\d+$/.test(chapterValue)) chapterValue=scmChapters[Number(chapterValue)]||chapterValue;
- if(paper==="P16" && (!chapterValue || chapterValue==="PYQ-based practice")) chapterValue="PYQ-based practice";
- return {attempt:String(attempt||"").trim()||"Unidentified Attempt",chapter:String(chapter||"").trim()||"Unidentified Chapter",question:String(question||"").trim(),subject:String(subject||"").trim()||"Unidentified Subject"};
+ if(paper==="P16" && /^\\d+$/.test(chapterValue)){
+   const n=Number(chapterValue);
+   chapterValue=scmChapters[n]||("Chapter "+chapterValue);
+ }
+ if(!chapterValue) chapterValue="PYQ-based practice";
+ if(paper==="P16" && chapterValue==="PYQ-based practice") chapterValue="Strategic Cost Management – General / Value Chain & Cost Management";
+ return {
+   attempt:String(attempt||"").trim()||"PYQ Attempt not specified",
+   chapter:chapterValue,
+   question:String(question||"").trim(),
+   subject:String(subject||"").trim()||"Unidentified Subject"
+ };
 }
 const accent=group==="Group 3"?"#0b6e69":"#7a5c16";
 const storageKey="cma_final_pyq_"+paper+"_v1";
@@ -28,6 +49,26 @@ try{Object.assign(state,JSON.parse(localStorage.getItem(storageKey)||"{}"));}cat
 try{const x=JSON.parse(localStorage.getItem(storageKey+"_flags")||"{}");wrongSet=new Set(x.wrong||[]);bookSet=new Set(x.book||[]);}catch(e){}
 function save(){try{localStorage.setItem(storageKey,JSON.stringify(state));localStorage.setItem(storageKey+"_flags",JSON.stringify({wrong:[...wrongSet],book:[...bookSet]}));}catch(e){}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function renderQuestionContent(raw){
+ const candidates=[raw.questionHtml,raw.qHtml,raw.html,raw.question,raw.q,raw.questionText];
+ const value=candidates.find(v=>v!==undefined&&v!==null&&String(v).trim()!=="");
+ if(typeof value==="string" && /<\/?(table|tr|td|th|br|p|div)\b/i.test(value)) return value;
+ const textValue=String(value??"").trim();
+ let html=esc(textValue).replace(/\n/g,"<br>");
+ const table=raw.table||raw.questionTable||raw.dataTable||raw.tableData;
+ if(Array.isArray(table) && table.length){
+   const rows=table.map(row=>{
+     const cells=Array.isArray(row)?row:(row&&Array.isArray(row.cells)?row.cells:Object.values(row||{}));
+     return "<tr>"+cells.map(cell=>"<td>"+esc(cell)+"</td>").join("")+"</tr>";
+   }).join("");
+   html += '<div class="fpyq-table-wrap"><table class="fpyq-table"><tbody>'+rows+'</tbody></table></div>';
+ }else if(table&&Array.isArray(table.rows)){
+   const headers=Array.isArray(table.headers)?'<thead><tr>'+table.headers.map(h=>"<th>"+esc(h)+"</th>").join("")+"</tr></thead>":"";
+   const rows=table.rows.map(row=>"<tr>"+(Array.isArray(row)?row:Object.values(row||{})).map(cell=>"<td>"+esc(cell)+"</td>").join("")+"</tr>").join("");
+   html += '<div class="fpyq-table-wrap"><table class="fpyq-table">'+headers+'<tbody>'+rows+'</tbody></table></div>';
+ }
+ return html;
+}
 function rowsFor(term){let r=entry.rows.slice();if(term&&term!=="all")r=r.filter(q=>q.pyqTerm===term);if(state.mode==="wrong")r=r.filter(q=>wrongSet.has(q.id));if(state.mode==="book")r=r.filter(q=>bookSet.has(q.id));return r;}
 function root(){return document.querySelector(".app,.wrap")||document.body;}
 function inject(){
@@ -51,7 +92,7 @@ function inject(){
  '#finalPyqPanel{display:none;background:var(--card,#fff);border:1px solid var(--line,#dfe5ea);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 8px 24px rgba(0,0,0,.05)}'+
  'body.final-pyq-active #finalPyqPanel{display:block}body.final-pyq-active #finalPyqSource{border-color:var(--fpya)}body.final-pyq-active .app>*:not(.hero):not(.nav):not(.top):not(#finalPyqSource):not(#finalPyqPanel),body.final-pyq-active .wrap>*:not(.masthead):not(.hero):not(#finalPyqSource):not(#finalPyqPanel){display:none!important}'+
  'body.final-pyq-active .final-pyq-hide{display:none!important}'+
- '.fpyq-hero{display:flex;justify-content:space-between;gap:12px;align-items:center;background:linear-gradient(135deg,var(--fpya),#123b3d);color:#fff;border-radius:14px;padding:16px}.fpyq-hero h2{margin:5px 0;font-size:20px}.fpyq-hero p{margin:0;opacity:.84;font-size:12px}.fpyq-badge{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.fpyq-total{font-size:30px;font-weight:900}.fpyq-card{background:#f8fafb;border:1px solid #e1e6e9;border-radius:13px;padding:14px;margin-top:12px}.fpyq-card>label{display:block;font-size:12px;font-weight:800;color:#59636a;margin-bottom:6px}.fpyq-card select{width:100%;min-width:0}.fpyq-quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.fpyq-quick button{padding:11px;border:1px solid #d9dee2;background:#fff;border-radius:10px;font-weight:800;color:#334047}.fpyq-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #e5e9eb}.fpyq-row:last-child{border-bottom:0}.fpyq-row small{display:block;color:#7a8389;margin-top:3px}.fpyq-step{display:flex;align-items:center;gap:10px}.fpyq-step button{width:36px;height:36px;border-radius:10px;border:1px solid #d4dade;background:#fff;font-size:20px}.fpyq-step strong{min-width:30px;text-align:center}.fpyq-switch input{display:none}.fpyq-switch span{display:block;width:44px;height:24px;border-radius:99px;background:#cbd2d6;position:relative}.fpyq-switch span:after{content:"";position:absolute;width:18px;height:18px;top:3px;left:3px;background:#fff;border-radius:50%;transition:.15s}.fpyq-switch input:checked+span{background:var(--fpya)}.fpyq-switch input:checked+span:after{left:23px}.fpyq-start{width:100%;margin-top:14px;padding:13px;border:0;border-radius:11px;background:var(--fpya);color:#fff;font-weight:900;font-size:15px}.fpyq-note{margin-top:10px;font-size:11px;color:#7a8389;line-height:1.5}.fpyq-qbar{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;color:#667078}.fpyq-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.fpyq-meta>div{background:#f7f9fa;border:1px solid #e1e6e9;border-radius:10px;padding:9px}.fpyq-meta b{display:block;font-size:10px;text-transform:uppercase;color:#7a8389;letter-spacing:.04em}.fpyq-meta span{display:block;font-size:12px;font-weight:800;color:#29343a;margin-top:3px}.fpyq-q{font-size:18px;line-height:1.5;margin:15px 0}.fpyq-opt{width:100%;text-align:left;padding:12px;margin:7px 0;border:1px solid #dce2e5;border-radius:11px;background:#fff}.fpyq-opt.correct{border-color:#3d8a5d;background:#eaf6ee}.fpyq-opt.wrong{border-color:#b94c43;background:#fff0ee}.fpyq-explain{padding:12px;border-radius:11px;background:#eef5f4;margin-top:12px;font-size:13px;line-height:1.5}.fpyq-nav{display:flex;gap:9px;margin-top:13px}.fpyq-nav button{flex:1;padding:11px;border-radius:10px;border:1px solid #d5dce0;background:#fff;font-weight:800}.fpyq-nav .primary{background:var(--fpya);color:#fff;border-color:var(--fpya)}.fpyq-bookmark{float:right;border:0;background:transparent;font-size:20px}.fpyq-result{text-align:center;padding:20px}.fpyq-result h3{font-size:26px;margin:4px}.fpyq-result p{color:#69747a}'+
+ '.fpyq-hero{display:flex;justify-content:space-between;gap:12px;align-items:center;background:linear-gradient(135deg,var(--fpya),#123b3d);color:#fff;border-radius:14px;padding:16px}.fpyq-hero h2{margin:5px 0;font-size:20px}.fpyq-hero p{margin:0;opacity:.84;font-size:12px}.fpyq-badge{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.fpyq-total{font-size:30px;font-weight:900}.fpyq-card{background:#f8fafb;border:1px solid #e1e6e9;border-radius:13px;padding:14px;margin-top:12px}.fpyq-card>label{display:block;font-size:12px;font-weight:800;color:#59636a;margin-bottom:6px}.fpyq-card select{width:100%;min-width:0}.fpyq-quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.fpyq-quick button{padding:11px;border:1px solid #d9dee2;background:#fff;border-radius:10px;font-weight:800;color:#334047}.fpyq-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #e5e9eb}.fpyq-row:last-child{border-bottom:0}.fpyq-row small{display:block;color:#7a8389;margin-top:3px}.fpyq-step{display:flex;align-items:center;gap:10px}.fpyq-step button{width:36px;height:36px;border-radius:10px;border:1px solid #d4dade;background:#fff;font-size:20px}.fpyq-step strong{min-width:30px;text-align:center}.fpyq-switch input{display:none}.fpyq-switch span{display:block;width:44px;height:24px;border-radius:99px;background:#cbd2d6;position:relative}.fpyq-switch span:after{content:"";position:absolute;width:18px;height:18px;top:3px;left:3px;background:#fff;border-radius:50%;transition:.15s}.fpyq-switch input:checked+span{background:var(--fpya)}.fpyq-switch input:checked+span:after{left:23px}.fpyq-start{width:100%;margin-top:14px;padding:13px;border:0;border-radius:11px;background:var(--fpya);color:#fff;font-weight:900;font-size:15px}.fpyq-note{margin-top:10px;font-size:11px;color:#7a8389;line-height:1.5}.fpyq-qbar{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;color:#667078}.fpyq-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.fpyq-meta>div{background:#f7f9fa;border:1px solid #e1e6e9;border-radius:10px;padding:9px}.fpyq-meta b{display:block;font-size:10px;text-transform:uppercase;color:#7a8389;letter-spacing:.04em}.fpyq-meta span{display:block;font-size:12px;font-weight:800;color:#29343a;margin-top:3px}.fpyq-q{font-size:18px;line-height:1.5;margin:15px 0}.fpyq-table-wrap{overflow-x:auto;margin:14px 0}.fpyq-table{width:100%;border-collapse:collapse;background:#fff;font-size:14px}.fpyq-table th,.fpyq-table td{border:1px solid #cfd6da;padding:9px 10px;text-align:left;vertical-align:top}.fpyq-table th{font-weight:800;background:#f1f4f5}.fpyq-opt{width:100%;text-align:left;padding:12px;margin:7px 0;border:1px solid #dce2e5;border-radius:11px;background:#fff}.fpyq-opt.correct{border-color:#3d8a5d;background:#eaf6ee}.fpyq-opt.wrong{border-color:#b94c43;background:#fff0ee}.fpyq-explain{padding:12px;border-radius:11px;background:#eef5f4;margin-top:12px;font-size:13px;line-height:1.5}.fpyq-nav{display:flex;gap:9px;margin-top:13px}.fpyq-nav button{flex:1;padding:11px;border-radius:10px;border:1px solid #d5dce0;background:#fff;font-weight:800}.fpyq-nav .primary{background:var(--fpya);color:#fff;border-color:var(--fpya)}.fpyq-bookmark{float:right;border:0;background:transparent;font-size:20px}.fpyq-result{text-align:center;padding:20px}.fpyq-result h3{font-size:26px;margin:4px}.fpyq-result p{color:#69747a}'+
  '@media(max-width:560px){.fpyq-meta{grid-template-columns:1fr}.fpyq-source-head{align-items:stretch;flex-direction:column}.fpyq-source-head select{min-width:0;width:100%}.fpyq-quick{grid-template-columns:1fr}.fpyq-row{align-items:flex-start}.fpyq-hero{padding:14px}}';
  document.head.appendChild(style);
  return source,panel;
@@ -108,7 +149,7 @@ function renderQ(){
  const marked=bookSet.has(q.id);
  quiz.innerHTML='<div class="fpyq-qbar"><span>Question '+(index+1)+' / '+pool.length+'</span><span>'+esc(m.attempt)+'</span></div>'+
  '<div class="fpyq-meta"><div><b>Subject</b><span>'+esc(m.subject)+'</span></div><div><b>Chapter</b><span>'+esc(m.chapter)+'</span></div><div><b>Attempt</b><span>'+esc(m.attempt)+'</span></div></div>'+
- '<button class="fpyq-bookmark" id="fpyqBookmark">'+(marked?"★":"☆")+'</button><div class="fpyq-q">'+esc(m.question)+'</div>'+
+ '<button class="fpyq-bookmark" id="fpyqBookmark">'+(marked?"★":"☆")+'</button><div class="fpyq-q">'+renderQuestionContent(q)+'</div>'+
  '<div>'+q.options.map((o,i)=>'<button class="fpyq-opt" data-i="'+i+'"><b>'+String.fromCharCode(65+i)+'.</b> '+esc(o)+'</button>').join("")+'</div>'+
  '<div id="fpyqExplain"></div><div class="fpyq-nav"><button id="fpyqExit">Exit</button><button class="primary" id="fpyqNext" disabled>'+(index===pool.length-1?"Submit":"Next")+'</button></div>';
  let selected=null,locked=false;
