@@ -283,11 +283,19 @@ window.bulkDeleteSelected=async()=>{
  if(!confirm(msg))return;
  const btn=$("bulkDelete");setBusy(btn,true,"Deleting "+ids.length+"…");
  try{
-   for(let i=0;i<ids.length;i++){
-     await db.collection("subjectiveQuestions").doc(ids[i]).delete();
+   // Delete in Firestore batches (max 500 writes per batch) instead of
+   // waiting for one network request per question.
+   const chunks=[];
+   for(let i=0;i<ids.length;i+=450)chunks.push(ids.slice(i,i+450));
+   let deleted=0;
+   for(const chunk of chunks){
+     const batch=db.batch();
+     chunk.forEach(id=>batch.delete(db.collection("subjectiveQuestions").doc(id)));
+     await batch.commit();
+     deleted+=chunk.length;
    }
    $("msg").className="msg ok";
-   $("msg").textContent=ids.length+" question(s) deleted successfully.";
+   $("msg").textContent=deleted+" question(s) deleted successfully.";
    await loadQuestions();
  }catch(e){
    $("msg").className="msg err";
