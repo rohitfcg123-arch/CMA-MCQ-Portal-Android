@@ -93,7 +93,8 @@
         <div class="field"><label>Marks</label><input id="editMarks" type="number" min="0" step="1" placeholder="14"></div>
       </div>
       <div class="field" style="margin-top:12px"><label>Question Content — View Only</label><div id="editQuestion" class="edit-question"></div></div>
-      <div class="field" style="margin-top:12px"><label>Institute Suggested Answer / Explanation</label><textarea id="editSolution" style="min-height:220px" placeholder="Paste the suggested answer / explanation in HTML."></textarea><div class="count" style="margin-top:6px">This field is editable. Leave blank to remove the answer from the user portal.</div></div>
+      <div class="field" style="margin-top:12px"><label>Institute Suggested Answer / Explanation</label><textarea id="editSolution" style="min-height:220px" placeholder="Paste the primary suggested answer in HTML."></textarea><div class="count" style="margin-top:6px">Primary answer. Leave blank to remove all answers unless alternative answers are supplied below.</div></div>
+      <div class="field" style="margin-top:12px"><label>Alternative Answers (JSON array)</label><textarea id="editAlternativeSolutions" style="min-height:140px" placeholder='["<p>Alternative answer 1...</p>","<p>Alternative answer 2...</p>"]'></textarea><div class="count" style="margin-top:6px">Optional. Store one or more alternative suggested answers. HTML is preserved exactly.</div></div>
       <div class="edit-actions">
         <button class="btn gray" id="cancelEdit">Cancel</button>
         <button class="btn gold" id="saveMetadata">Save Question / Answer</button>
@@ -311,6 +312,7 @@ window.openMetadataEditor=function(id){
   $("editMarks").value=x.marks==null?"":x.marks;
   $("editQuestion").innerHTML=x.html||"<i>No question HTML stored.</i>";
   $("editSolution").value=x.solutionHtml||"";
+  $("editAlternativeSolutions").value=Array.isArray(x.solutionHtmls)?JSON.stringify(x.solutionHtmls.slice(1),null,2):"";
   $("editMsg").textContent="";
   $("editMsg").className="msg";
   $("editModal").classList.remove("hidden");
@@ -334,6 +336,20 @@ $("saveMetadata").onclick=async()=>{
   const chapter=$("editChapter").value;
   const attempt=$("editAttempt").value;
   const solutionHtml=$("editSolution").value.trim();
+  let alternativeSolutions=[];
+  const altRaw=$("editAlternativeSolutions").value.trim();
+  if(altRaw){
+    try{
+      const parsed=JSON.parse(altRaw);
+      if(!Array.isArray(parsed))throw Error("Alternative Answers must be a JSON array.");
+      alternativeSolutions=parsed.map(v=>String(v||"").trim()).filter(Boolean);
+    }catch(e){
+      $("editMsg").className="msg err";
+      $("editMsg").textContent="Alternative Answers JSON is invalid: "+(e.message||e);
+      return;
+    }
+  }
+  const solutionHtmls=[solutionHtml,...alternativeSolutions].filter(Boolean);
   if(!group||!subject||!chapter||!attempt||!qno){
     $("editMsg").className="msg err";
     $("editMsg").textContent="Please fill Group, Subject, Chapter, Attempt and Question Number.";
@@ -346,12 +362,12 @@ $("saveMetadata").onclick=async()=>{
   }
   try{
     setBusy(btn,true,"Saving…");
-    const updates={group,subject,chapter,attempt,q:qno,solutionHtml,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
+    const updates={group,subject,chapter,attempt,q:qno,solutionHtml:solutionHtmls[0]||"",solutionHtmls,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
     if(marksRaw==="") updates.marks= firebase.firestore.FieldValue.delete();
     else updates.marks=Number(marksRaw);
     await db.collection("subjectiveQuestions").doc(editingQuestionId).update(updates);
     const idx=DATA.findIndex(q=>q.id===editingQuestionId);
-    if(idx>=0)DATA[idx]={...DATA[idx],group,subject,chapter,attempt,q:qno,solutionHtml,marks:marksRaw===""?undefined:Number(marksRaw)};
+    if(idx>=0)DATA[idx]={...DATA[idx],group,subject,chapter,attempt,q:qno,solutionHtml:solutionHtmls[0]||"",solutionHtmls,marks:marksRaw===""?undefined:Number(marksRaw)};
     $("editMsg").className="msg ok";
     $("editMsg").textContent="Metadata updated successfully. Question content was not changed.";
     renderRows();
@@ -439,93 +455,79 @@ async function applySolutionArray(arr){
    if(n==="final3"||n==="finalgroup3"||n==="cmifinalgroup3"||n==="cmafinalgroup3")return "final3";
    return n;
  };
- // Resolve the actual question number independently of the descriptive q text.
- // Example: "Question 3(A) — Transfer Pricing" -> "3a"
- // and "3(a)" -> "3a". This lets answer JSON match uploaded SCM questions.
  const questionNoCanon=x=>{
-   const explicit=x&&(
-     x.question_no||x.questionNo||x.questionNumber||
-     x.qno||x.q_number
-   );
+   const explicit=x&&(x.question_no||x.questionNo||x.questionNumber||x.qno||x.q_number);
    const raw=String(explicit||x?.q||x?.question||"").trim();
-   const m=raw.match(/(?:question\\s*)?(\\d+)\\s*(?:[\\(\\[]\\s*([a-z])\\s*[\\)\\]])?/i);
+   const m=raw.match(/(?:question\s*)?(\d+)\s*(?:[\(\[]\s*([a-z])\s*[\)\]])?/i);
    if(m)return String(m[1])+String(m[2]||"").toLowerCase();
-   const roman=raw.match(/(?:question\\s*)?(\\d+)\\s*[\\(\\[]\\s*(i{1,3}|iv|v|vi{0,3}|ix|x|xi|xii|xiii|xiv|xv)\\s*[\\)\\]]/i);
+   const roman=raw.match(/(?:question\s*)?(\d+)\s*[\(\[]\s*(i{1,3}|iv|v|vi{0,3}|ix|x|xi|xii|xiii|xiv|xv)\s*[\)\]]/i);
    if(roman)return String(roman[1])+roman[2].toLowerCase();
    return canon(raw);
  };
- const questionKey=(x,includeChapter=false)=>[
-   groupCanon(x.group||"final3"),
-   subjectCanon(x.subject||""),
-   includeChapter?canon(x.chapter||x.t||""):"",
-   canon(x.attempt||x.a||""),
-   questionNoCanon(x)
- ].join("|");
+ const questionKey=(x)=>[groupCanon(x.group||"final3"),subjectCanon(x.subject||""),canon(x.attempt||x.a||""),questionNoCanon(x)].join("|");
+
+ const extractAnswers=x=>{
+   const values=[];
+   if(Array.isArray(x.solutionHtmls))values.push(...x.solutionHtmls);
+   if(Array.isArray(x.alternativeAnswers))values.push(...x.alternativeAnswers.map(v=>typeof v==="string"?v:(v?.solutionHtml||"")));
+   if(Array.isArray(x.answers))values.push(...x.answers.map(v=>typeof v==="string"?v:(v?.solutionHtml||v?.html||"")));
+   if(String(x.solutionHtml||"").trim())values.unshift(String(x.solutionHtml).trim());
+   return [...new Set(values.map(v=>String(v||"").trim()).filter(Boolean))];
+ };
 
  const docsByBasic=new Map();
- DATA.forEach(x=>{
-   const basic=questionKey(x,false);
-   if(!docsByBasic.has(basic))docsByBasic.set(basic,x);
- });
-
+ DATA.forEach(x=>{const k=questionKey(x);if(!docsByBasic.has(k))docsByBasic.set(k,x);});
  const staticRows=Array.isArray(window.SFM_SUBJECTIVE_PYQ)?window.SFM_SUBJECTIVE_PYQ:[];
  const staticByBasic=new Map();
- staticRows.forEach((x,i)=>{
-   const row={...x,_staticIndex:i,group:"final3",subject:"Strategic Financial Management"};
-   const basic=questionKey(row,false);
-   if(!staticByBasic.has(basic))staticByBasic.set(basic,row);
+ staticRows.forEach((x,i)=>{const row={...x,_staticIndex:i,group:"final3",subject:"Strategic Financial Management"};const k=questionKey(row);if(!staticByBasic.has(k))staticByBasic.set(k,row);});
+
+ const grouped=new Map(),missing=[];
+ arr.forEach((x,i)=>{
+   const answers=extractAnswers(x);
+   if(!x.group||!x.subject||!x.attempt||!x.q||!answers.length)throw Error("Solution item "+(i+1)+" is missing required fields. Required: group, subject, attempt, q and at least one answer (solutionHtml / solutionHtmls / alternativeAnswers / answers).");
+   const k=questionKey(x);
+   if(!grouped.has(k))grouped.set(k,{x,answers:[]});
+   grouped.get(k).answers.push(...answers);
  });
 
  const batch=db.batch();
- let updated=0,created=0,missing=[];
-
- arr.forEach((x,i)=>{
-   if(!x.group||!x.subject||!x.attempt||!x.q||!String(x.solutionHtml||"").trim()){
-     throw Error("Solution item "+(i+1)+" is missing required fields. Required: group, subject, attempt, q, solutionHtml.");
-   }
-
-   const basic=questionKey(x,false);
-
-   // Answers are matched canonically by Group + Subject + Attempt + Question No.
-   // Chapter is deliberately ignored because chapter names may be corrected later.
-   const existing=docsByBasic.get(basic);
-   const staticBasic=staticByBasic.get(basic);
-
+ let updated=0,created=0;
+ grouped.forEach(item=>{
+   const x=item.x;
+   const incomingAnswers=[...new Set(item.answers.map(v=>String(v).trim()).filter(Boolean))];
+   const existing=docsByBasic.get(questionKey(x));
    if(existing){
+     const old=[...(Array.isArray(existing.solutionHtmls)?existing.solutionHtmls:[]),String(existing.solutionHtml||"")].map(v=>String(v||"").trim()).filter(Boolean);
+     const all=[...new Set([...old,...incomingAnswers])];
      batch.update(db.collection("subjectiveQuestions").doc(existing.id),{
-       solutionHtml:String(x.solutionHtml).trim(),
+       solutionHtml:all[0]||"",
+       solutionHtmls:all,
        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
        updatedBy:ADMIN_EMAIL
      });
      updated++;
      return;
    }
-
+   const staticBasic=staticByBasic.get(questionKey(x));
    if(staticBasic){
-     const s=staticBasic;
+     const s=staticBasic, all=incomingAnswers;
      const ref=db.collection("subjectiveQuestions").doc();
      batch.set(ref,{
-       group:"final3",
-       subject:"Strategic Financial Management",
+       group:"final3",subject:"Strategic Financial Management",
        chapter:String(x.chapter||s.t||"").trim(),
-       attempt:String(s.a||x.attempt).trim(),
-       q:String(s.q||x.q).trim(),
+       attempt:String(s.a||x.attempt).trim(),q:String(s.q||x.q).trim(),
        html:String(s.html||"").trim(),
-       solutionHtml:String(x.solutionHtml).trim(),
+       solutionHtml:all[0]||"",solutionHtmls:all,
        marks:s.marks===""||s.marks==null?null:Number(s.marks),
-       sort:Number(s.sort)||0,
-       updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-       updatedBy:ADMIN_EMAIL
+       sort:Number(s.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL
      });
      created++;
      return;
    }
-
    missing.push(x.attempt+" "+x.q+" — "+(x.chapter||""));
  });
-
  await batch.commit();
- return {updated,created,missing};
+ return {updated,created,missing,grouped:grouped.size,answersApplied:[...grouped.values()].reduce((n,x)=>n+[...new Set(x.answers)].length,0)};
 }
 $("importBtn").onclick=async()=>{const btn=$("importBtn");try{setBusy(btn,true,"Importing…");const raw=$("json").value.trim();if(!raw)throw Error("Please select a JSON file above or paste the JSON array in the box first.");const arr=normalizeQuestionJsonPayload(raw);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must contain at least one question.");if(arr[0]&&arr[0].solutionHtml&&!arr[0].html){const result=await applySolutionArray(arr);$("jsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). Answer-only JSON was automatically detected."; $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions();return;}let importItems=[];
 if(arr.length&&arr[0]&&Array.isArray(arr[0].questions)){
@@ -552,7 +554,7 @@ const batch=db.batch();
 let added=0,updated=0;
 incoming.forEach(x=>{
   const key=canonicalKey(x);
-  const data={group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,marks:x.marks===""||x.marks==null?null:Number(x.marks),html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
+  const data={group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,marks:x.marks===""||x.marks==null?null:Number(x.marks),html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):String(x.solutionHtml||"").trim()?[String(x.solutionHtml).trim()]:[],sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
   if(existing.has(key)){batch.set(db.collection("subjectiveQuestions").doc(existing.get(key).id),data,{merge:true});updated++}
   else{batch.set(db.collection("subjectiveQuestions").doc(),data);added++}
 });
@@ -568,7 +570,8 @@ $("exportSolutionsBtn").onclick=async()=>{
       chapter:x.chapter||"",
       attempt:x.attempt||"",
       q:x.q||"",
-      solutionHtml:String(x.solutionHtml||"").trim()
+      solutionHtml:String(x.solutionHtml||"").trim(),
+      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls:((String(x.solutionHtml||"").trim())?[String(x.solutionHtml).trim()]:[])
     }));
     const blob=new Blob([JSON.stringify(rows,null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);
@@ -582,7 +585,7 @@ $("exportSolutionsBtn").onclick=async()=>{
     $("solutionJsonMsg").textContent="Could not export answers: "+(e.message||e);
   }
 };
-$("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" answer(s) applied — "+result.updated+" existing question(s) updated, "+result.created+" SFM question(s) added."+(result.missing&&result.missing.length?" "+result.missing.length+" answer(s) skipped because no matching question record exists (for example Section-A 1(i)–1(xv)); no blank questions were created.":"")+" Answers are now editable from Edit / Answer.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
+$("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" question(s) updated/created with "+result.answersApplied+" answer version(s). Multiple alternative answers for the same question are stored together."+(result.missing&&result.missing.length?" "+result.missing.length+" unmatched answer item(s) skipped; no blank questions were created.":"")+" Answers are now editable from Edit / Answer.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
 </script>
 </body></html>
