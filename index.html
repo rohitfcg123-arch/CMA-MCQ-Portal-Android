@@ -14,7 +14,7 @@ main{max-width:1180px;margin:auto;padding:28px 20px 65px}.hero{position:relative
 .cma-update-strip{margin:10px 0 16px;padding:9px 13px;border:1px solid #d5cdbb;border-radius:12px;background:#eee9dc;color:#0e5052;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;box-shadow:0 3px 10px rgba(8,56,58,.04)}
 .cma-update-strip b{color:#9a741e;letter-spacing:.06em}
 </style>
-</head><body><div class="cma-update-strip"><b>UPDATE #53 — Subjective Practice Hub added</b><span>Practice Subjective Questions now opens a CMA Student Hub-style page with Previous Year Paper and Mock Test Papers sections.</span></div>
+</head><body><div class="cma-update-strip"><b>UPDATE #54 — Subjective Practice Hub navigation finalized</b><span>Practice Subjective Questions now opens the dedicated CMA Student Hub-style page; Previous Year Paper and Mock Test Papers are inside that hub.</span></div>
 <div id="pullRefreshIndicator" aria-hidden="true">↻</div>
 <header class="topbar"><div class="topbar-inner"><div><div class="brand">CMA <span>ZONE</span></div><span class="brand-sub">MCQ Practice · Test Preparation</span></div><div class="session"><a class="btn btn-gold" href="payment.html">💳 Buy Subscription</a><span id="email"></span><button class="btn btn-light" id="loginBtn">Login</button><button class="btn btn-gold hidden" id="logoutBtn">Logout</button></div></div></header><div class="cma-madeby">✨ Made by CMA Students, for CMA Students ✨</div><div id="cmaNewsTicker" role="status" aria-label="Special offer"><div class="ticker-label">SPECIAL OFFER</div><div class="ticker-window"><div class="ticker-track"><span class="ticker-item">🎓 CMA Zone — FREE TILL DECEMBER 2026</span><span class="ticker-item">🔥 Practice MCQs & PYQs with free access till December 2026</span><span class="ticker-item">🚀 CMA Foundation • Intermediate • Final — Start Practising Now</span><span class="ticker-item">🎓 CMA Zone — FREE TILL DECEMBER 2026</span><span class="ticker-item">🔥 Practice MCQs & PYQs with free access till December 2026</span><span class="ticker-item">🚀 CMA Foundation • Intermediate • Final — Start Practising Now</span></div></div></div>
 <main>
@@ -26,31 +26,16 @@ main{max-width:1180px;margin:auto;padding:28px 20px 65px}.hero{position:relative
 <section class="group-section" id="cmaStudentHub" style="background:linear-gradient(135deg,#fffdf8,#f2ecdf);border-color:#d7c99f;margin-bottom:15px"><div style="display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap"><div><span class="eyebrow">CMA STUDENT RESOURCES</span><h2 style="margin:4px 0;color:var(--teal-dark);font-size:21px">📚 CMA Student Hub</h2><p style="margin:0;color:var(--muted);font-size:12.5px;line-height:1.5">Study Material · MCQ Bank · Previous Year Papers · Answers · CMA Updates · Revision · CMA Jobs</p></div><a href="cma-student-hub.html" class="btn btn-gold" style="text-decoration:none;white-space:nowrap">Open CMA Student Hub →</a></div></section>
 <section class="group-section" id="subjectivePyqHub" style="background:linear-gradient(135deg,#fffdf8,#f2ecdf);border-color:#d7c99f">
 <div class="section-head">
-<div><span class="eyebrow">SUBJECTIVE PRACTICE</span><h2>✍️ Practice Subjective Questions</h2><p>Practice subjective questions separately from the previous-year paper resources.</p></div>
+<div><span class="eyebrow">SUBJECTIVE PRACTICE</span><h2>✍️ Practice Subjective Questions</h2><p>Previous Year Paper and Mock Test Papers in one dedicated practice hub.</p></div>
 <span class="section-index">SQ</span>
 </div>
-<div class="grid">
 <a class="subject-card" href="subjective-practice.html?v=20260927u53" style="min-height:88px">
 <div class="card-icon">✍️</div>
-<div class="card-copy"><h3>Practice Subjective Questions</h3><p>Choose CMA group, subject and chapter to practise subjective questions.</p></div>
+<div class="card-copy"><h3>Practice Subjective Questions</h3><p>Open the subjective practice hub to choose Previous Year Paper or Mock Test Papers.</p></div>
 <span class="arrow">→</span>
 </a>
-</div>
 </section>
 
-<section class="group-section" id="previousYearPaperHub" style="background:linear-gradient(135deg,#fffdf8,#f2ecdf);border-color:#d7c99f">
-<div class="section-head">
-<div><span class="eyebrow">PREVIOUS YEAR PAPER</span><h2>📄 Previous Year Paper</h2><p>Access previous-year paper resources and PYQ practice from one dedicated section.</p></div>
-<span class="section-index">PYQ</span>
-</div>
-<div class="grid">
-<a class="subject-card" href="subjective-practice.html?v=20260927u53" style="min-height:88px">
-<div class="card-icon">📄</div>
-<div class="card-copy"><h3>PYQ</h3><p>Practice previous-year subjective questions chapter-wise and attempt-wise.</p></div>
-<span class="arrow">→</span>
-</a>
-</div>
-</section>
 <section class="group-section cma-course-selector" id="cmaSubjectPicker">
 <div class="section-head"><div><span class="eyebrow">QUICK START</span><h2>Choose Your CMA Group</h2><p>Select a group and its subjects will appear below.</p></div><span class="section-index">GO</span></div>
 <select id="cmaGroupPicker" class="btn" style="width:100%;padding:13px;background:#fff;border:1px solid var(--border);color:var(--teal);font-weight:850">
