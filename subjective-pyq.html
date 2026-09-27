@@ -7,16 +7,16 @@
 <header class="topbar"><div class="topbar-inner"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to Index</a></div></header>
 <div class="madeby">✨ Made by CMA Students, for CMA Students ✨</div>
 <main>
-<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #94</b> — Strategic Cost Management now follows the supplied 26-chapter list and reads bulk-uploaded SCM PYQs from Firebase.</div><h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
+<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #96</b> — SCM chapter dropdown, Firebase question loading, and chapter-wise filtering fixed; bulk-uploaded SCM PYQs are rendered from Firebase.</div><h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
 <section class="filters">
 <div class="field"><label for="group">1. Choose CMA Group</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label for="subject">2. Choose Subject</label><select id="subject" disabled><option value="">First choose group</option></select></div>
 <div class="field"><label for="topic">3. Choose Topic / Chapter</label><select id="topic" disabled><option value="">First choose subject</option></select><div id="topicNote" class="topic-note"></div></div>
 </section>
-<div id="status" class="status">Choose a group, subject and topic to begin.</div>
+<div id="status" class="status">Choose a group, subject and topic to begin.</div><div id="scmLoadStatus" class="status" style="display:none"></div>
 <section id="results"></section>
 </main>
-<div class="update-strip"><b>UPDATE #51 — Subject and Topic dropdown fixed</b> · SFM data is now loaded before the dropdown script, so Choose Subject and Choose Topic work correctly.</div>
+<div class="update-strip"><b>UPDATE #96 — Subject / Chapter / Firebase sync fixed</b> · SCM now always loads all 26 chapters, normalizes chapter matching, and refreshes results after Firebase data arrives.</div>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
@@ -34,6 +34,19 @@ filters.insertAdjacentHTML("beforeend",'<div class="field"><label for="attempt">
 const at=document.getElementById("attempt");
 window.SFM_ATTEMPTS.forEach(x=>{const o=document.createElement("option");o.value=x;o.textContent=x+" Attempt";at.appendChild(o);});
 const update=()=>render();
+function normalize(v){return String(v||"").trim().replace(/\\s+/g," ").toUpperCase();}
+function setChaptersFor(subject){
+  if(subject==="Strategic Financial Management"){
+    fill(t,[["All Chapters","all"],...window.SFM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all";
+  }else if(subject==="Strategic Cost Management"){
+    fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all";
+  }else{
+    fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");
+    t.value="all";
+  }
+}
 function fill(el,items,placeholder){el.innerHTML='<option value="">'+placeholder+'</option>';items.forEach(x=>{const o=document.createElement("option");o.value=x[1]||x;o.textContent=x[0]||x;el.appendChild(o);});el.disabled=false;}
 g.addEventListener("change",function(){results.innerHTML="";status.textContent="";note.textContent="";s.disabled=true;t.disabled=true;s.innerHTML="";t.innerHTML="";at.value="";fill(s,groups[g.value]||[],"Select Subject");});
 s.addEventListener("change",function(){
@@ -75,7 +88,7 @@ function render(){
     status.textContent=subject?"No subjective data is assigned to this subject yet.":"Choose a subject to begin.";
     return;
   }
-  let rows=getRowsForSubject(subject).filter(x=>(!topic||topic==="all"||x.t===topic)&&(!attempt||x.a===attempt));
+  let rows=getRowsForSubject(subject).filter(x=>(!topic||topic==="all"||normalize(x.t)===normalize(topic))&&(!attempt||normalize(x.a)===normalize(attempt)));
   status.textContent=rows.length+" subjective PYQ"+(rows.length===1?"":"s")+" found"+(topic&&topic!=="all"?" for "+topic:"")+(attempt?" · "+attempt:"");
   if(!rows.length){results.innerHTML='<div class="empty">No questions match the selected chapter and attempt.</div>';return;}
   rows.forEach(x=>{
@@ -125,6 +138,8 @@ async function loadUploadedQuestions(){
     }));
 
     const topic=document.getElementById("topic");
+    const scmStatus=document.getElementById("scmLoadStatus");
+    if(scmStatus){scmStatus.style.display="block";scmStatus.textContent="Firebase sync complete: "+scmRemote.length+" SCM subjective PYQs loaded."}
     if(topic)topic.dispatchEvent(new Event("change"));
     console.info("Subjective PYQ sync: SFM",sfmRemote.length,"SCM",scmRemote.length);
   }catch(e){
