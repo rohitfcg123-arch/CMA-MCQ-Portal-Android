@@ -164,7 +164,8 @@ function populateSubjects(group,selected){
   if(selected&&list.includes(selected))$("subject").value=selected;
 }
 
-let DATA=[];\nlet listMode="questions";
+let DATA=[];
+let listMode="questions";
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function fmt(v){if(!v)return"";if(v.toDate)return v.toDate().toLocaleString("en-IN");return new Date(v).toLocaleString("en-IN")}
 function setBusy(btn,busy,label){if(!btn)return;if(busy){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>'+label}else{btn.disabled=false;btn.textContent=label}}
@@ -420,7 +421,8 @@ $("saveMetadata").onclick=async()=>{
   }
 };
 function resetQuestionListFilters(){$("listGroup").value="";$("listSubject").value="";$("listAttempt").value="";$("listChapter").value="";$("listQno").value="";$("listSearch").value="";$("uploadedFrom").value="";$("uploadedTo").value="";updateQuestionListFilters()}
-$("listGroup").onchange=updateQuestionListFilters;\nsetTimeout(()=>setListMode("questions"),0);
+$("listGroup").onchange=updateQuestionListFilters;
+setTimeout(()=>setListMode("questions"),0);
 $("listSubject").onchange=updateQuestionListFilters;
 $("listAttempt").onchange=updateQuestionListFilters;
 $("listChapter").onchange=renderRows;
