@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #177</b> — Google login/logout flow fixed for the uploader; popup is used first with redirect fallback, and auth errors are shown clearly.</div>
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #178</b> — Fixed the uploader JavaScript syntax error that was preventing the Google Login button and Logout button from running.</div>
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -447,7 +447,9 @@ $("listQno").oninput=renderRows;
 $("listSearch").oninput=renderRows;
 $("uploadedFrom").onchange=renderRows;
 $("uploadedTo").onchange=renderRows;
-$("clearListFilters").onclick=resetQuestionListFilters;\n$("questionsViewBtn").onclick=()=>setListMode("questions");\n$("answersViewBtn").onclick=()=>setListMode("answers");
+$("clearListFilters").onclick=resetQuestionListFilters;
+$("questionsViewBtn").onclick=()=>setListMode("questions");
+$("answersViewBtn").onclick=()=>setListMode("answers");
 $("selectAllBox").onchange=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=$("selectAllBox").checked);updateSelectedCount()};
 $("selectAllVisible").onclick=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=true);updateSelectedCount()};
 $("clearSelected").onclick=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=false);updateSelectedCount()};

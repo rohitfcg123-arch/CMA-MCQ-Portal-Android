@@ -1,5 +1,0 @@
-/* CMA Portal — shared premium access popup */
-(function(){'use strict';
-function ensure(){let b=document.getElementById('cmaAccessPopup');if(b)return b;b=document.createElement('div');b.id='cmaAccessPopup';b.innerHTML='<div class="cma-premium-card"><button id="cmaPopupClose" class="cma-popup-close">×</button><div class="cma-popup-lock">🔒</div><h2>Premium Access Required</h2><p id="cmaPremiumMessage">This feature is available with a subscription.</p><div class="cma-popup-actions"><button id="cmaBuySubscription" class="cma-popup-buy">💳 Buy Subscription</button><button id="cmaPopupCancel" class="cma-popup-cancel">Close</button></div></div>';document.body.appendChild(b);const close=()=>b.style.display='none';b.querySelector('#cmaPopupClose').onclick=close;b.querySelector('#cmaPopupCancel').onclick=close;b.querySelector('#cmaBuySubscription').onclick=()=>location.href='payment.html';b.onclick=e=>{if(e.target===b)close()};return b}
-window.cmaShowAccessPopup=function(message){const b=ensure();b.querySelector('#cmaPremiumMessage').textContent=message||'This feature requires premium access. Please buy a subscription to continue.';b.style.display='flex'};
-})();
