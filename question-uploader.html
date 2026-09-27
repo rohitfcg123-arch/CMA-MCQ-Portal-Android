@@ -50,7 +50,7 @@
 <input id="solutionJsonFile" type="file" accept=".json,application/json" style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <div class="count" style="margin-top:6px">Select the Solution JSON file directly, or paste the solution array below.</div>
 <textarea id="solutionJson" style="margin-top:12px;min-height:180px" placeholder='Paste Solution JSON array here...'></textarea>
-<div class="toolbar"><button class="btn gold" id="importSolutionsBtn">Import Solutions JSON</button></div><div id="solutionJsonMsg" class="msg"></div>
+<div class="toolbar"><button class="btn gold" id="importSolutionsBtn">Import Answers JSON</button><button class="btn gray" id="exportSolutionsBtn">Export Answers JSON</button></div><div id="solutionJsonMsg" class="msg"></div>
 </div></section>
 
 <section class="panel"><h2>Uploaded Questions <span class="count" id="count"></span></h2><div class="body">
@@ -83,7 +83,7 @@
   <div class="edit-card">
     <h2 id="editModalTitle">Edit Question Metadata</h2>
     <div class="body">
-      <div class="note" style="margin-bottom:12px"><b>Question content is locked.</b> Only metadata can be changed here. The original question HTML and solution HTML are not edited by this form.</div>
+      <div class="note" style="margin-bottom:12px"><b>Question content is locked.</b> Question HTML cannot be edited here. Metadata and the Institute Suggested Answer / Explanation can be updated separately.</div>
       <div class="grid">
         <div class="field"><label>Group</label><select id="editGroup"><option value="final3">CMA Final Group 3</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final4">CMA Final Group 4</option></select></div>
         <div class="field"><label>Subject</label><select id="editSubject"></select></div>
@@ -93,6 +93,7 @@
         <div class="field"><label>Marks</label><input id="editMarks" type="number" min="0" step="1" placeholder="14"></div>
       </div>
       <div class="field" style="margin-top:12px"><label>Question Content — View Only</label><div id="editQuestion" class="edit-question"></div></div>
+      <div class="field" style="margin-top:12px"><label>Institute Suggested Answer / Explanation</label><textarea id="editSolution" style="min-height:220px" placeholder="Paste the suggested answer / explanation in HTML."></textarea><div class="count" style="margin-top:6px">This field is editable. Leave blank to remove the answer from the user portal.</div></div>
       <div class="edit-actions">
         <button class="btn gray" id="cancelEdit">Cancel</button>
         <button class="btn gold" id="saveMetadata">Save Metadata</button>
@@ -309,6 +310,7 @@ window.openMetadataEditor=function(id){
   $("editQno").value=x.q||"";
   $("editMarks").value=x.marks==null?"":x.marks;
   $("editQuestion").innerHTML=x.html||"<i>No question HTML stored.</i>";
+  $("editSolution").value=x.solutionHtml||"";
   $("editMsg").textContent="";
   $("editMsg").className="msg";
   $("editModal").classList.remove("hidden");
@@ -331,6 +333,7 @@ $("saveMetadata").onclick=async()=>{
   const subject=$("editSubject").value;
   const chapter=$("editChapter").value;
   const attempt=$("editAttempt").value;
+  const solutionHtml=$("editSolution").value.trim();
   if(!group||!subject||!chapter||!attempt||!qno){
     $("editMsg").className="msg err";
     $("editMsg").textContent="Please fill Group, Subject, Chapter, Attempt and Question Number.";
@@ -343,12 +346,12 @@ $("saveMetadata").onclick=async()=>{
   }
   try{
     setBusy(btn,true,"Saving…");
-    const updates={group,subject,chapter,attempt,q:qno,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
+    const updates={group,subject,chapter,attempt,q:qno,solutionHtml,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
     if(marksRaw==="") updates.marks= firebase.firestore.FieldValue.delete();
     else updates.marks=Number(marksRaw);
     await db.collection("subjectiveQuestions").doc(editingQuestionId).update(updates);
     const idx=DATA.findIndex(q=>q.id===editingQuestionId);
-    if(idx>=0)DATA[idx]={...DATA[idx],group,subject,chapter,attempt,q:qno,marks:marksRaw===""?undefined:Number(marksRaw)};
+    if(idx>=0)DATA[idx]={...DATA[idx],group,subject,chapter,attempt,q:qno,solutionHtml,marks:marksRaw===""?undefined:Number(marksRaw)};
     $("editMsg").className="msg ok";
     $("editMsg").textContent="Metadata updated successfully. Question content was not changed.";
     renderRows();
@@ -539,6 +542,29 @@ incoming.forEach(x=>{
 await batch.commit();
 $("jsonMsg").textContent=incoming.size+" unique question(s) processed — "+added+" added, "+updated+" existing questions overwritten. Matching now ignores chapter, so corrected chapter data replaces the old record instead of creating another one.";
 $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Questions JSON")}};
+$("exportSolutionsBtn").onclick=async()=>{
+  try{
+    const snap=await db.collection("subjectiveQuestions").get();
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>String(x.solutionHtml||"").trim()).map(x=>({
+      group:x.group||"",
+      subject:x.subject||"",
+      chapter:x.chapter||"",
+      attempt:x.attempt||"",
+      q:x.q||"",
+      solutionHtml:String(x.solutionHtml||"").trim()
+    }));
+    const blob=new Blob([JSON.stringify(rows,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;a.download="CMA_Zone_Answers.json";a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    $("solutionJsonMsg").className="msg ok";
+    $("solutionJsonMsg").textContent=rows.length+" answer(s) exported.";
+  }catch(e){
+    $("solutionJsonMsg").className="msg err";
+    $("solutionJsonMsg").textContent="Could not export answers: "+(e.message||e);
+  }
+};
 $("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). No duplicate question content was created.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
 </script>
