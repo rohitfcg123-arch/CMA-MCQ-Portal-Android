@@ -339,7 +339,33 @@ async function applySolutionArray(arr){
  await batch.commit();
  return {updated,created};
 }
-$("importBtn").onclick=async()=>{const btn=$("importBtn");try{setBusy(btn,true,"Importing…");const raw=$("json").value.trim();if(!raw)throw Error("Please select a JSON file above or paste the JSON array in the box first.");const arr=JSON.parse(raw);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must be a non-empty array.");if(arr[0]&&arr[0].solutionHtml&&!arr[0].html){const result=await applySolutionArray(arr);$("jsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). Answer-only JSON was automatically detected."; $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions();return;}const batch=db.batch();arr.forEach((x,i)=>{if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+x.group+". Use the exact subject from the dropdown.");const ref=db.collection("subjectiveQuestions").doc();batch.set(ref,{group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL})});await batch.commit();$("jsonMsg").textContent=arr.length+" question(s) imported successfully.";$("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Questions JSON")}};
+$("importBtn").onclick=async()=>{const btn=$("importBtn");try{setBusy(btn,true,"Importing…");const raw=$("json").value.trim();if(!raw)throw Error("Please select a JSON file above or paste the JSON array in the box first.");const arr=JSON.parse(raw);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must be a non-empty array.");if(arr[0]&&arr[0].solutionHtml&&!arr[0].html){const result=await applySolutionArray(arr);$("jsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). Answer-only JSON was automatically detected."; $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions();return;}let importItems=[];
+if(arr.length&&arr[0]&&Array.isArray(arr[0].questions)){
+  arr.forEach((section,si)=>{
+    if(!section.chapter||!Array.isArray(section.questions))throw Error("Chapter section "+(si+1)+" is invalid. Required: chapter and questions[].");
+    section.questions.forEach(q=>importItems.push({...q,chapter:q.chapter||section.chapter}));
+  });
+}else importItems=arr;
+const existingSnap=await db.collection("subjectiveQuestions").get();
+const existing=new Map();
+existingSnap.docs.forEach(d=>{
+  const x=d.data();
+  const key=[x.group,x.subject,x.chapter,x.attempt,x.q].map(v=>String(v||"").trim().toLowerCase()).join("|");
+  existing.set(key,{id:d.id});
+});
+const batch=db.batch();
+let added=0,updated=0;
+importItems.forEach((x,i)=>{
+  if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");
+  if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+x.group+". Use the exact subject from the dropdown.");
+  const key=[x.group,x.subject,x.chapter,x.attempt,x.q].map(v=>String(v||"").trim().toLowerCase()).join("|");
+  const data={group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
+  if(existing.has(key)){batch.set(db.collection("subjectiveQuestions").doc(existing.get(key).id),data,{merge:true});updated++}
+  else{batch.set(db.collection("subjectiveQuestions").doc(),data);added++}
+});
+await batch.commit();
+$("jsonMsg").textContent=importItems.length+" question(s) processed — "+added+" added, "+updated+" existing matching question(s) overwritten. No duplicate created.";
+$("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Questions JSON")}};
 $("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). No duplicate question content was created.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
 </script>
