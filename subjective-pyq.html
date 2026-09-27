@@ -7,7 +7,7 @@
 <header class="topbar"><div class="topbar-inner"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to Index</a></div></header>
 <div class="madeby">✨ Made by CMA Students, for CMA Students ✨</div>
 <main>
-<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #45</b> — SFM Investment Decisions, Risky Proposal Evaluation, Leasing Decisions and Securitization sections added with dedicated chapter dropdown options.</div><h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. Bond Valuation, Equity/Share Valuation, Mutual Funds and Portfolio Management contain typed subjective PYQs; the new Investment, Risky Proposal, Leasing and Securitization sections are available through dedicated chapter options and can be uploaded by JSON.</p></section>
+<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #94</b> — Strategic Cost Management now follows the supplied 26-chapter list and reads bulk-uploaded SCM PYQs from Firebase.</div><h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
 <section class="filters">
 <div class="field"><label for="group">1. Choose CMA Group</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label for="subject">2. Choose Subject</label><select id="subject" disabled><option value="">First choose group</option></select></div>
@@ -22,6 +22,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="js/sfm-subjective-pyq-v29.js?v=20260927u51"></script>
 <script>
+window.SCM_CHAPTERS=["COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"];
+window.SCM_SUBJECTIVE_PYQ=[];
+</script>
+<script>
 (function(){
 const groups={"foundation":[["Fundamentals of Law and Business Communication","foundation-fundamentals-law-business-communication"],["Fundamentals of Financial and Cost Accounting","foundation-fundamentals-financial-cost-accounting"],["Fundamentals of Business Mathematics and Statistics","foundation-fundamentals-business-mathematics-statistics"],["Fundamentals of Business Economics and Management","foundation-fundamentals-business-economics-management"]],"inter1":[["Business Law and Ethics","inter-group-1-business-law-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operation Management and Strategic Management","inter-group-2-operation-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Strategic Cost Management","final-group-3-strategic-cost-management"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax & International Laws","final-group-3-direct-tax-international-laws"],["Corporate & Economic Laws","final-group-3-corporate-economic-laws"]],"final4":[["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Cost Management & Audit","final-group-4-cost-management-audit"],["Indirect Tax Law & Practice","final-group-4-indirect-tax-law-practice"],["Entrepreneurship & Startup","final-group-4-entrepreneurship-startup"],["Risk Management, Banking & Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance & Business Valuation","final-group-4-strategic-performance-business-valuation"]]};
 const g=document.getElementById("group"),s=document.getElementById("subject"),t=document.getElementById("topic"),status=document.getElementById("status"),results=document.getElementById("results"),note=document.getElementById("topicNote");
@@ -32,28 +36,59 @@ window.SFM_ATTEMPTS.forEach(x=>{const o=document.createElement("option");o.value
 const update=()=>render();
 function fill(el,items,placeholder){el.innerHTML='<option value="">'+placeholder+'</option>';items.forEach(x=>{const o=document.createElement("option");o.value=x[1]||x;o.textContent=x[0]||x;el.appendChild(o);});el.disabled=false;}
 g.addEventListener("change",function(){results.innerHTML="";status.textContent="";note.textContent="";s.disabled=true;t.disabled=true;s.innerHTML="";t.innerHTML="";at.value="";fill(s,groups[g.value]||[],"Select Subject");});
-s.addEventListener("change",function(){results.innerHTML="";status.textContent="";note.textContent="";t.disabled=true;t.innerHTML="";at.value="";if(!s.value)return;const subject=s.options[s.selectedIndex].textContent;if(subject==="Strategic Financial Management"){fill(t,[["All Chapters","all"],...window.SFM_CHAPTERS.map(x=>[x,x])],"Select Chapter");t.value="all";note.textContent="Select All Chapters to view every uploaded SFM subjective PYQ. Individual chapters can be selected for focused practice."}else{fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");t.value="all";note.textContent="Subjective PYQ data for this subject will appear here once its papers are added.";render();}});
+s.addEventListener("change",function(){
+  results.innerHTML="";status.textContent="";note.textContent="";t.disabled=true;t.innerHTML="";at.value="";
+  if(!s.value)return;
+  const subject=s.options[s.selectedIndex].textContent;
+  if(subject==="Strategic Financial Management"){
+    fill(t,[["All Chapters","all"],...window.SFM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all";
+    note.textContent="Select All Chapters to view every uploaded SFM subjective PYQ. Individual chapters can be selected for focused practice.";
+  }else if(subject==="Strategic Cost Management"){
+    fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all";
+    note.textContent="SCM follows the 26 chapter names supplied for this portal. Uploaded SCM PYQs are loaded automatically from Firebase.";
+  }else{
+    fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");
+    t.value="all";
+    note.textContent="Subjective PYQ data for this subject will appear here once its papers are added.";
+  }
+  render();
+});
 t.addEventListener("change",update);at.addEventListener("change",update);
+function getRowsForSubject(subject){
+  if(subject==="Strategic Financial Management"){
+    return (window.SFM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:String(x.solutionHtml||"").trim()}));
+  }
+  if(subject==="Strategic Cost Management"){
+    return (window.SCM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.attempt,q:x.q,t:x.chapter,html:x.html,solutionHtml:String(x.solutionHtml||"").trim()}));
+  }
+  return [];
+}
 function render(){
- results.innerHTML="";
- const subject=s.options[s.selectedIndex]?.textContent||"";
- const topic=t.value||"";
- const attempt=at.value||"";
- if(subject!=="Strategic Financial Management"){status.textContent=subject?( "No SFM subjective data is assigned to this subject yet."):"Choose a subject to begin.";return;}
- let rows=window.SFM_SUBJECTIVE_PYQ.filter(x=>(!topic||topic==="all"||x.t===topic)&&(!attempt||x.a===attempt));
- status.textContent=rows.length+" subjective PYQ"+(rows.length===1?"":"s")+" found"+(topic?" for "+topic:"")+(attempt?" · "+attempt:"");
- if(!rows.length){results.innerHTML='<div class="empty">No questions match the selected chapter and attempt.</div>';return;}
- rows.forEach(x=>{
-   const card=document.createElement("article");card.className="question";
-   card.innerHTML='<div class="qhead"><h2 class="qtitle">Question '+x.q+'</h2><span class="attempt">'+x.a+' Attempt</span></div><div class="topic-note"><b>Chapter:</b> '+x.t+'</div><div class="pyq-question">'+x.html+'</div>';
-   if(String(x.solutionHtml||"").trim()){
-     const btn=document.createElement("button"); btn.className="solution-toggle"; btn.type="button"; btn.textContent="📖 View Institute Solution";
-     const box=document.createElement("div"); box.className="solution-box"; box.innerHTML="<b>Institute Suggested Answer / Solution</b>"+x.solutionHtml;
-     btn.onclick=()=>{const open=box.classList.toggle("open");btn.textContent=open?"✕ Close Solution":"📖 View Institute Solution"};
-     card.appendChild(btn); card.appendChild(box);
-   }
-   results.appendChild(card);
- });
+  results.innerHTML="";
+  const subject=s.options[s.selectedIndex]?.textContent||"";
+  const topic=t.value||"";
+  const attempt=at.value||"";
+  const supported=subject==="Strategic Financial Management"||subject==="Strategic Cost Management";
+  if(!supported){
+    status.textContent=subject?"No subjective data is assigned to this subject yet.":"Choose a subject to begin.";
+    return;
+  }
+  let rows=getRowsForSubject(subject).filter(x=>(!topic||topic==="all"||x.t===topic)&&(!attempt||x.a===attempt));
+  status.textContent=rows.length+" subjective PYQ"+(rows.length===1?"":"s")+" found"+(topic&&topic!=="all"?" for "+topic:"")+(attempt?" · "+attempt:"");
+  if(!rows.length){results.innerHTML='<div class="empty">No questions match the selected chapter and attempt.</div>';return;}
+  rows.forEach(x=>{
+    const card=document.createElement("article");card.className="question";
+    card.innerHTML='<div class="qhead"><h2 class="qtitle">Question '+x.q+'</h2><span class="attempt">'+x.a+' Attempt</span></div><div class="topic-note"><b>Chapter:</b> '+x.t+'</div><div class="pyq-question">'+x.html+'</div>';
+    if(String(x.solutionHtml||"").trim()){
+      const btn=document.createElement("button");btn.className="solution-toggle";btn.type="button";btn.textContent="📖 View Institute Solution";
+      const box=document.createElement("div");box.className="solution-box";box.innerHTML="<b>Institute Suggested Answer / Solution</b>"+x.solutionHtml;
+      btn.onclick=()=>{const open=box.classList.toggle("open");btn.textContent=open?"✕ Close Solution":"📖 View Institute Solution"};
+      card.appendChild(btn);card.appendChild(box);
+    }
+    results.appendChild(card);
+  });
 }
 g.dispatchEvent(new Event("change"));
 })();
@@ -66,56 +101,34 @@ const db=firebase.firestore();
 const key=x=>[x.a,x.q,x.t].join("|").toLowerCase();
 async function loadUploadedQuestions(){
   try{
-    // Read the complete collection first, then filter locally.
-    // This avoids losing uploaded questions because of query/filter
-    // mismatches and also keeps duplicate question numbers from
-    // different uploaded records.
     const snap=await db.collection("subjectiveQuestions").get();
-    const remote=snap.docs
-      .map(d=>({id:d.id,...d.data()}))
-      .filter(x=>
-        String(x.group||"").toLowerCase()==="final3" &&
-        String(x.subject||"").trim().toLowerCase()==="strategic financial management"
-      );
+    const remote=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const sfmRemote=remote.filter(x=>String(x.group||"").toLowerCase()==="final3"&&String(x.subject||"").trim().toLowerCase()==="strategic financial management");
+    const scmRemote=remote.filter(x=>String(x.group||"").toLowerCase()==="final3"&&String(x.subject||"").trim().toLowerCase()==="strategic cost management");
 
-    const staticRows=Array.isArray(window.SFM_SUBJECTIVE_PYQ)
-      ? window.SFM_SUBJECTIVE_PYQ.slice()
-      : [];
-
-    const remoteRows=[];
+    const staticRows=Array.isArray(window.SFM_SUBJECTIVE_PYQ)?window.SFM_SUBJECTIVE_PYQ.slice():[];
     const replacedStatic=new Set();
+    const remoteSfmRows=[];
 
-    remote.forEach(x=>{
+    sfmRemote.forEach(x=>{
       const row={a:x.attempt,q:x.q,t:x.chapter,html:x.html,solutionHtml:String(x.solutionHtml||"").trim()};
       const k=key(row);
-
-      // If an uploaded question corresponds exactly to a hard-coded
-      // question, replace that hard-coded version once.
       const staticIndex=staticRows.findIndex((s,i)=>!replacedStatic.has(i)&&key(s)===k);
-
-      if(staticIndex>=0){
-        staticRows[staticIndex]=row;
-        replacedStatic.add(staticIndex);
-      }else{
-        // Every separate Firestore document is preserved.
-        remoteRows.push(row);
-      }
+      if(staticIndex>=0){staticRows[staticIndex]=row;replacedStatic.add(staticIndex);}
+      else remoteSfmRows.push(row);
     });
 
-    window.SFM_SUBJECTIVE_PYQ=staticRows.concat(remoteRows);
-
-    console.info(
-      "SFM PYQ sync:",
-      "Firestore documents =", remote.length,
-      "Static questions =", staticRows.length,
-      "Additional uploaded =", remoteRows.length,
-      "Total displayed =", window.SFM_SUBJECTIVE_PYQ.length
-    );
+    window.SFM_SUBJECTIVE_PYQ=staticRows.concat(remoteSfmRows);
+    window.SCM_SUBJECTIVE_PYQ=scmRemote.map(x=>({
+      id:x.id,a:x.attempt,q:x.q,t:x.chapter,html:String(x.html||""),
+      solutionHtml:String(x.solutionHtml||"")
+    }));
 
     const topic=document.getElementById("topic");
     if(topic)topic.dispatchEvent(new Event("change"));
+    console.info("Subjective PYQ sync: SFM",sfmRemote.length,"SCM",scmRemote.length);
   }catch(e){
-    console.warn("Question uploader sync failed:",e.message);
+    console.warn("Subjective PYQ sync failed:",e.message);
   }
 }
 loadUploadedQuestions();
