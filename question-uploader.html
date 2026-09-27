@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #97</b> — SCM 26-chapter dropdown + bulk PYQ JSON support aligned to the supplied chapter list.</div>
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #98</b> — SCM clean JSON identity + bulk delete with Select All and upload-time filtering.</div>
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -62,8 +62,20 @@
 <div class="field"><label>Question No.</label><input id="listQno" placeholder="e.g. 5 or 4(b)"></div>
 <div class="field"><label>Search</label><input id="listSearch" placeholder="Search question, subject, topic, ID..."></div>
 </div>
-<div class="toolbar" style="margin-top:12px"><button class="btn gray" id="clearListFilters">Clear Filters</button><span class="count" id="filterCount" style="align-self:center"></span></div>
-<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Attempt</th><th>Question</th><th>Group</th><th>Subject</th><th>Chapter</th><th>Updated</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="toolbar" style="margin-top:12px">
+<button class="btn gray" id="clearListFilters">Clear Filters</button>
+<button class="btn" id="selectAllVisible">Select All Visible</button>
+<button class="btn gray" id="clearSelected">Clear Selection</button>
+<button class="btn red" id="bulkDelete">Delete Selected</button>
+<span class="count" id="filterCount" style="align-self:center"></span>
+<span class="count" id="selectedCount" style="align-self:center"></span>
+</div>
+<div class="grid" style="margin-top:10px">
+<div class="field"><label>Uploaded From</label><input id="uploadedFrom" type="datetime-local"></div>
+<div class="field"><label>Uploaded To</label><input id="uploadedTo" type="datetime-local"></div>
+</div>
+<div class="note" style="margin-top:10px">Time filter uses the Firestore <b>updatedAt</b> timestamp. After filtering, use <b>Select All Visible → Delete Selected</b> to remove the matching questions in one operation.</div>
+<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th><input id="selectAllBox" type="checkbox" title="Select all visible"></th><th>Attempt</th><th>Question</th><th>Group</th><th>Subject</th><th>Chapter</th><th>Updated</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table></div>
 </div></section>
 </div>
 
@@ -217,8 +229,12 @@ function updateQuestionListFilters(){
  fillSelect("listChapter",attemptRows.map(x=>x.chapter),"All Chapters / Topics");
  renderRows();
 }
+function uploadedDate(x){if(!x||!x.updatedAt)return null;if(x.updatedAt.toDate)return x.updatedAt.toDate();const d=new Date(x.updatedAt);return isNaN(d)?null:d}
 function filteredQuestions(){
  const group=$("listGroup").value,subject=$("listSubject").value,attempt=$("listAttempt").value,chapter=$("listChapter").value,qno=norm($("listQno").value),search=norm($("listSearch").value);
+ const from=$("uploadedFrom").value?new Date($("uploadedFrom").value):null;
+ const to=$("uploadedTo").value?new Date($("uploadedTo").value):null;
+ if(to)to.setSeconds(59,999);
  return DATA.filter(x=>{
   if(group&&String(x.group||"")!==group)return false;
   if(subject&&String(x.subject||"")!==subject)return false;
@@ -226,23 +242,59 @@ function filteredQuestions(){
   if(chapter&&String(x.chapter||"")!==chapter)return false;
   if(qno&&!norm(x.q).includes(qno))return false;
   if(search){const hay=[x.id,x.q,x.html,x.group,x.subject,x.chapter,x.attempt].map(v=>norm(v)).join(" ");if(!hay.includes(search))return false}
+  const d=uploadedDate(x);
+  if(from&&(!d||d<from))return false;
+  if(to&&(!d||d>to))return false;
   return true;
  });
+}
+function updateSelectedCount(){
+ const n=document.querySelectorAll(".rowCheck:checked").length;
+ $("selectedCount").textContent=n?n+" selected":"";
+ const boxes=[...document.querySelectorAll(".rowCheck")];
+ $("selectAllBox").checked=boxes.length>0&&boxes.every(b=>b.checked);
 }
 function renderRows(){
  const filtered=filteredQuestions();
  $("count").textContent="("+DATA.length+")";
  $("filterCount").textContent=filtered.length===DATA.length?filtered.length+" questions":filtered.length+" matching / "+DATA.length+" total";
- $("rows").innerHTML=filtered.map(x=>'<tr><td>'+esc(x.attempt)+'</td><td><b>'+esc(x.q)+'</b></td><td>'+esc(x.group)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.chapter)+'</td><td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn red" onclick="removeQ(\''+x.id+'\')">Delete</button></td></tr>').join("")||'<tr><td colspan="7">No matching questions found. Try Clear Filters.</td></tr>';
+ $("rows").innerHTML=filtered.map(x=>'<tr><td><input class="rowCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt)+'</td><td><b>'+esc(x.q)+'</b></td><td>'+esc(x.group)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.chapter)+'</td><td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn red" onclick="removeQ(\''+x.id+'\')">Delete</button></td></tr>').join("")||'<tr><td colspan="8">No matching questions found. Try Clear Filters.</td></tr>';
+ document.querySelectorAll(".rowCheck").forEach(b=>b.onchange=updateSelectedCount);
+ updateSelectedCount();
 }
-function resetQuestionListFilters(){$("listGroup").value="";$("listSubject").value="";$("listAttempt").value="";$("listChapter").value="";$("listQno").value="";$("listSearch").value="";updateQuestionListFilters()}
+function resetQuestionListFilters(){$("listGroup").value="";$("listSubject").value="";$("listAttempt").value="";$("listChapter").value="";$("listQno").value="";$("listSearch").value="";$("uploadedFrom").value="";$("uploadedTo").value="";updateQuestionListFilters()}
 $("listGroup").onchange=updateQuestionListFilters;
 $("listSubject").onchange=updateQuestionListFilters;
 $("listAttempt").onchange=updateQuestionListFilters;
 $("listChapter").onchange=renderRows;
 $("listQno").oninput=renderRows;
 $("listSearch").oninput=renderRows;
+$("uploadedFrom").onchange=renderRows;
+$("uploadedTo").onchange=renderRows;
 $("clearListFilters").onclick=resetQuestionListFilters;
+$("selectAllBox").onchange=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=$("selectAllBox").checked);updateSelectedCount()};
+$("selectAllVisible").onclick=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=true);updateSelectedCount()};
+$("clearSelected").onclick=()=>{document.querySelectorAll(".rowCheck").forEach(b=>b.checked=false);updateSelectedCount()};
+window.bulkDeleteSelected=async()=>{
+ const ids=[...document.querySelectorAll(".rowCheck:checked")].map(b=>b.value);
+ if(!ids.length){alert("Please select at least one question.");return}
+ const filtered=filteredQuestions().filter(x=>ids.includes(x.id));
+ const msg="Delete "+ids.length+" selected question(s)? This permanently removes them from Firestore.\n\n"+filtered.slice(0,12).map(x=>x.attempt+" — Q"+x.q+" — "+x.subject).join("\n")+(ids.length>12?"\n…":"");
+ if(!confirm(msg))return;
+ const btn=$("bulkDelete");setBusy(btn,true,"Deleting "+ids.length+"…");
+ try{
+   for(let i=0;i<ids.length;i++){
+     await db.collection("subjectiveQuestions").doc(ids[i]).delete();
+   }
+   $("msg").className="msg ok";
+   $("msg").textContent=ids.length+" question(s) deleted successfully.";
+   await loadQuestions();
+ }catch(e){
+   $("msg").className="msg err";
+   $("msg").textContent="Bulk delete stopped: "+(e.message||e);
+ }finally{setBusy(btn,false,"Delete Selected")}
+};
+$("bulkDelete").onclick=bulkDeleteSelected;
 $("jsonFile").onchange=async()=>{const file=$("jsonFile").files&&$("jsonFile").files[0];if(!file)return;try{$("jsonMsg").className="msg";$("jsonMsg").textContent="Reading "+file.name+"…";$("json").value=await file.text();JSON.parse($("json").value);$("jsonMsg").textContent="JSON file loaded. Tap Import Questions JSON.";$("jsonMsg").className="msg ok"}catch(e){$("jsonMsg").textContent="Invalid JSON file: "+(e.message||e);$("jsonMsg").className="msg err"}};
 $("solutionJsonFile").onchange=async()=>{const file=$("solutionJsonFile").files&&$("solutionJsonFile").files[0];if(!file)return;try{$("solutionJsonMsg").className="msg";$("solutionJsonMsg").textContent="Reading "+file.name+"…";$("solutionJson").value=await file.text();const arr=JSON.parse($("solutionJson").value);if(!Array.isArray(arr)||!arr.length)throw Error("Solution JSON must be a non-empty array.");$("solutionJsonMsg").textContent=arr.length+" solution(s) loaded. Tap Import Solutions JSON.";$("solutionJsonMsg").className="msg ok"}catch(e){$("solutionJsonMsg").textContent="Invalid solution JSON: "+(e.message||e);$("solutionJsonMsg").className="msg err"}};
 window.removeQ=async id=>{const x=DATA.find(q=>q.id===id);if(!x||!confirm("Delete "+x.attempt+" "+x.q+"?"))return;const buttons=document.querySelectorAll("#rows button");const btn=[...buttons].find(b=>b.getAttribute("onclick")&&b.getAttribute("onclick").includes(id));try{setBusy(btn,true,"Deleting…");await db.collection("subjectiveQuestions").doc(id).delete();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{if(btn&&document.body.contains(btn))setBusy(btn,false,"Delete")}};
