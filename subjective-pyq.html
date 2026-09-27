@@ -172,7 +172,7 @@ async function loadUploadedQuestions(){
           q:row.q||base.q,
           t:row.t||base.t,
           html:row.html||base.html,
-          solutionHtml:row.solutionHtml||String(base.solutionHtml||"").trim()
+          solutionHtml:row.solutionHtml||String(base.solutionHtml||"").trim(),\n          solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):(Array.isArray(base.solutionHtmls)?base.solutionHtmls:[])
         };
         replacedStatic.add(staticIndex);
       }else{
@@ -192,7 +192,7 @@ async function loadUploadedQuestions(){
       const prevTime=prev&&prev.updatedAt?new Date(prev.updatedAt):null;
       const curTime=x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0);
       if(!prev || (curTime>prevTime)){
-        scmUnique.set(k,{id:x.id,a:String(x.attempt||x.a||x.pyqTerm||x.term||x.exam||x.examTerm||x.year||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||""),updatedAt:curTime});
+        scmUnique.set(k,{id:x.id,a:String(x.attempt||x.a||x.pyqTerm||x.term||x.exam||x.examTerm||x.year||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||""),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],updatedAt:curTime});
       }
     });
     window.SCM_SUBJECTIVE_PYQ=[...scmUnique.values()];
