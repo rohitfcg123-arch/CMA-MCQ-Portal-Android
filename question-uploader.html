@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #94</b> — SCM 26-chapter dropdown + bulk PYQ JSON support aligned to the supplied chapter list.</div>
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -28,9 +28,7 @@
 <div class="grid" style="margin-top:14px">
 <div class="field"><label>Group</label><select id="group"><option value="final3">CMA Final Group 3</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label>Subject</label><select id="subject"></select></div>
-<div class="field"><label>Chapter</label><select id="chapter">
-<option>Security Analysis</option><option>Equity/Share Valuation</option><option>Bond Valuation</option><option>Mutual Funds</option><option>Portfolio Management</option><option>Derivatives</option><option>Foreign Exchange</option><option>Investment Decisions</option><option>Evaluation of Risky Proposals</option><option>Leasing Decision</option><optgroup label="SFM — Investment / Risk / Theory Section"><option>Investment Decisions, Project Planning and Control</option><option>Evaluation of Risky Proposal for Investment Decisions</option><option>Leasing Decisions</option><option>Securitization</option></optgroup>
-</select></div>
+<div class="field"><label>Chapter</label><select id="chapter"><option value="">Select Chapter</option></select></div>
 <div class="field"><label>Attempt</label><select id="attempt"><option>December 2023</option><option>June 2024</option><option>December 2024</option><option>June 2025</option><option>December 2025</option><option>June 2026</select></div>
 <div class="field"><label>Question Number</label><input id="qno" placeholder="4(b)"></div>
 <div class="field"><label>Sort Order (optional)</label><input id="sort" type="number" placeholder="1"></div>
@@ -41,8 +39,8 @@
 </div></section>
 
 <section class="panel"><h2>JSON Upload / Backup</h2><div class="body">
-<div class="note">You can also paste multiple questions as a JSON array. This is useful for bulk uploading a whole attempt/chapter. For the new SFM section, use the exact chapter names from the dropdown: Investment Decisions, Project Planning and Control; Evaluation of Risky Proposal for Investment Decisions; Leasing Decisions; Securitization. Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Optional: <b>solutionHtml</b> for the Institute Suggested Answer / Solution. Example: <code>[{"group":"final3","subject":"Strategic Financial Management","chapter":"Mutual Funds","attempt":"June 2026","q":"4(b)","html":"&lt;p&gt;Question...&lt;/p&gt;"}]</code></div>
-<input id="jsonFile" type="file" accept=".json,application/json" style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
+<div class="note">You can also paste multiple questions as a JSON array. For <b>Strategic Cost Management</b>, use the exact 26 chapter names from the chapter dropdown (including COST OF QUALITY, DECISION MAKING MAKE OR BUY, TRANSFER PRICING, STANDARD COSTING AND VARIANCE ANALYSIS, LINEAR PROGRAMMING, TRANSPORTATION, ASSIGNMENT, GAME THEORY, SIMULATION, PROJECT MANAGEMENT, LEARNING CURVE, BUSINESS APPLICATION OF MAXIMA AND MINIMA and BUSINESS FORECASTING MODELS). Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Optional: <b>solutionHtml</b>.</div>
+<input id="jsonFile"/> type="file" accept=".json,application/json" style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <div class="count" style="margin-top:6px">Select the Question JSON file directly, or paste JSON below.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
 <div class="toolbar"><button class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button></div><div id="jsonMsg" class="msg"></div>
@@ -111,6 +109,16 @@ const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();co
     "Entrepreneurship and Startup"
   ]
 };
+const CHAPTERS_BY_SUBJECT={
+  "Strategic Financial Management":["Security Analysis","Equity/Share Valuation","Bond Valuation","Mutual Funds","Portfolio Management","Derivatives","Foreign Exchange","Investment Decisions","Evaluation of Risky Proposals","Leasing Decision","Investment Decisions, Project Planning and Control","Evaluation of Risky Proposal for Investment Decisions","Leasing Decisions","Securitization"],
+  "Strategic Cost Management":["COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"]
+};
+function populateChapters(subject,selected){
+  const list=CHAPTERS_BY_SUBJECT[subject]||[];
+  const el=$("chapter");
+  el.innerHTML='<option value="">Select Chapter</option>'+list.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+  if(selected&&list.includes(selected))el.value=selected;
+}
 function populateSubjects(group,selected){
   const list=SUBJECTS[group]||[];
   $("subject").innerHTML=list.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join("");
@@ -157,8 +165,10 @@ $("logout").onclick=logout;
 auth.getRedirectResult().then(r=>{
   if(r&&r.user) return;
 }).catch(showLoginError);
-$("group").onchange=()=>populateSubjects($("group").value);
+$("group").onchange=()=>{populateSubjects($("group").value);populateChapters($("subject").value)};
+$("subject").onchange=()=>populateChapters($("subject").value);
 populateSubjects($("group").value,"Strategic Financial Management");
+populateChapters($("subject").value);
 auth.onAuthStateChanged(async u=>{
   if(!u){
     $("login").classList.remove("hidden");
