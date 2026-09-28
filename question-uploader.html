@@ -9,12 +9,12 @@
 <script src="js/sfm-subjective-pyq-v29.js?v=20260927u50"></script>
 <style>
 :root{--teal:#0d3b3e;--dark:#082627;--gold:#c8a24a;--cream:#faf6ee;--paper:#fffdf8;--line:#e3dbc9;--muted:#65716f;--red:#a43c32;--green:#2f7042}
-*{box-sizing:border-box}body{margin:0;background:var(--cream);color:#22302f;font-family:Inter,Segoe UI,Arial,sans-serif}.top{background:var(--teal);color:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:20px;font-weight:850}.brand span{color:#ead39b}.wrap{max-width:1250px;margin:auto;padding:18px}.panel{background:var(--paper);border:1px solid var(--line);border-radius:17px;margin:14px 0;box-shadow:0 5px 18px #0826270b}.panel h2{margin:0;padding:15px 17px;border-bottom:1px solid var(--line);font-size:16px;color:var(--dark)}.body{padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:var(--teal)}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f}textarea{min-height:180px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}.btn{border:0;border-radius:9px;padding:10px 13px;background:var(--teal);color:#fff;font-weight:800;cursor:pointer}.gold{background:var(--gold);color:var(--dark)}.gray{background:#687572}.red{background:var(--red)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.msg{font-size:13px;margin-top:10px;min-height:18px}.ok{color:var(--green)}.err{color:var(--red)}.note{background:#f4eee2;border:1px solid var(--line);padding:11px;border-radius:10px;color:var(--muted);font-size:12px;line-height:1.5}.login{max-width:430px;margin:70px auto;padding:28px;background:var(--paper);border:1px solid var(--line);border-radius:18px}.hidden{display:none!important}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:9px;border-bottom:1px solid #eee7da;text-align:left;font-size:12px;vertical-align:top}th{background:#f2ecdf}.preview{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px;line-height:1.6}.preview table{min-width:0}.preview th,.preview td{border:1px solid #ccc}.solution-preview{background:#f5fbf8;border:1px solid #cfe3d8;border-radius:12px;padding:14px;margin-top:10px;line-height:1.6}.count{color:var(--muted);font-size:12px}.spinner{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:7px}@keyframes spin{to{transform:rotate(360deg)}}button:disabled{opacity:.65;cursor:not-allowed}; .question-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:12px;background:#f7f2e9;border:1px solid var(--line);border-radius:12px}.question-filters .field label{font-size:11px}.edit-modal{position:fixed;inset:0;background:#08262799;display:flex;align-items:center;justify-content:center;padding:18px;z-index:100}.edit-card{width:min(980px,100%);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #08262740}.edit-card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);color:var(--dark)}.edit-card .body{padding:18px}.edit-question{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;max-height:260px;overflow:auto;line-height:1.6}.edit-question table{min-width:0}.edit-question th,.edit-question td{border:0}.edit-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:#22302f;font-family:Inter,Segoe UI,Arial,sans-serif}.top{background:var(--teal);color:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:20px;font-weight:850}.brand span{color:#ead39b}.wrap{max-width:1250px;margin:auto;padding:18px}.panel{background:var(--paper);border:1px solid var(--line);border-radius:17px;margin:14px 0;box-shadow:0 5px 18px #0826270b}.panel h2{margin:0;padding:15px 17px;border-bottom:1px solid var(--line);font-size:16px;color:var(--dark)}.body{padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:var(--teal)}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f}textarea{min-height:180px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}.btn{border:0;border-radius:9px;padding:10px 13px;background:var(--teal);color:#fff;font-weight:800;cursor:pointer}.gold{background:var(--gold);color:var(--dark)}.gray{background:#687572}.red{background:var(--red)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.msg{font-size:13px;margin-top:10px;min-height:18px}.ok{color:var(--green)}.err{color:var(--red)}.note{background:#f4eee2;border:1px solid var(--line);padding:11px;border-radius:10px;color:var(--muted);font-size:12px;line-height:1.5}.login{max-width:430px;margin:70px auto;padding:28px;background:var(--paper);border:1px solid var(--line);border-radius:18px}.hidden{display:none!important}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:9px;border-bottom:1px solid #eee7da;text-align:left;font-size:12px;vertical-align:top}th{background:#f2ecdf}.preview{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px;line-height:1.6}.preview table{min-width:0}.preview th,.preview td{border:1px solid #ccc}.solution-preview{background:#f5fbf8;border:1px solid #cfe3d8;border-radius:12px;padding:14px;margin-top:10px;line-height:1.6}.count{color:var(--muted);font-size:12px}.spinner{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:7px}@keyframes spin{to{transform:rotate(360deg)}}button:disabled{opacity:.65;cursor:not-allowed}; .question-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:12px;background:#f7f2e9;border:1px solid var(--line);border-radius:12px}.question-filters .field label{font-size:11px}.edit-modal{position:fixed;inset:0;background:#08262799;display:flex;align-items:center;justify-content:center;padding:18px;z-index:100}.edit-card{width:min(980px,100%);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #08262740}.edit-card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);color:var(--dark)}.edit-card .body{padding:18px}.edit-question{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;max-height:260px;overflow:auto;line-height:1.6}.edit-question table{min-width:0}.edit-question th,.edit-question td{border:0}.edit-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}.duplicate-modal{position:fixed;inset:0;background:#08262799;display:flex;align-items:center;justify-content:center;padding:18px;z-index:120}.duplicate-card{width:min(1050px,100%);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #08262740}.duplicate-card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);color:var(--dark)}.duplicate-card .body{padding:18px}.duplicate-row{border:1px solid var(--line);border-radius:12px;background:#fff;padding:12px;margin-bottom:10px}.duplicate-meta{font-size:12px;color:var(--muted);margin-bottom:8px}.duplicate-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.duplicate-side{border:1px solid #eee7da;border-radius:9px;padding:10px;background:#fafafa;font-size:12px;line-height:1.5}.duplicate-side b{display:block;color:var(--teal);margin-bottom:5px}.duplicate-choice{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.duplicate-choice button{padding:7px 10px;border:0;border-radius:8px;font-weight:800;cursor:pointer}.dup-replace{background:var(--gold);color:var(--dark)}.dup-skip{background:#687572;color:#fff}.duplicate-choice .selected{outline:3px solid #0d3b3e33}.duplicate-status{font-size:12px;font-weight:800;margin-top:7px}.duplicate-footer{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}@media(max-width:700px){.duplicate-columns{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #187</b> — Financial Accounting final accounts chapters separated into Commercial Organisations, Not-for-Profit Organisations and Incomplete Records.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #188</b> — Duplicate question detection now asks Replace/Overwrite or Skip before changing an existing question.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn">Continue with Google</button>
@@ -122,6 +122,24 @@
       <div id="editMsg" class="msg"></div>
     </div>
   </div>
+
+</div>
+
+<div id="duplicateModal" class="duplicate-modal hidden" role="dialog" aria-modal="true" aria-labelledby="duplicateModalTitle">
+  <div class="duplicate-card">
+    <h2 id="duplicateModalTitle">Duplicate Question Detected</h2>
+    <div class="body">
+      <div class="note"><b>Existing question found with the same Group + Subject + Attempt/Year + Question Number.</b> Nothing will be changed until you choose an action. For each duplicate, choose <b>Replace / Overwrite</b> to use the newly uploaded question, or <b>Skip</b> to keep the existing question unchanged.</div>
+      <div id="duplicateRows" style="margin-top:12px"></div>
+      <div class="duplicate-footer">
+        <button class="btn gold" id="replaceAllDuplicates" type="button">Replace All</button>
+        <button class="btn gray" id="skipAllDuplicates" type="button">Skip All</button>
+        <button class="btn gray" id="cancelDuplicateImport" type="button">Cancel Import</button>
+        <button class="btn" id="continueDuplicateImport" type="button" disabled>Continue Upload</button>
+      </div>
+      <div id="duplicateMsg" class="msg"></div>
+    </div>
+  </div>
 </div>
 
 </div>
@@ -134,7 +152,16 @@ const auth=firebase.auth(),db=firebase.firestore(),provider=new firebase.auth.Go
 provider.setCustomParameters({prompt:"select_account"});
 provider.addScope("email");
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
-const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();const SUBJECTS={
+const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();
+function questionIdentityKey(x){
+  const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+  const group=canon(x&&x.group);
+  const subject=canon(x&&x.subject);
+  const attempt=canon(x&&x.attempt);
+  const q=canon(x&&x.q);
+  return [group,subject,attempt,q].join("|");
+}
+const SUBJECTS={
   foundation:[
     "Fundamentals of Business Laws and Business Communication",
     "Fundamentals of Financial and Cost Accounting",
@@ -781,7 +808,81 @@ function payload(){
 }
 $("previewBtn").onclick=()=>{try{$("preview").innerHTML="<h3 style=\"margin:0 0 8px;color:var(--teal)\">Question Preview</h3>"+$("html").value+($("solution").value.trim()?"<div class=\"solution-preview\"><b>Institute Solution Preview</b>"+$("solution").value+"</div>":"");$("preview").classList.remove("hidden")}catch(e){}};
 $("clearBtn").onclick=()=>{["qno","marks","sort","html","solution"].forEach(id=>$(id).value="");$("preview").classList.add("hidden");$("msg").textContent=""};
-$("saveBtn").onclick=async()=>{const btn=$("saveBtn");try{setBusy(btn,true,"Uploading…");const d=payload();await db.collection("subjectiveQuestions").add(d);$("msg").textContent="Question uploaded successfully. It will appear in the user portal automatically.";$("msg").className="msg ok";$("clearBtn").click();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{setBusy(btn,false,"Upload Question")}};
+$("saveBtn").onclick=async()=>{const btn=$("saveBtn");try{setBusy(btn,true,"Checking duplicate…");const d=payload();const snap=await db.collection("subjectiveQuestions").get();const key=questionIdentityKey(d);const hit=snap.docs.find(doc=>questionIdentityKey(doc.data())===key);if(hit){const decision=await askDuplicateDecisions([{key,x:d,existing:{id:hit.id,data:hit.data()}}]);if(decision===null){$("msg").textContent="Upload cancelled. Existing question was not changed.";$("msg").className="msg";return}if(decision.get(key)!=="replace"){$("msg").textContent="Skipped. Existing question was kept unchanged.";$("msg").className="msg";return}await db.collection("subjectiveQuestions").doc(hit.id).set(d,{merge:true});$("msg").textContent="Existing question replaced/overwritten successfully.";}else{await db.collection("subjectiveQuestions").add(d);$("msg").textContent="Question uploaded successfully. It will appear in the user portal automatically.";}$("msg").className="msg ok";$("clearBtn").click();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{setBusy(btn,false,"Upload Question")}};
+
+let duplicateDecisionResolver=null;
+function duplicatePreviewText(v){
+  return String(v||"").replace(/<[^>]*>/g," ").replace(/&nbsp;/g," ").replace(/\\s+/g," ").trim().slice(0,320);
+}
+function askDuplicateDecisions(conflicts){
+  return new Promise(resolve=>{
+    duplicateDecisionResolver=resolve;
+    const decisions=new Map();
+    window.__duplicateDecisions=decisions;
+    $("duplicateRows").innerHTML=conflicts.map((c,i)=>{
+      const oldText=duplicatePreviewText(c.existing.data.html);
+      const newText=duplicatePreviewText(c.x.html);
+      return '<div class="duplicate-row" data-dup-index="'+i+'">'+
+        '<div class="duplicate-meta"><b>Duplicate '+(i+1)+'</b> — '+esc(c.x.attempt)+' — Q'+esc(c.x.q)+' — '+esc(c.x.subject)+' — '+esc(c.x.chapter)+'</div>'+
+        '<div class="duplicate-columns">'+
+          '<div class="duplicate-side"><b>Existing question</b>'+esc(oldText||"No question text")+'</div>'+
+          '<div class="duplicate-side"><b>New uploaded question</b>'+esc(newText||"No question text")+'</div>'+
+        '</div>'+
+        '<div class="duplicate-choice">'+
+          '<button type="button" class="dup-replace" data-action="replace" data-index="'+i+'">Replace / Overwrite</button>'+
+          '<button type="button" class="dup-skip" data-action="skip" data-index="'+i+'">Skip</button>'+
+        '</div>'+
+        '<div class="duplicate-status" id="dupStatus'+i+'">Choose Replace or Skip</div>'+
+      '</div>';
+    }).join("");
+    document.querySelectorAll("#duplicateRows [data-action]").forEach(btn=>{
+      btn.onclick=()=>{
+        const i=Number(btn.dataset.index), action=btn.dataset.action;
+        decisions.set(i,action);
+        const row=btn.closest(".duplicate-row");
+        row.querySelectorAll("[data-action]").forEach(b=>b.classList.remove("selected"));
+        btn.classList.add("selected");
+        $("dupStatus"+i).textContent=action==="replace"?"✓ Replace / Overwrite selected":"✓ Skip selected";
+        $("dupStatus"+i).style.color=action==="replace"?"var(--green)":"var(--muted)";
+        $("continueDuplicateImport").disabled=decisions.size!==conflicts.length;
+        $("duplicateMsg").textContent=decisions.size+" of "+conflicts.length+" duplicate(s) decided.";
+        $("duplicateMsg").className="msg";
+      };
+    });
+    $("replaceAllDuplicates").onclick=()=>{
+      conflicts.forEach((_,i)=>decisions.set(i,"replace"));
+      document.querySelectorAll("#duplicateRows [data-action]").forEach(b=>b.classList.remove("selected"));
+      document.querySelectorAll('#duplicateRows [data-action="replace"]').forEach(b=>b.classList.add("selected"));
+      conflicts.forEach((_,i)=>{ $("dupStatus"+i).textContent="✓ Replace / Overwrite selected";$("dupStatus"+i).style.color="var(--green)"; });
+      $("continueDuplicateImport").disabled=false;
+      $("duplicateMsg").textContent="Replace / Overwrite selected for all "+conflicts.length+" duplicate(s).";
+      $("duplicateMsg").className="msg ok";
+    };
+    $("skipAllDuplicates").onclick=()=>{
+      conflicts.forEach((_,i)=>decisions.set(i,"skip"));
+      document.querySelectorAll("#duplicateRows [data-action]").forEach(b=>b.classList.remove("selected"));
+      document.querySelectorAll('#duplicateRows [data-action="skip"]').forEach(b=>b.classList.add("selected"));
+      conflicts.forEach((_,i)=>{ $("dupStatus"+i).textContent="✓ Skip selected";$("dupStatus"+i).style.color="var(--muted)"; });
+      $("continueDuplicateImport").disabled=false;
+      $("duplicateMsg").textContent="Skip selected for all "+conflicts.length+" duplicate(s).";
+      $("duplicateMsg").className="msg";
+    };
+    $("cancelDuplicateImport").onclick=()=>{
+      $("duplicateModal").classList.add("hidden");
+      duplicateDecisionResolver(null);
+      duplicateDecisionResolver=null;
+    };
+    $("continueDuplicateImport").onclick=()=>{
+      if(decisions.size!==conflicts.length)return;
+      const result=new Map();
+      conflicts.forEach((c,i)=>result.set(c.key,decisions.get(i)));
+      $("duplicateModal").classList.add("hidden");
+      duplicateDecisionResolver(result);
+      duplicateDecisionResolver=null;
+    };
+    $("duplicateModal").classList.remove("hidden");
+  });
+}
 function normalizeQuestionJsonPayload(raw){
   const parsed=JSON.parse(raw);
   if(Array.isArray(parsed)) return parsed;
@@ -925,7 +1026,7 @@ const normalizeGroupValue=v=>{
   if(n==="final4"||n==="finalgroup4"||n==="cmafinalgroup4")return "final4";
   return "";
 };
-const canonicalKey=x=>[x.group,x.subject,x.attempt,x.q].map(canon).join("|");
+const canonicalKey=x=>questionIdentityKey(x);
 const existing=new Map();
 existingSnap.docs.forEach(d=>{
   const x=d.data(), key=canonicalKey(x);
@@ -936,19 +1037,40 @@ importItems.forEach((raw,i)=>{
   const x={...raw,group:normalizeGroupValue(raw.group)};
   if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");
   if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+(raw.group||"unknown group")+". Use the exact subject from the dropdown.");
-  // Subject is fixed to the official dropdown, while chapter text is preserved from the source JSON.
-  // This prevents valid PYQs from being rejected only because an attempt uses a slightly
-  // different chapter/topic label. The selected/uploaded chapter remains visible unchanged.
   if(typeof x.chapter!=="string" || !x.chapter.trim())throw Error("Item "+(i+1)+" is missing a chapter.");
   incoming.set(canonicalKey(x),x);
 });
+
+// IMPORTANT: Do not silently overwrite an existing question.
+// First detect all conflicts, show them to the administrator, and wait for
+// an explicit Replace/Overwrite or Skip decision before any Firestore write.
+const conflicts=[];
+incoming.forEach((x,key)=>{
+  if(existing.has(key)) conflicts.push({key,x,existing:existing.get(key)});
+});
+let decisions=new Map();
+if(conflicts.length){
+  decisions=await askDuplicateDecisions(conflicts);
+  if(decisions===null){
+    $("jsonMsg").textContent="Import cancelled. No questions were changed.";
+    $("jsonMsg").className="msg";
+    return;
+  }
+}
 let added=0,updated=0;
 const writeItems=[];
 incoming.forEach(x=>{
   const key=canonicalKey(x);
   const data={group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,marks:x.marks===""||x.marks==null?null:Number(x.marks),html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):String(x.solutionHtml||"").trim()?[String(x.solutionHtml).trim()]:[],sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
-  if(existing.has(key)){writeItems.push({id:existing.get(key).id,data,update:true});updated++}
-  else{writeItems.push({id:null,data,update:false});added++}
+  if(existing.has(key)){
+    if(decisions.get(key)==="replace"){
+      writeItems.push({id:existing.get(key).id,data,update:true});
+      updated++;
+    }
+    return;
+  }
+  writeItems.push({id:null,data,update:false});
+  added++;
 });
 // Firestore WriteBatch supports up to 500 writes. Split large imports into
 // smaller batches so 501, 1,000, 5,000 etc. questions can be uploaded in one go.
@@ -960,7 +1082,7 @@ for(let i=0;i<writeItems.length;i+=450){
   });
   await batch.commit();
 }
-$("jsonMsg").textContent=incoming.size+" unique question(s) processed — "+added+" added, "+updated+" existing questions overwritten. Large uploads were automatically split into safe Firestore batches; matching ignores chapter so corrected chapter data replaces the old record instead of creating another one.";
+$("jsonMsg").textContent=incoming.size+" unique question(s) processed — "+added+" added, "+updated+" replaced/overwritten, "+(conflicts.length-updated)+" skipped. Duplicate decisions were confirmed before any write.";
 $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Questions JSON")}};
 $("exportSolutionsBtn").onclick=async()=>{
   try{
