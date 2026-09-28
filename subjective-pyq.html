@@ -124,6 +124,17 @@ function getRowsForSubject(subject){
       solutionHtml:String(x.solutionHtml||"").trim()
     }));
   }
+  if(subject==="Corporate & Economic Laws"){
+    return (window.CEL_SUBJECTIVE_PYQ||[]).map(x=>({
+      s:"Corporate and Economic Laws",
+      a:String(x.attempt||x.a||"").trim(),
+      q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),
+      t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
+      html:String(x.html||x.questionHtml||x.qHtml||""),
+      solutionHtml:String(x.solutionHtml||"").trim(),
+      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
+    }));
+  }
   if(subject==="Direct Tax & International Laws"){
     return (window.DIT_SUBJECTIVE_PYQ||[]).map(x=>({
       s:"Direct Tax Laws and International Taxation",
