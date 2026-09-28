@@ -7,7 +7,7 @@
 <header class="topbar"><div class="topbar-inner"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to Index</a></div></header>
 <div class="madeby">✨ Made by CMA Students, for CMA Students ✨</div>
 <main>
-<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #186</b> — Fixed CMA Intermediate Group 1 Business Laws and Ethics Firebase loading; uploaded BLE subjective PYQs now sync, filter and display correctly.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
+<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #187</b> — Fixed CMA Intermediate Group 1 Business Laws and Ethics Firebase loading; uploaded BLE subjective PYQs now sync, filter and display correctly.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
 <section class="filters">
 <div class="field"><label for="group">1. Choose CMA Group</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label for="subject">2. Choose Subject</label><select id="subject" disabled><option value="">First choose group</option></select></div>
@@ -63,7 +63,7 @@ window.DIT_QUESTION_CHAPTERS={
 </script>
 <script>
 (function(){
-const groups={"foundation":[["Fundamentals of Law and Business Communication","foundation-fundamentals-law-business-communication"],["Fundamentals of Financial and Cost Accounting","foundation-fundamentals-financial-cost-accounting"],["Fundamentals of Business Mathematics and Statistics","foundation-fundamentals-business-mathematics-statistics"],["Fundamentals of Business Economics and Management","foundation-fundamentals-business-economics-management"]],"inter1":[["Business Laws and Ethics","inter-group-1-business-law-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operation Management and Strategic Management","inter-group-2-operation-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Strategic Cost Management","final-group-3-strategic-cost-management"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax & International Laws","final-group-3-direct-tax-international-laws"],["Corporate & Economic Laws","final-group-3-corporate-economic-laws"]],"final4":[["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Cost Management & Audit","final-group-4-cost-management-audit"],["Indirect Tax Law & Practice","final-group-4-indirect-tax-law-practice"],["Entrepreneurship & Startup","final-group-4-entrepreneurship-startup"],["Risk Management, Banking & Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance & Business Valuation","final-group-4-strategic-performance-business-valuation"]]};
+const groups={"inter1":[["Business Laws and Ethics","inter-group-1-business-laws-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operations Management and Strategic Management","inter-group-2-operations-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Corporate and Economic Laws","final-group-3-corporate-and-economic-laws"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax Laws and International Taxation","final-group-3-direct-tax-laws-international-taxation"],["Strategic Cost Management","final-group-3-strategic-cost-management"]],"final4":[["Cost and Management Audit","final-group-4-cost-management-audit"],["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Indirect Tax Laws and Practice","final-group-4-indirect-tax-laws-practice"],["Entrepreneurship and Startup","final-group-4-entrepreneurship-startup"],["Risk Management, Banking and Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance Management and Business Valuation","final-group-4-strategic-performance-business-valuation"]]}
 const g=document.getElementById("group"),s=document.getElementById("subject"),t=document.getElementById("topic"),status=document.getElementById("status"),results=document.getElementById("results"),note=document.getElementById("topicNote");
 const filters=document.querySelector(".filters");
 filters.insertAdjacentHTML("beforeend",'<div class="field"><label for="attempt">4. Choose Attempt (optional)</label><select id="attempt"><option value="">All Attempts</option></select></div>');
@@ -79,7 +79,9 @@ function setChaptersFor(subject){
     fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
   }else{
-    fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");
+    const rows=(window.ALL_SUBJECTIVE_REMOTE||[]).filter(x=>normalize(x.subject)===normalize(subject));
+    const chapters=[...new Set(rows.map(x=>String(x.t||"").trim()).filter(Boolean))];
+    fill(t,[["All Chapters","all"],...chapters.map(x=>[x,x])],"All Topics / Chapters");
     t.value="all";
   }
 }
@@ -100,17 +102,19 @@ s.addEventListener("change",function(){
   }else if(subject==="Business Laws and Ethics"){
     fill(t,[["All Chapters","all"],...window.BLE_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all"; note.textContent="Business Laws and Ethics follows the 13 chapter structure configured in the uploader. Uploaded BLE subjective PYQs are loaded automatically from Firebase.";
-  }else if(subject==="Corporate & Economic Laws"){
+  }else if(subject==="Corporate and Economic Laws"){
     fill(t,[["All Chapters","all"],...window.CEL_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all"; note.textContent="Corporate and Economic Laws follows the official 11-module Paper 13 structure. Uploaded P13 subjective PYQs are loaded automatically from Firebase.";
-  }else if(subject==="Direct Tax & International Laws"){
+  }else if(subject==="Direct Tax Laws and International Taxation"){
     fill(t,[["All Chapters","all"],...window.DIT_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
     note.textContent="Direct Tax Laws and International Taxation follows the official 14-module structure. Select a module to filter its PYQs.";
   }else{
-    fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");
+    const rows=(window.ALL_SUBJECTIVE_REMOTE||[]).filter(x=>normalize(x.subject)===normalize(subject));
+    const chapters=[...new Set(rows.map(x=>String(x.t||"").trim()).filter(Boolean))];
+    fill(t,[["All Chapters","all"],...chapters.map(x=>[x,x])],"All Topics / Chapters");
     t.value="all";
-    note.textContent="Subjective PYQ data for this subject will appear here once its papers are added.";
+    note.textContent="Uploaded subjective PYQs for this subject are loaded automatically from Firebase.";
   }
   render();
 });
@@ -132,7 +136,7 @@ function getRowsForSubject(subject){
   if(subject==="Business Laws and Ethics"){
     return (window.BLE_SUBJECTIVE_PYQ||[]).map(x=>({s:"Business Laws and Ethics",a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]}));
   }
-  if(subject==="Corporate & Economic Laws"){
+  if(subject==="Corporate and Economic Laws"){
     return (window.CEL_SUBJECTIVE_PYQ||[]).map(x=>({
       s:"Corporate and Economic Laws",
       a:String(x.attempt||x.a||"").trim(),
@@ -143,7 +147,7 @@ function getRowsForSubject(subject){
       solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
     }));
   }
-  if(subject==="Direct Tax & International Laws"){
+  if(subject==="Direct Tax Laws and International Taxation"){
     return (window.DIT_SUBJECTIVE_PYQ||[]).map(x=>({
       s:"Direct Tax Laws and International Taxation",
       a:String(x.attempt||x.a||"").trim(),
@@ -154,14 +158,19 @@ function getRowsForSubject(subject){
       solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
     }));
   }
-  return [];
+  const currentGroup=g.value;
+  return (window.ALL_SUBJECTIVE_REMOTE||[]).filter(x=>{
+    const gc=String(x.group||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+    const wantedGroup=String(currentGroup||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+    return gc===wantedGroup && normalize(x.subject)===normalize(subject);
+  }).map(x=>({s:x.subject,a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:x.solutionHtml,solutionHtmls:x.solutionHtmls}));
 }
 function render(){
   results.innerHTML="";
   const subject=s.options[s.selectedIndex]?.textContent||"";
   const topic=t.value||"";
   const attempt=at.value||"";
-  const supported=subject==="Strategic Financial Management"||subject==="Strategic Cost Management"||subject==="Direct Tax & International Laws"||subject==="Corporate & Economic Laws"||subject==="Business Laws and Ethics";
+  const supported=!!subject;
   if(!supported){
     status.textContent=subject?"No subjective data is assigned to this subject yet.":"Choose a subject to begin.";
     return;
@@ -203,6 +212,14 @@ async function loadUploadedQuestions(){
   try{
     const snap=await db.collection("subjectiveQuestions").get();
     const remote=snap.docs.map(d=>({id:d.id,...d.data()}));
+    window.ALL_SUBJECTIVE_REMOTE=remote.map(x=>({
+      id:x.id,group:String(x.group||"").trim(),subject:String(x.subject||"").trim(),
+      a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),
+      t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
+      html:String(x.html||x.questionHtml||x.qHtml||"").trim(),
+      solutionHtml:String(x.solutionHtml||"").trim(),
+      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
+    }));
     const sfmRemote=remote.filter(x=>String(x.group||"").toLowerCase()==="final3"&&String(x.subject||"").trim().toLowerCase()==="strategic financial management");
     const bleRemote=remote.filter(x=>{const g=String(x.group||"").trim().toLowerCase();const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");return g==="inter1"&&(s==="businesslawsandethics"||s==="businesslawandethics"||s==="p5ble");});
     const celRemote=remote.filter(x=>{const g=String(x.group||"").trim().toLowerCase();const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");return g==="final3"&&(s==="corporateandeconomiclaws"||s==="corporateeconomiclaws"||s==="p13cel");});
@@ -313,6 +330,7 @@ async function loadUploadedQuestions(){
     const scmStatus=document.getElementById("scmLoadStatus");
     if(scmStatus){scmStatus.style.display="block";scmStatus.textContent="Firebase sync complete: SFM "+sfmRemote.length+" · SCM "+scmRemote.length+" · DT "+ditRemote.length+" · CEL "+celRemote.length+" · BLE "+bleRemote.length+" subjective PYQs loaded."}
     if(topic)topic.dispatchEvent(new Event("change"));
+    if(s) s.dispatchEvent(new Event("change"));
     console.info("Subjective PYQ sync: SFM",sfmRemote.length,"SCM",scmRemote.length,"DT",ditRemote.length,"CEL",celRemote.length,"BLE",bleRemote.length);
   }catch(e){
     console.warn("Subjective PYQ sync failed:",e.message);
