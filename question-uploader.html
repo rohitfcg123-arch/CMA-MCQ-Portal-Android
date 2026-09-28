@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #184</b> — Added multi-file JSON selection and combined import: upload any number of questions in one JSON file; the uploader validates all records, deduplicates them, and automatically commits large uploads in safe Firestore batches.
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #185</b> — Expanded all Intermediate/Final subjects and made chapter import tolerant upload any number of questions in one JSON file; the uploader validates all records, deduplicates them, and automatically commits large uploads in safe Firestore batches.
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -163,7 +163,10 @@ const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();co
   final4:[
     "Cost and Management Audit",
     "Corporate Financial Reporting",
-    "Indirect Tax Laws and Practice"
+    "Indirect Tax Laws and Practice",
+    "Entrepreneurship and Startup",
+    "Risk Management, Banking and Insurance",
+    "Strategic Performance Management and Business Valuation"
   ]
 };
 const CHAPTERS_BY_SUBJECT={
@@ -173,6 +176,9 @@ const CHAPTERS_BY_SUBJECT={
     "Sale of Goods Act, 1930",
     "Negotiable Instruments Act, 1881",
     "Business Communication"
+  ],
+  "Financial Accounting":[
+    "Accounting Fundamentals","Accounting for Special Transactions","Final Accounts","Accounting for Partnership Firms","Accounting for Incomplete Records","Branch Accounting","Departmental Accounting","Accounting for Hire Purchase and Instalment System","Accounting for Consignment","Accounting for Joint Venture","Accounting for Bills of Exchange","Accounting for Insurance Claims","Accounting for Royalty","Accounting for Investment","Accounting for Non-Profit Organisations","Bank Reconciliation Statement","Rectification of Errors","Cash Flow Statement","Accounting Standards"
   ],
   "Business Laws and Ethics":[
     "Introduction to Law and Legal System in India",
@@ -228,6 +234,20 @@ const CHAPTERS_BY_SUBJECT={
     "Forensic Audit",
     "Anti-Money Laundering"
   ],
+  "Operations Management and Strategic Management":["Operations Management","Strategic Management"],
+  "Corporate Accounting and Auditing":["Corporate Accounting","Auditing"],
+  "Financial Management and Business Data Analytics":["Financial Management","Business Data Analytics"],
+  "Management Accounting":["Management Accounting"],
+  "Direct and Indirect Taxation":["Direct Taxation","Indirect Taxation"],
+  "Cost Accounting":["Cost Accounting"],
+  "Cost and Management Audit":["Cost Audit","Management Audit","Internal Audit","Operational Audit","Forensic Audit","Anti-Money Laundering"],
+  "Corporate Financial Reporting":["Specific Accounting Standards","Financial Instruments","Business Combinations and Restructuring","Consolidated Financial Statements","Recent Developments in Financial Reporting","Government Accounting in India"],
+  "Indirect Tax Laws and Practice":["GST","Customs"],
+  "Entrepreneurship and Startup":["Entrepreneurship","Startup"],
+  "Risk Management, Banking and Insurance":["Risk Management","Banking","Insurance"],
+  "Strategic Performance Management and Business Valuation":["Strategic Performance Management","Business Valuation"],
+  "Corporate & Economic Laws":["The Companies Act, 2013","Insolvency and Bankruptcy Code, 2016","Corporate Governance and Social Responsibility and Sustainability","SEBI Regulations","The Competition Act, 2002","Foreign Exchange Management Act, 1999","Laws and Regulations related to Banking Sector","Laws and Regulations related to Insurance Sector","Specific Legal Provisions related to MSME Sector","Laws and Regulations related to Cyber Security and Data Privacy","Laws and Regulations related to Anti-Money Laundering"],
+  "Direct Tax & International Laws":["Direct Taxation","International Taxation"],
   "Corporate Financial Reporting":[
     "Specific Accounting Standards",
     "Valuation of Shares (Including Determination of Goodwill, Post-Valuation of Tangible and Intangible Assets)",
@@ -905,7 +925,10 @@ importItems.forEach((raw,i)=>{
   const x={...raw,group:normalizeGroupValue(raw.group)};
   if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");
   if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+(raw.group||"unknown group")+". Use the exact subject from the dropdown.");
-  if(!(CHAPTERS_BY_SUBJECT[x.subject]||[]).includes(x.chapter))throw Error("Item "+(i+1)+" has an invalid chapter for "+x.subject+". Use the exact chapter from the dropdown.");
+  // Subject is fixed to the official dropdown, while chapter text is preserved from the source JSON.
+  // This prevents valid PYQs from being rejected only because an attempt uses a slightly
+  // different chapter/topic label. The selected/uploaded chapter remains visible unchanged.
+  if(typeof x.chapter!=="string" || !x.chapter.trim())throw Error("Item "+(i+1)+" is missing a chapter.");
   incoming.set(canonicalKey(x),x);
 });
 let added=0,updated=0;
