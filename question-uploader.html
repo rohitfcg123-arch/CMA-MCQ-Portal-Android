@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #182</b> — Expanded Question Uploader subject and chapter categorization from Foundation through Final Group 4, with official law-paper module names added: extracts only the number/part from question titles, validates duplicates/unclear formats, previews changes, and updates only the q field.
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #183</b> — Added true bulk JSON import: upload any number of questions in one JSON file; the uploader validates all records, deduplicates them, and automatically commits large uploads in safe Firestore batches.
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -40,7 +40,7 @@
 </div></section>
 
 <section class="panel"><h2>JSON Upload / Backup</h2><div class="body">
-<div class="note">You can also paste multiple questions as a JSON array. For <b>Direct Tax Laws and International Taxation</b>, use the exact 14 module names from the chapter dropdown. For <b>Strategic Cost Management</b>, use the exact 26 chapter names from the chapter dropdown (including COST OF QUALITY, DECISION MAKING MAKE OR BUY, TRANSFER PRICING, STANDARD COSTING AND VARIANCE ANALYSIS, LINEAR PROGRAMMING, TRANSPORTATION, ASSIGNMENT, GAME THEORY, SIMULATION, PROJECT MANAGEMENT, LEARNING CURVE, BUSINESS APPLICATION OF MAXIMA AND MINIMA and BUSINESS FORECASTING MODELS). Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Optional: <b>marks, solutionHtml</b>.</div>
+<div class="note"><b>Bulk JSON Upload:</b> You can upload 3, 10, 100, 500 or more questions in a single JSON file. All questions are validated first, duplicates are merged by Group + Subject + Attempt + Question Number, and large uploads are automatically split into safe Firestore batches.  For <b>Direct Tax Laws and International Taxation</b>, use the exact 14 module names from the chapter dropdown. For <b>Strategic Cost Management</b>, use the exact 26 chapter names from the chapter dropdown (including COST OF QUALITY, DECISION MAKING MAKE OR BUY, TRANSFER PRICING, STANDARD COSTING AND VARIANCE ANALYSIS, LINEAR PROGRAMMING, TRANSPORTATION, ASSIGNMENT, GAME THEORY, SIMULATION, PROJECT MANAGEMENT, LEARNING CURVE, BUSINESS APPLICATION OF MAXIMA AND MINIMA and BUSINESS FORECASTING MODELS). Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Optional: <b>marks, solutionHtml</b>.</div>
 <input id="jsonFile" type="file" accept=".json,application/json" style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <div class="count" style="margin-top:6px">Select the Question JSON file directly, or paste JSON below.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
@@ -908,16 +908,25 @@ importItems.forEach((raw,i)=>{
   if(!(CHAPTERS_BY_SUBJECT[x.subject]||[]).includes(x.chapter))throw Error("Item "+(i+1)+" has an invalid chapter for "+x.subject+". Use the exact chapter from the dropdown.");
   incoming.set(canonicalKey(x),x);
 });
-const batch=db.batch();
 let added=0,updated=0;
+const writeItems=[];
 incoming.forEach(x=>{
   const key=canonicalKey(x);
   const data={group:x.group,subject:x.subject,chapter:x.chapter,attempt:x.attempt,q:x.q,marks:x.marks===""||x.marks==null?null:Number(x.marks),html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):String(x.solutionHtml||"").trim()?[String(x.solutionHtml).trim()]:[],sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
-  if(existing.has(key)){batch.set(db.collection("subjectiveQuestions").doc(existing.get(key).id),data,{merge:true});updated++}
-  else{batch.set(db.collection("subjectiveQuestions").doc(),data);added++}
+  if(existing.has(key)){writeItems.push({id:existing.get(key).id,data,update:true});updated++}
+  else{writeItems.push({id:null,data,update:false});added++}
 });
-await batch.commit();
-$("jsonMsg").textContent=incoming.size+" unique question(s) processed — "+added+" added, "+updated+" existing questions overwritten. Matching now ignores chapter, so corrected chapter data replaces the old record instead of creating another one.";
+// Firestore WriteBatch supports up to 500 writes. Split large imports into
+// smaller batches so 501, 1,000, 5,000 etc. questions can be uploaded in one go.
+for(let i=0;i<writeItems.length;i+=450){
+  const batch=db.batch();
+  writeItems.slice(i,i+450).forEach(item=>{
+    const ref=item.update?db.collection("subjectiveQuestions").doc(item.id):db.collection("subjectiveQuestions").doc();
+    batch.set(ref,item.data,{merge:item.update});
+  });
+  await batch.commit();
+}
+$("jsonMsg").textContent=incoming.size+" unique question(s) processed — "+added+" added, "+updated+" existing questions overwritten. Large uploads were automatically split into safe Firestore batches; matching ignores chapter so corrected chapter data replaces the old record instead of creating another one.";
 $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent=e.message;$("jsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Questions JSON")}};
 $("exportSolutionsBtn").onclick=async()=>{
   try{
