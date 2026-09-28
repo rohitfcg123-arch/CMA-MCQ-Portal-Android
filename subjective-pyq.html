@@ -7,7 +7,7 @@
 <header class="topbar"><div class="topbar-inner"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to Index</a></div></header>
 <div class="madeby">✨ Made by CMA Students, for CMA Students ✨</div>
 <main>
-<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #187</b> — Fixed CMA Intermediate Group 1 Business Laws and Ethics Firebase loading; uploaded BLE subjective PYQs now sync, filter and display correctly.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
+<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #188</b> — Fixed CMA Intermediate Group 1 Business Laws and Ethics Firebase loading; uploaded BLE subjective PYQs now sync, filter and display correctly.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
 <section class="filters">
 <div class="field"><label for="group">1. Choose CMA Group</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label for="subject">2. Choose Subject</label><select id="subject" disabled><option value="">First choose group</option></select></div>
@@ -64,6 +64,7 @@ window.DIT_QUESTION_CHAPTERS={
 <script>
 (function(){
 const groups={"inter1":[["Business Laws and Ethics","inter-group-1-business-laws-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operations Management and Strategic Management","inter-group-2-operations-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Corporate and Economic Laws","final-group-3-corporate-and-economic-laws"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax Laws and International Taxation","final-group-3-direct-tax-laws-international-taxation"],["Strategic Cost Management","final-group-3-strategic-cost-management"]],"final4":[["Cost and Management Audit","final-group-4-cost-management-audit"],["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Indirect Tax Laws and Practice","final-group-4-indirect-tax-laws-practice"],["Entrepreneurship and Startup","final-group-4-entrepreneurship-startup"],["Risk Management, Banking and Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance Management and Business Valuation","final-group-4-strategic-performance-business-valuation"]]}
+const FA_CHAPTERS=["Accounting Fundamentals","Bills of Exchange","Consignment","Joint Venture","Preparation of Final Accounts of Commercial Organisations, Not-for-Profit Organisations and from Incomplete Records","Partnership Accounting","Lease Accounting","Branch (including Foreign Branch) and Departmental Accounts","Insurance Claim for Loss of Stock and Loss of Profit","Hire Purchase and Installment Sale Transactions","Accounting Standards"];
 const g=document.getElementById("group"),s=document.getElementById("subject"),t=document.getElementById("topic"),status=document.getElementById("status"),results=document.getElementById("results"),note=document.getElementById("topicNote");
 const filters=document.querySelector(".filters");
 filters.insertAdjacentHTML("beforeend",'<div class="field"><label for="attempt">4. Choose Attempt (optional)</label><select id="attempt"><option value="">All Attempts</option></select></div>');
@@ -99,6 +100,9 @@ s.addEventListener("change",function(){
     fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
     note.textContent="SCM follows the 26 chapter names supplied for this portal. Uploaded SCM PYQs are loaded automatically from Firebase.";
+  }else if(subject==="Financial Accounting"){
+    fill(t,[["All Chapters","all"],...FA_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all"; note.textContent="Financial Accounting follows the Paper 6 structure. Bills of Exchange, Consignment and Joint Venture are separate chapters.";
   }else if(subject==="Business Laws and Ethics"){
     fill(t,[["All Chapters","all"],...window.BLE_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all"; note.textContent="Business Laws and Ethics follows the 13 chapter structure configured in the uploader. Uploaded BLE subjective PYQs are loaded automatically from Firebase.";
@@ -120,6 +124,9 @@ s.addEventListener("change",function(){
 });
 t.addEventListener("change",update);at.addEventListener("change",update);
 function getRowsForSubject(subject){
+  if(subject==="Financial Accounting"){
+    return (window.ALL_SUBJECTIVE_REMOTE||[]).filter(x=>String(x.group||"").trim().toLowerCase()==="inter1"&&normalize(x.subject)==="financial accounting").map(x=>({s:x.subject,a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:x.solutionHtml,solutionHtmls:x.solutionHtmls}));
+  }
   if(subject==="Strategic Financial Management"){
     return (window.SFM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]}));
   }
