@@ -15,7 +15,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #180</b> — Added safe bulk question-number cleanup: extracts only the number/part from question titles, validates duplicates/unclear formats, previews changes, and updates only the q field.
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #181</b> — Expanded Question Uploader subject and chapter categorization from Foundation through Final Group 4, with official law-paper module names added: extracts only the number/part from question titles, validates duplicates/unclear formats, previews changes, and updates only the q field.
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -168,8 +168,93 @@ const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();co
   ]
 };
 const CHAPTERS_BY_SUBJECT={
-  "Strategic Financial Management":["Security Analysis","Equity/Share Valuation","Bond Valuation","Mutual Funds","Portfolio Management","Derivatives","Foreign Exchange","Investment Decisions","Evaluation of Risky Proposals","Leasing Decision","Investment Decisions, Project Planning and Control","Evaluation of Risky Proposal for Investment Decisions","Leasing Decisions","Securitization"],
-  "Strategic Cost Management":["COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"]
+  "Fundamentals of Business Laws and Business Communication":[
+    "Introduction",
+    "Indian Contracts Act, 1872",
+    "Sale of Goods Act, 1930",
+    "Negotiable Instruments Act, 1881",
+    "Business Communication"
+  ],
+  "Business Laws and Ethics":[
+    "Introduction to Law and Legal System in India",
+    "Indian Contracts Act, 1872",
+    "Sale of Goods Act, 1930",
+    "Negotiable Instruments Act, 1881",
+    "Indian Partnership Act, 1932",
+    "Limited Liability Partnership Act, 2008",
+    "Factories Act, 1948",
+    "Payment of Gratuity Act, 1972",
+    "Employees Provident Fund and Miscellaneous Provisions Act, 1952",
+    "Employees State Insurance Act, 1948",
+    "The Code on Wages, 2019",
+    "Companies Act, 2013",
+    "Business Ethics and Emotional Intelligence"
+  ],
+  "Corporate and Economic Laws":[
+    "The Companies Act, 2013",
+    "Insolvency and Bankruptcy Code, 2016",
+    "Corporate Governance and Social Responsibility and Sustainability",
+    "SEBI Regulations",
+    "The Competition Act, 2002",
+    "Foreign Exchange Management Act, 1999",
+    "Laws and Regulations related to Banking Sector",
+    "Laws and Regulations related to Insurance Sector",
+    "Specific Legal Provisions related to MSME Sector",
+    "Laws and Regulations related to Cyber Security and Data Privacy",
+    "Laws and Regulations related to Anti-Money Laundering"
+  ],
+  "Strategic Financial Management":[
+    "Security Analysis","Equity/Share Valuation","Bond Valuation","Mutual Funds","Portfolio Management","Derivatives","Foreign Exchange","Investment Decisions","Evaluation of Risky Proposals","Leasing Decision","Investment Decisions, Project Planning and Control","Evaluation of Risky Proposal for Investment Decisions","Leasing Decisions","Securitization"
+  ],
+  "Strategic Cost Management":[
+    "COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"
+  ],
+  "Cost and Management Audit":[
+    "Basics of Cost Audit",
+    "Companies (Cost Records and Audit) Rules, 2014 (as amended)",
+    "Cost Auditor",
+    "Overview of Cost Accounting Standards and GACAP",
+    "Cost Auditing and Assurance Standards",
+    "Cost Audit Programme",
+    "Cost Audit Documentation, Audit Process and Execution",
+    "Preparation and Filing of Cost Audit Report",
+    "Basics of Management Audit",
+    "Management Reporting Issues and Analysis",
+    "Management Audit in Different Functions",
+    "Evaluation of Corporate Image",
+    "Information Systems Security Audit",
+    "Internal Control and Internal Audit",
+    "Operational Audit and Internal Audit under Companies Act, 2013",
+    "Audit of Different Service Organisations",
+    "Forensic Audit",
+    "Anti-Money Laundering"
+  ],
+  "Corporate Financial Reporting":[
+    "Corporate Financial Reporting — Module-wise classification"
+  ],
+  "Indirect Tax Laws and Practice":[
+    "Supply under GST - A Refresh",
+    "Time of Supply (Advanced)",
+    "Place of Supply",
+    "Valuation (Advanced)",
+    "Input Tax Credit (Advanced)",
+    "Zero Rated Supplies and Deemed Exports",
+    "TDS & TCS under GST",
+    "E-way Bill",
+    "GST Refunds- Inverted Duty Structure and Zero-rated Supplies",
+    "GST Returns",
+    "Accounts and Records",
+    "GST Annual Return and GST Audit Return",
+    "Transition to GST (Transitional Provisions)",
+    "Dispute Resolution Mechanism under GST",
+    "Inspection, Search, Seizure, Arrest and Prosecution",
+    "Anti-profiteering",
+    "Walkthrough of GSTN Portal",
+    "Valuation and Related Party Transactions",
+    "Customs Procedures - Baggage & Courier / Post",
+    "Manufacture in Bond",
+    "Duty Drawback"
+  ]
 };
 function populateChapters(subject,selected){
   const list=CHAPTERS_BY_SUBJECT[subject]||[];
