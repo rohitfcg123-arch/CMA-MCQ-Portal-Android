@@ -7,7 +7,7 @@
 <header class="topbar"><div class="topbar-inner"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to Index</a></div></header>
 <div class="madeby">✨ Made by CMA Students, for CMA Students ✨</div>
 <main>
-<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #185</b> — Fixed the SCM Firebase loading JavaScript error; SCM questions will now load again, with suggested/alternative answers directly below each question.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
+<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #186</b> — Fixed CMA Intermediate Group 1 Business Laws and Ethics Firebase loading; uploaded BLE subjective PYQs now sync, filter and display correctly.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
 <section class="filters">
 <div class="field"><label for="group">1. Choose CMA Group</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label for="subject">2. Choose Subject</label><select id="subject" disabled><option value="">First choose group</option></select></div>
@@ -22,6 +22,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="js/sfm-subjective-pyq-v29.js?v=20260927u52"></script>
 <script>
+window.BLE_CHAPTERS=["Introduction to Law and Legal System in India","Indian Contracts Act, 1872","Sale of Goods Act, 1930","Negotiable Instruments Act, 1881","Indian Partnership Act, 1932","Limited Liability Partnership Act, 2008","Factories Act, 1948","Payment of Gratuity Act, 1972","Employees Provident Fund and Miscellaneous Provisions Act, 1952","Employees State Insurance Act, 1948","The Code on Wages, 2019","Companies Act, 2013","Business Ethics and Emotional Intelligence"];
+window.BLE_SUBJECTIVE_PYQ=[];
 window.SCM_CHAPTERS=["COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"];
 window.SCM_SUBJECTIVE_PYQ=[];
 window.DIT_SUBJECTIVE_PYQ=[];
@@ -61,7 +63,7 @@ window.DIT_QUESTION_CHAPTERS={
 </script>
 <script>
 (function(){
-const groups={"foundation":[["Fundamentals of Law and Business Communication","foundation-fundamentals-law-business-communication"],["Fundamentals of Financial and Cost Accounting","foundation-fundamentals-financial-cost-accounting"],["Fundamentals of Business Mathematics and Statistics","foundation-fundamentals-business-mathematics-statistics"],["Fundamentals of Business Economics and Management","foundation-fundamentals-business-economics-management"]],"inter1":[["Business Law and Ethics","inter-group-1-business-law-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operation Management and Strategic Management","inter-group-2-operation-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Strategic Cost Management","final-group-3-strategic-cost-management"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax & International Laws","final-group-3-direct-tax-international-laws"],["Corporate & Economic Laws","final-group-3-corporate-economic-laws"]],"final4":[["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Cost Management & Audit","final-group-4-cost-management-audit"],["Indirect Tax Law & Practice","final-group-4-indirect-tax-law-practice"],["Entrepreneurship & Startup","final-group-4-entrepreneurship-startup"],["Risk Management, Banking & Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance & Business Valuation","final-group-4-strategic-performance-business-valuation"]]};
+const groups={"foundation":[["Fundamentals of Law and Business Communication","foundation-fundamentals-law-business-communication"],["Fundamentals of Financial and Cost Accounting","foundation-fundamentals-financial-cost-accounting"],["Fundamentals of Business Mathematics and Statistics","foundation-fundamentals-business-mathematics-statistics"],["Fundamentals of Business Economics and Management","foundation-fundamentals-business-economics-management"]],"inter1":[["Business Laws and Ethics","inter-group-1-business-law-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operation Management and Strategic Management","inter-group-2-operation-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Strategic Cost Management","final-group-3-strategic-cost-management"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax & International Laws","final-group-3-direct-tax-international-laws"],["Corporate & Economic Laws","final-group-3-corporate-economic-laws"]],"final4":[["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Cost Management & Audit","final-group-4-cost-management-audit"],["Indirect Tax Law & Practice","final-group-4-indirect-tax-law-practice"],["Entrepreneurship & Startup","final-group-4-entrepreneurship-startup"],["Risk Management, Banking & Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance & Business Valuation","final-group-4-strategic-performance-business-valuation"]]};
 const g=document.getElementById("group"),s=document.getElementById("subject"),t=document.getElementById("topic"),status=document.getElementById("status"),results=document.getElementById("results"),note=document.getElementById("topicNote");
 const filters=document.querySelector(".filters");
 filters.insertAdjacentHTML("beforeend",'<div class="field"><label for="attempt">4. Choose Attempt (optional)</label><select id="attempt"><option value="">All Attempts</option></select></div>');
@@ -95,6 +97,9 @@ s.addEventListener("change",function(){
     fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
     note.textContent="SCM follows the 26 chapter names supplied for this portal. Uploaded SCM PYQs are loaded automatically from Firebase.";
+  }else if(subject==="Business Laws and Ethics"){
+    fill(t,[["All Chapters","all"],...window.BLE_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all"; note.textContent="Business Laws and Ethics follows the 13 chapter structure configured in the uploader. Uploaded BLE subjective PYQs are loaded automatically from Firebase.";
   }else if(subject==="Corporate & Economic Laws"){
     fill(t,[["All Chapters","all"],...window.CEL_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all"; note.textContent="Corporate and Economic Laws follows the official 11-module Paper 13 structure. Uploaded P13 subjective PYQs are loaded automatically from Firebase.";
@@ -123,6 +128,9 @@ function getRowsForSubject(subject){
       html:String(x.html||x.questionHtml||x.qHtml||""),
       solutionHtml:String(x.solutionHtml||"").trim()
     }));
+  }
+  if(subject==="Business Laws and Ethics"){
+    return (window.BLE_SUBJECTIVE_PYQ||[]).map(x=>({s:"Business Laws and Ethics",a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]}));
   }
   if(subject==="Corporate & Economic Laws"){
     return (window.CEL_SUBJECTIVE_PYQ||[]).map(x=>({
@@ -153,7 +161,7 @@ function render(){
   const subject=s.options[s.selectedIndex]?.textContent||"";
   const topic=t.value||"";
   const attempt=at.value||"";
-  const supported=subject==="Strategic Financial Management"||subject==="Strategic Cost Management"||subject==="Direct Tax & International Laws"||subject==="Corporate & Economic Laws";
+  const supported=subject==="Strategic Financial Management"||subject==="Strategic Cost Management"||subject==="Direct Tax & International Laws"||subject==="Corporate & Economic Laws"||subject==="Business Laws and Ethics";
   if(!supported){
     status.textContent=subject?"No subjective data is assigned to this subject yet.":"Choose a subject to begin.";
     return;
@@ -196,6 +204,7 @@ async function loadUploadedQuestions(){
     const snap=await db.collection("subjectiveQuestions").get();
     const remote=snap.docs.map(d=>({id:d.id,...d.data()}));
     const sfmRemote=remote.filter(x=>String(x.group||"").toLowerCase()==="final3"&&String(x.subject||"").trim().toLowerCase()==="strategic financial management");
+    const bleRemote=remote.filter(x=>{const g=String(x.group||"").trim().toLowerCase();const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");return g==="inter1"&&(s==="businesslawsandethics"||s==="businesslawandethics"||s==="p5ble");});
     const celRemote=remote.filter(x=>{const g=String(x.group||"").trim().toLowerCase();const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");return g==="final3"&&(s==="corporateandeconomiclaws"||s==="corporateeconomiclaws"||s==="p13cel");});
     const ditRemote=remote.filter(x=>{
       const g=String(x.group||"").trim().toLowerCase();
@@ -279,6 +288,11 @@ async function loadUploadedQuestions(){
     const celUnique=new Map(); const celCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
     celRemote.forEach(x=>{const row={id:x.id,a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]};const k=["final3","corporateandeconomiclaws",row.a,row.q].map(celCanon).join("|");const prev=celUnique.get(k);const cur=x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0);const pt=prev&&prev.updatedAt?prev.updatedAt:new Date(0);if(!prev||cur>pt)celUnique.set(k,{...row,updatedAt:cur});});
     window.CEL_SUBJECTIVE_PYQ=[...celUnique.values()];
+    const bleUnique=new Map();
+    const bleCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+    bleRemote.forEach(x=>{const row={id:x.id,a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],updatedAt:x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0)};const k=["inter1","businesslawsandethics",row.a,row.q].map(bleCanon).join("|");const prev=bleUnique.get(k);if(!prev||row.updatedAt>prev.updatedAt)bleUnique.set(k,row);});
+    window.BLE_SUBJECTIVE_PYQ=[...bleUnique.values()];
+
     const scmUnique=new Map();
     const scmCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
     scmRemote.forEach(x=>{
@@ -297,9 +311,9 @@ async function loadUploadedQuestions(){
 
     const topic=document.getElementById("topic");
     const scmStatus=document.getElementById("scmLoadStatus");
-    if(scmStatus){scmStatus.style.display="block";scmStatus.textContent="Firebase sync complete: SFM "+sfmRemote.length+" · SCM "+scmRemote.length+" · DT "+ditRemote.length+" · CEL "+celRemote.length+" subjective PYQs loaded."}
+    if(scmStatus){scmStatus.style.display="block";scmStatus.textContent="Firebase sync complete: SFM "+sfmRemote.length+" · SCM "+scmRemote.length+" · DT "+ditRemote.length+" · CEL "+celRemote.length+" · BLE "+bleRemote.length+" subjective PYQs loaded."}
     if(topic)topic.dispatchEvent(new Event("change"));
-    console.info("Subjective PYQ sync: SFM",sfmRemote.length,"SCM",scmRemote.length,"DT",ditRemote.length,"CEL",celRemote.length);
+    console.info("Subjective PYQ sync: SFM",sfmRemote.length,"SCM",scmRemote.length,"DT",ditRemote.length,"CEL",celRemote.length,"BLE",bleRemote.length);
   }catch(e){
     console.warn("Subjective PYQ sync failed:",e.message);
     const scmStatus=document.getElementById("scmLoadStatus");
