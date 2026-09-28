@@ -25,6 +25,38 @@
 window.SCM_CHAPTERS=["COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"];
 window.SCM_SUBJECTIVE_PYQ=[];
 window.DIT_SUBJECTIVE_PYQ=[];
+window.DIT_CHAPTERS=[
+"Assessment of Income and Computation of Tax Liability of Various Entities",
+"Tax Management, Return and Assessment Procedure",
+"Grievance Redressal",
+"Penalties and Prosecutions",
+"Business Restructuring",
+"Different Aspects of Tax Planning",
+"CBDT and Other Authorities",
+"E-commerce Transaction and Liability in Special Cases",
+"Income Computation and Disclosure Standards (ICDS)",
+"Black Money Act, 2015",
+"Case Study",
+"Double Taxation and Avoidance Agreements (DTAA) [Sec.90, 90A and 91]",
+"Transfer Pricing",
+"GAAR"
+];
+window.DIT_QUESTION_CHAPTERS={
+"2(a)":"Assessment of Income and Computation of Tax Liability of Various Entities",
+"2(b)":"Assessment of Income and Computation of Tax Liability of Various Entities",
+"3(a)":"Assessment of Income and Computation of Tax Liability of Various Entities",
+"3(b)":"Assessment of Income and Computation of Tax Liability of Various Entities",
+"4(a)":"Business Restructuring",
+"4(b)":"Assessment of Income and Computation of Tax Liability of Various Entities",
+"5(a)":"Tax Management, Return and Assessment Procedure",
+"5(b)":"Income Computation and Disclosure Standards (ICDS)",
+"6(a)":"Double Taxation and Avoidance Agreements (DTAA) [Sec.90, 90A and 91]",
+"6(b)":"Double Taxation and Avoidance Agreements (DTAA) [Sec.90, 90A and 91]",
+"7(a)":"Transfer Pricing",
+"7(b)":"Transfer Pricing",
+"8(a)":"Assessment of Income and Computation of Tax Liability of Various Entities",
+"8(b)":"Transfer Pricing"
+};
 </script>
 <script>
 (function(){
@@ -63,9 +95,9 @@ s.addEventListener("change",function(){
     t.value="all";
     note.textContent="SCM follows the 26 chapter names supplied for this portal. Uploaded SCM PYQs are loaded automatically from Firebase.";
   }else if(subject==="Direct Tax & International Laws"){
-    fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");
+    fill(t,[["All Chapters","all"],...window.DIT_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
-    note.textContent="Direct Tax Laws and International Taxation subjective PYQs are loaded from Firebase.";
+    note.textContent="Direct Tax Laws and International Taxation follows the official 14-module structure. Select a module to filter its PYQs.";
   }else{
     fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");
     t.value="all";
@@ -93,7 +125,7 @@ function getRowsForSubject(subject){
       s:"Direct Tax Laws and International Taxation",
       a:String(x.attempt||x.a||"").trim(),
       q:String(x.q||"").trim(),
-      t:String(x.chapter||x.t||"").trim(),
+      t:String(x.chapter||x.t||window.DIT_QUESTION_CHAPTERS[String(x.q||"").trim()]||"").trim(),
       html:String(x.html||""),
       solutionHtml:String(x.solutionHtml||"").trim(),
       solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
@@ -215,7 +247,7 @@ async function loadUploadedQuestions(){
         id:x.id,
         a:String(x.attempt||x.a||"").trim(),
         q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),
-        t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
+        t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||window.DIT_QUESTION_CHAPTERS[String(x.q||x.question||x.questionNumber||x.questionNo||"").trim()]||"").trim(),
         html:String(x.html||x.questionHtml||x.qHtml||"").trim(),
         solutionHtml:String(x.solutionHtml||"").trim(),
         solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
