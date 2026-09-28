@@ -14,8 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #185</b> — Expanded all Intermediate/Final subjects and made chapter import tolerant upload any number of questions in one JSON file; the uploader validates all records, deduplicates them, and automatically commits large uploads in safe Firestore batches.
-<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #186</b> — Financial Accounting chapters updated exactly as per the supplied Paper 6 structure; Bills of Exchange, Consignment and Joint Venture are separate chapters.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn">Continue with Google</button>
@@ -178,7 +177,17 @@ const CHAPTERS_BY_SUBJECT={
     "Business Communication"
   ],
   "Financial Accounting":[
-    "Accounting Fundamentals","Accounting for Special Transactions","Final Accounts","Accounting for Partnership Firms","Accounting for Incomplete Records","Branch Accounting","Departmental Accounting","Accounting for Hire Purchase and Instalment System","Accounting for Consignment","Accounting for Joint Venture","Accounting for Bills of Exchange","Accounting for Insurance Claims","Accounting for Royalty","Accounting for Investment","Accounting for Non-Profit Organisations","Bank Reconciliation Statement","Rectification of Errors","Cash Flow Statement","Accounting Standards"
+    "Accounting Fundamentals",
+    "Bills of Exchange",
+    "Consignment",
+    "Joint Venture",
+    "Preparation of Final Accounts of Commercial Organisations, Not-for-Profit Organisations and from Incomplete Records",
+    "Partnership Accounting",
+    "Lease Accounting",
+    "Branch (including Foreign Branch) and Departmental Accounts",
+    "Insurance Claim for Loss of Stock and Loss of Profit",
+    "Hire Purchase and Installment Sale Transactions",
+    "Accounting Standards"
   ],
   "Business Laws and Ethics":[
     "Introduction to Law and Legal System in India",
