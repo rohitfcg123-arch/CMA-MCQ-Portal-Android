@@ -7,7 +7,7 @@
 <header class="topbar"><div class="topbar-inner"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to Index</a></div></header>
 <div class="madeby">✨ Made by CMA Students, for CMA Students ✨</div>
 <main>
-<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #190</b> — Fixed Financial Accounting Firebase PYQ loading; uploaded Paper 6 subjective questions now sync, filter and display correctly.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
+<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #191</b> — Fixed Financial Accounting Firebase PYQ loading; uploaded Paper 6 subjective questions now sync, filter and display correctly.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
 <section class="filters">
 <div class="field"><label for="group">1. Choose CMA Group</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label for="subject">2. Choose Subject</label><select id="subject" disabled><option value="">First choose group</option></select></div>
@@ -28,6 +28,7 @@ window.SCM_CHAPTERS=["COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP AN
 window.SCM_SUBJECTIVE_PYQ=[];
 window.DIT_SUBJECTIVE_PYQ=[];
 window.FA_SUBJECTIVE_PYQ=[];
+window.DIT_INTER1_CHAPTERS=["Basics of Income Tax Act","Heads of Income","Total Income and Tax Liability of Individuals & HUF","Concept of Indirect Taxes","Goods and Services Tax (GST) Laws","Customs Act & Rules"];
 window.DIT_CHAPTERS=[
 "Assessment of Income and Computation of Tax Liability of Various Entities",
 "Tax Management, Return and Assessment Procedure",
@@ -110,6 +111,10 @@ s.addEventListener("change",function(){
   }else if(subject==="Corporate and Economic Laws"){
     fill(t,[["All Chapters","all"],...window.CEL_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all"; note.textContent="Corporate and Economic Laws follows the official 11-module Paper 13 structure. Uploaded P13 subjective PYQs are loaded automatically from Firebase.";
+  }else if(subject==="Direct and Indirect Taxation"){
+    fill(t,[["All Chapters","all"],...window.DIT_INTER1_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all";
+    note.textContent="Direct and Indirect Taxation follows the six Paper 7 modules shown in the CMA syllabus structure."; 
   }else if(subject==="Direct Tax Laws and International Taxation"){
     fill(t,[["All Chapters","all"],...window.DIT_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
