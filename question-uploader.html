@@ -1,5 +1,4 @@
-<!,
-  "Direct Tax Laws and International Taxation":["Assessment of Income and Computation of Tax Liability of Various Entities","Tax Management, Return and Assessment Procedure","Grievance Redressal","Penalties and Prosecutions","Business Restructuring","Different Aspects of Tax Planning","CBDT and Other Authorities","E-commerce Transaction and Liability in Special Cases","Income Computation and Disclosure Standards (ICDS)","Black Money Act, 2015","Case Study","Double Taxation and Avoidance Agreements (DTAA) [Sec.90, 90A and 91]","Transfer Pricing","GAAR"]DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -15,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #181</b> — Expanded Question Uploader subject and chapter categorization from Foundation through Final Group 4, with official law-paper module names added: extracts only the number/part from question titles, validates duplicates/unclear formats, previews changes, and updates only the q field.
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #182</b> — Expanded Question Uploader subject and chapter categorization from Foundation through Final Group 4, with official law-paper module names added: extracts only the number/part from question titles, validates duplicates/unclear formats, previews changes, and updates only the q field.
 <div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
@@ -756,9 +755,37 @@ function normalizeQuestionJsonPayload(raw){
   const parsed=JSON.parse(raw);
   if(Array.isArray(parsed)) return parsed;
   if(parsed&&Array.isArray(parsed.rows)) return parsed.rows;
-  if(parsed&&Array.isArray(parsed.questions)) return parsed.questions;
   if(parsed&&Array.isArray(parsed.data)) return parsed.data;
-  throw Error("JSON must be a non-empty array, or an object containing a rows[], questions[] or data[] array.");
+  if(parsed&&Array.isArray(parsed.questions)){
+    // Accept the CMA question-paper JSON format as well as the uploader's flat format.
+    // Paper metadata is copied into every question, while question/id/options are
+    // converted to the required q/html fields without changing the source wording.
+    const escHtml=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    const questionToHtml=q=>{
+      if(String(q.html||q.questionHtml||q.qHtml||"").trim()) return String(q.html||q.questionHtml||q.qHtml).trim();
+      const body=escHtml(q.question||"").replace(/\\n/g,"<br>");
+      let out="<p>"+body+"</p>";
+      if(Array.isArray(q.options)&&q.options.length){
+        out+="<ol type=\"A\">"+q.options.map(o=>{
+          const text=typeof o==="object"?(o.text??""):o;
+          return "<li>"+escHtml(text).replace(/\\n/g,"<br>")+"</li>";
+        }).join("")+"</ol>";
+      }
+      return out;
+    };
+    return parsed.questions.map((q,i)=>({
+      ...q,
+      group:q.group||parsed.group||"",
+      subject:q.subject||parsed.subject||"",
+      chapter:q.chapter||q.chapterName||q.topic||"",
+      attempt:q.attempt||parsed.attempt||"",
+      q:q.q||q.id||q.questionNumber||q.questionNo||"",
+      html:questionToHtml(q),
+      marks:q.marks==null?q.marks:q.marks,
+      sort:q.sort==null?(i+1):q.sort
+    }));
+  }
+  throw Error("JSON must be a non-empty array, or an object containing rows[], questions[] or data[], or a CMA question-paper object containing questions[].");
 }
 async function applySolutionArray(arr){
  if(!Array.isArray(arr)||!arr.length)throw Error("Solution JSON must be a non-empty array.");
