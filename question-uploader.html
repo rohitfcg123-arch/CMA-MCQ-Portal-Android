@@ -858,6 +858,15 @@ if(arr.length&&arr[0]&&Array.isArray(arr[0].questions)){
 }else importItems=arr;
 const existingSnap=await db.collection("subjectiveQuestions").get();
 const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+const normalizeGroupValue=v=>{
+  const n=canon(v);
+  if(n==="foundation"||n==="cmafoundation")return "foundation";
+  if(n==="inter1"||n==="intergroup1"||n==="cmaintermediategroup1")return "inter1";
+  if(n==="inter2"||n==="intergroup2"||n==="cmaintermediategroup2")return "inter2";
+  if(n==="final3"||n==="finalgroup3"||n==="cmafinalgroup3")return "final3";
+  if(n==="final4"||n==="finalgroup4"||n==="cmafinalgroup4")return "final4";
+  return "";
+};
 const canonicalKey=x=>[x.group,x.subject,x.attempt,x.q].map(canon).join("|");
 const existing=new Map();
 existingSnap.docs.forEach(d=>{
@@ -865,9 +874,11 @@ existingSnap.docs.forEach(d=>{
   if(!existing.has(key))existing.set(key,{id:d.id,data:x});
 });
 const incoming=new Map();
-importItems.forEach((x,i)=>{
+importItems.forEach((raw,i)=>{
+  const x={...raw,group:normalizeGroupValue(raw.group)};
   if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");
-  if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+x.group+". Use the exact subject from the dropdown.");
+  if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+(raw.group||"unknown group")+". Use the exact subject from the dropdown.");
+  if(!(CHAPTERS_BY_SUBJECT[x.subject]||[]).includes(x.chapter))throw Error("Item "+(i+1)+" has an invalid chapter for "+x.subject+". Use the exact chapter from the dropdown.");
   incoming.set(canonicalKey(x),x);
 });
 const batch=db.batch();
