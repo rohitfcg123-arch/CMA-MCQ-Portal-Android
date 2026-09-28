@@ -24,6 +24,7 @@
 <script>
 window.SCM_CHAPTERS=["COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"];
 window.SCM_SUBJECTIVE_PYQ=[];
+window.DIT_SUBJECTIVE_PYQ=[];
 </script>
 <script>
 (function(){
@@ -61,6 +62,10 @@ s.addEventListener("change",function(){
     fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
     note.textContent="SCM follows the 26 chapter names supplied for this portal. Uploaded SCM PYQs are loaded automatically from Firebase.";
+  }else if(subject==="Direct Tax & International Laws"){
+    fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");
+    t.value="all";
+    note.textContent="Direct Tax Laws and International Taxation subjective PYQs are loaded from Firebase.";
   }else{
     fill(t,[["All Topics / Chapters","all"]],"All Topics / Chapters");
     t.value="all";
@@ -83,6 +88,17 @@ function getRowsForSubject(subject){
       solutionHtml:String(x.solutionHtml||"").trim()
     }));
   }
+  if(subject==="Direct Tax & International Laws"){
+    return (window.DIT_SUBJECTIVE_PYQ||[]).map(x=>({
+      s:"Direct Tax Laws and International Taxation",
+      a:String(x.attempt||x.a||"").trim(),
+      q:String(x.q||"").trim(),
+      t:String(x.chapter||x.t||"").trim(),
+      html:String(x.html||""),
+      solutionHtml:String(x.solutionHtml||"").trim(),
+      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
+    }));
+  }
   return [];
 }
 function render(){
@@ -90,7 +106,7 @@ function render(){
   const subject=s.options[s.selectedIndex]?.textContent||"";
   const topic=t.value||"";
   const attempt=at.value||"";
-  const supported=subject==="Strategic Financial Management"||subject==="Strategic Cost Management";
+  const supported=subject==="Strategic Financial Management"||subject==="Strategic Cost Management"||subject==="Direct Tax & International Laws";
   if(!supported){
     status.textContent=subject?"No subjective data is assigned to this subject yet.":"Choose a subject to begin.";
     return;
@@ -133,6 +149,16 @@ async function loadUploadedQuestions(){
     const snap=await db.collection("subjectiveQuestions").get();
     const remote=snap.docs.map(d=>({id:d.id,...d.data()}));
     const sfmRemote=remote.filter(x=>String(x.group||"").toLowerCase()==="final3"&&String(x.subject||"").trim().toLowerCase()==="strategic financial management");
+    const ditRemote=remote.filter(x=>{
+      const g=String(x.group||"").trim().toLowerCase();
+      const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+      return g==="final3"&&(
+        s==="directtaxlawsandinternationaltaxation"||
+        s==="directtaxandinternationallaws"||
+        s==="directtaxinternationaltaxation"
+      );
+    });
+
     const scmRemote=remote.filter(x=>{
       const g=String(x.group||"").trim().toLowerCase();
       const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
@@ -182,6 +208,26 @@ async function loadUploadedQuestions(){
     });
 
     window.SFM_SUBJECTIVE_PYQ=staticRows.concat(remoteSfmRows);
+    const ditUnique=new Map();
+    const ditCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+    ditRemote.forEach(x=>{
+      const row={
+        id:x.id,
+        a:String(x.attempt||x.a||"").trim(),
+        q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),
+        t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
+        html:String(x.html||x.questionHtml||x.qHtml||"").trim(),
+        solutionHtml:String(x.solutionHtml||"").trim(),
+        solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
+      };
+      const k=["final3","directtaxlawsandinternationaltaxation",row.a,row.q].map(ditCanon).join("|");
+      const prev=ditUnique.get(k);
+      const curTime=x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0);
+      const prevTime=prev&&prev.updatedAt?prev.updatedAt:new Date(0);
+      if(!prev || curTime>prevTime) ditUnique.set(k,{...row,updatedAt:curTime});
+    });
+    window.DIT_SUBJECTIVE_PYQ=[...ditUnique.values()];
+
     const scmUnique=new Map();
     const scmCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
     scmRemote.forEach(x=>{
@@ -200,9 +246,9 @@ async function loadUploadedQuestions(){
 
     const topic=document.getElementById("topic");
     const scmStatus=document.getElementById("scmLoadStatus");
-    if(scmStatus){scmStatus.style.display="block";scmStatus.textContent="Firebase sync complete: "+scmRemote.length+" SCM subjective PYQs loaded."}
+    if(scmStatus){scmStatus.style.display="block";scmStatus.textContent="Firebase sync complete: SFM "+sfmRemote.length+" · SCM "+scmRemote.length+" · DT "+ditRemote.length+" subjective PYQs loaded."}
     if(topic)topic.dispatchEvent(new Event("change"));
-    console.info("Subjective PYQ sync: SFM",sfmRemote.length,"SCM",scmRemote.length);
+    console.info("Subjective PYQ sync: SFM",sfmRemote.length,"SCM",scmRemote.length,"DT",ditRemote.length);
   }catch(e){
     console.warn("Subjective PYQ sync failed:",e.message);
     const scmStatus=document.getElementById("scmLoadStatus");
