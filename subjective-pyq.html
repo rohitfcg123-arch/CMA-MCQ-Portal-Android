@@ -41,6 +41,7 @@ window.DIT_CHAPTERS=[
 "Transfer Pricing",
 "GAAR"
 ];
+window.CEL_CHAPTERS=["The Companies Act, 2013","Insolvency and Bankruptcy Code, 2016","Corporate Governance and Social Responsibility and Sustainability","SEBI Regulations","The Competition Act, 2002","Foreign Exchange Management Act, 1999","Laws and Regulations related to Banking Sector","Laws and Regulations related to Insurance Sector","Specific Legal Provisions related to MSME Sector","Laws and Regulations related to Cyber Security and Data Privacy","Laws and Regulations related to Anti-Money Laundering"];
 window.DIT_QUESTION_CHAPTERS={
 "2(a)":"Assessment of Income and Computation of Tax Liability of Various Entities",
 "2(b)":"Assessment of Income and Computation of Tax Liability of Various Entities",
@@ -94,6 +95,9 @@ s.addEventListener("change",function(){
     fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
     note.textContent="SCM follows the 26 chapter names supplied for this portal. Uploaded SCM PYQs are loaded automatically from Firebase.";
+  }else if(subject==="Corporate & Economic Laws"){
+    fill(t,[["All Chapters","all"],...window.CEL_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all"; note.textContent="Corporate and Economic Laws follows the official 11-module Paper 13 structure. Uploaded P13 subjective PYQs are loaded automatically from Firebase.";
   }else if(subject==="Direct Tax & International Laws"){
     fill(t,[["All Chapters","all"],...window.DIT_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
@@ -138,7 +142,7 @@ function render(){
   const subject=s.options[s.selectedIndex]?.textContent||"";
   const topic=t.value||"";
   const attempt=at.value||"";
-  const supported=subject==="Strategic Financial Management"||subject==="Strategic Cost Management"||subject==="Direct Tax & International Laws";
+  const supported=subject==="Strategic Financial Management"||subject==="Strategic Cost Management"||subject==="Direct Tax & International Laws"||subject==="Corporate & Economic Laws";
   if(!supported){
     status.textContent=subject?"No subjective data is assigned to this subject yet.":"Choose a subject to begin.";
     return;
@@ -181,6 +185,7 @@ async function loadUploadedQuestions(){
     const snap=await db.collection("subjectiveQuestions").get();
     const remote=snap.docs.map(d=>({id:d.id,...d.data()}));
     const sfmRemote=remote.filter(x=>String(x.group||"").toLowerCase()==="final3"&&String(x.subject||"").trim().toLowerCase()==="strategic financial management");
+    const celRemote=remote.filter(x=>{const g=String(x.group||"").trim().toLowerCase();const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");return g==="final3"&&(s==="corporateandeconomiclaws"||s==="corporateeconomiclaws"||s==="p13cel");});
     const ditRemote=remote.filter(x=>{
       const g=String(x.group||"").trim().toLowerCase();
       const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
@@ -260,6 +265,9 @@ async function loadUploadedQuestions(){
     });
     window.DIT_SUBJECTIVE_PYQ=[...ditUnique.values()];
 
+    const celUnique=new Map(); const celCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+    celRemote.forEach(x=>{const row={id:x.id,a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]};const k=["final3","corporateandeconomiclaws",row.a,row.q].map(celCanon).join("|");const prev=celUnique.get(k);const cur=x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0);const pt=prev&&prev.updatedAt?prev.updatedAt:new Date(0);if(!prev||cur>pt)celUnique.set(k,{...row,updatedAt:cur});});
+    window.CEL_SUBJECTIVE_PYQ=[...celUnique.values()];
     const scmUnique=new Map();
     const scmCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
     scmRemote.forEach(x=>{
@@ -278,9 +286,9 @@ async function loadUploadedQuestions(){
 
     const topic=document.getElementById("topic");
     const scmStatus=document.getElementById("scmLoadStatus");
-    if(scmStatus){scmStatus.style.display="block";scmStatus.textContent="Firebase sync complete: SFM "+sfmRemote.length+" · SCM "+scmRemote.length+" · DT "+ditRemote.length+" subjective PYQs loaded."}
+    if(scmStatus){scmStatus.style.display="block";scmStatus.textContent="Firebase sync complete: SFM "+sfmRemote.length+" · SCM "+scmRemote.length+" · DT "+ditRemote.length+" · CEL "+celRemote.length+" subjective PYQs loaded."}
     if(topic)topic.dispatchEvent(new Event("change"));
-    console.info("Subjective PYQ sync: SFM",sfmRemote.length,"SCM",scmRemote.length,"DT",ditRemote.length);
+    console.info("Subjective PYQ sync: SFM",sfmRemote.length,"SCM",scmRemote.length,"DT",ditRemote.length,"CEL",celRemote.length);
   }catch(e){
     console.warn("Subjective PYQ sync failed:",e.message);
     const scmStatus=document.getElementById("scmLoadStatus");
