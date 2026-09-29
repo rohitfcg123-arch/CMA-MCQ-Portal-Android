@@ -233,13 +233,128 @@ function setupPortalSections(){
   ]
 };
 const CHAPTERS_BY_SUBJECT={
-  "Cost Accounting":[
-    "Introduction to Cost Accounting",
-    "Cost Ascertainment – Elements of Cost",
-    "Cost Accounting Standards (CAS 1 to CAS 24)",
-    "Cost Book Keeping",
-    "Methods of Costing",
-    "Cost Accounting Techniques"
+  "Fundamentals of Business Laws and Business Communication":[
+    "Introduction",
+    "Indian Contracts Act, 1872",
+    "Sale of Goods Act, 1930",
+    "Negotiable Instruments Act, 1881",
+    "Business Communication"
+  ],
+  "Financial Accounting":[
+    "Accounting Fundamentals",
+    "Bills of Exchange",
+    "Consignment",
+    "Joint Venture",
+    "Preparation of Final Accounts of Commercial Organisations",
+    "Preparation of Final Accounts of Not-for-Profit Organisations",
+    "Preparation of Final Accounts from Incomplete Records",
+    "Partnership Accounting",
+    "Lease Accounting",
+    "Branch (including Foreign Branch) and Departmental Accounts",
+    "Insurance Claim for Loss of Stock and Loss of Profit",
+    "Hire Purchase and Installment Sale Transactions",
+    "Accounting Standards"
+  ],
+  "Business Laws and Ethics":[
+    "Introduction to Law and Legal System in India",
+    "Indian Contracts Act, 1872",
+    "Sale of Goods Act, 1930",
+    "Negotiable Instruments Act, 1881",
+    "Indian Partnership Act, 1932",
+    "Limited Liability Partnership Act, 2008",
+    "Factories Act, 1948",
+    "Payment of Gratuity Act, 1972",
+    "Employees Provident Fund and Miscellaneous Provisions Act, 1952",
+    "Employees State Insurance Act, 1948",
+    "The Code on Wages, 2019",
+    "Companies Act, 2013",
+    "Business Ethics and Emotional Intelligence"
+  ],
+  "Corporate and Economic Laws":[
+    "The Companies Act, 2013",
+    "Insolvency and Bankruptcy Code, 2016",
+    "Corporate Governance and Social Responsibility and Sustainability",
+    "SEBI Regulations",
+    "The Competition Act, 2002",
+    "Foreign Exchange Management Act, 1999",
+    "Laws and Regulations related to Banking Sector",
+    "Laws and Regulations related to Insurance Sector",
+    "Specific Legal Provisions related to MSME Sector",
+    "Laws and Regulations related to Cyber Security and Data Privacy",
+    "Laws and Regulations related to Anti-Money Laundering"
+  ],
+  "Strategic Financial Management":[
+    "Security Analysis","Equity/Share Valuation","Bond Valuation","Mutual Funds","Portfolio Management","Derivatives","Foreign Exchange","Investment Decisions","Evaluation of Risky Proposals","Leasing Decision","Investment Decisions, Project Planning and Control","Evaluation of Risky Proposal for Investment Decisions","Leasing Decisions","Securitization"
+  ],
+  "Strategic Cost Management":[
+    "COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"
+  ],
+  "Cost and Management Audit":[
+    "Basics of Cost Audit",
+    "Companies (Cost Records and Audit) Rules, 2014 (as amended)",
+    "Cost Auditor",
+    "Overview of Cost Accounting Standards and GACAP",
+    "Cost Auditing and Assurance Standards",
+    "Cost Audit Programme",
+    "Cost Audit Documentation, Audit Process and Execution",
+    "Preparation and Filing of Cost Audit Report",
+    "Basics of Management Audit",
+    "Management Reporting Issues and Analysis",
+    "Management Audit in Different Functions",
+    "Evaluation of Corporate Image",
+    "Information Systems Security Audit",
+    "Internal Control and Internal Audit",
+    "Operational Audit and Internal Audit under Companies Act, 2013",
+    "Audit of Different Service Organisations",
+    "Forensic Audit",
+    "Anti-Money Laundering"
+  ],
+  "Operations Management and Strategic Management":["Operations Management","Strategic Management"],
+  "Corporate Accounting and Auditing":["Corporate Accounting","Auditing"],
+  "Financial Management and Business Data Analytics":["Financial Management","Business Data Analytics"],
+  "Management Accounting":["Management Accounting"],
+  "Direct and Indirect Taxation":["Basics of Income Tax Act","Heads of Income","Total Income and Tax Liability of Individuals & HUF","Concept of Indirect Taxes","Goods and Services Tax (GST) Laws","Customs Act & Rules"],
+  "Cost Accounting":["Cost Accounting"],
+  "Cost and Management Audit":["Cost Audit","Management Audit","Internal Audit","Operational Audit","Forensic Audit","Anti-Money Laundering"],
+  "Corporate Financial Reporting":["Specific Accounting Standards","Financial Instruments","Business Combinations and Restructuring","Consolidated Financial Statements","Recent Developments in Financial Reporting","Government Accounting in India"],
+  "Indirect Tax Laws and Practice":["GST","Customs"],
+  "Entrepreneurship and Startup":["Entrepreneurship","Startup"],
+  "Risk Management, Banking and Insurance":["Risk Management","Banking","Insurance"],
+  "Strategic Performance Management and Business Valuation":["Strategic Performance Management","Business Valuation"],
+  "Corporate & Economic Laws":["The Companies Act, 2013","Insolvency and Bankruptcy Code, 2016","Corporate Governance and Social Responsibility and Sustainability","SEBI Regulations","The Competition Act, 2002","Foreign Exchange Management Act, 1999","Laws and Regulations related to Banking Sector","Laws and Regulations related to Insurance Sector","Specific Legal Provisions related to MSME Sector","Laws and Regulations related to Cyber Security and Data Privacy","Laws and Regulations related to Anti-Money Laundering"],
+  "Direct Tax & International Laws":["Direct Taxation","International Taxation"],
+  "Corporate Financial Reporting":[
+    "Specific Accounting Standards",
+    "Valuation of Shares (Including Determination of Goodwill, Post-Valuation of Tangible and Intangible Assets)",
+    "Accounting of Financial Instruments",
+    "NBFCs – Provisioning Norms, Accounting and Reporting",
+    "Accounting for Business Combinations and Restructuring",
+    "Consolidated Financial Statements and Separate Financial Statements",
+    "Recent Developments in Financial Reporting",
+    "Government Accounting in India"
+  ],
+  "Indirect Tax Laws and Practice":[
+    "Supply under GST - A Refresh",
+    "Time of Supply (Advanced)",
+    "Place of Supply",
+    "Valuation (Advanced)",
+    "Input Tax Credit (Advanced)",
+    "Zero Rated Supplies and Deemed Exports",
+    "TDS & TCS under GST",
+    "E-way Bill",
+    "GST Refunds- Inverted Duty Structure and Zero-rated Supplies",
+    "GST Returns",
+    "Accounts and Records",
+    "GST Annual Return and GST Audit Return",
+    "Transition to GST (Transitional Provisions)",
+    "Dispute Resolution Mechanism under GST",
+    "Inspection, Search, Seizure, Arrest and Prosecution",
+    "Anti-profiteering",
+    "Walkthrough of GSTN Portal",
+    "Valuation and Related Party Transactions",
+    "Customs Procedures - Baggage & Courier / Post",
+    "Manufacture in Bond",
+    "Duty Drawback"
   ]
 };
 function populateSubjects(group,selected){
@@ -248,6 +363,7 @@ function populateSubjects(group,selected){
   if(selected&&list.includes(selected))$("subject").value=selected;
 }
 
+function setBusy(btn,busy,label){if(!btn)return;if(busy){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>'+label}else{btn.disabled=false;btn.textContent=label}}
 let DATA=[];
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function fmt(v){if(!v)return"";if(v.toDate)return v.toDate().toLocaleString("en-IN");return new Date(v).toLocaleString("en-IN")}
