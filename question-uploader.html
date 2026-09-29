@@ -1262,7 +1262,12 @@ $("saveBtn").onclick=async()=>{const btn=$("saveBtn");try{
   $("msg").textContent="Question validated and staged for PDF verification. Firebase was NOT changed.";
   $("msg").className="msg ok";
   $("pendingVerificationPanel").scrollIntoView({behavior:"smooth",block:"start"});
-  await generatePendingVerificationPdf();
+  // Do not keep the main Import button in "Validating" state while the
+  // browser renders a large verification PDF. Staging is complete at this
+  // point; PDF generation runs separately and updates its own status.
+  $("jsonMsg").textContent=incoming.size+" unique question(s) validated and staged. Preparing the verification PDF separately… Firebase was NOT changed.";
+  $("jsonMsg").className="msg ok";
+  generatePendingVerificationPdf().catch(()=>{});
 }catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{setBusy(btn,false,"Upload Question")}};
 
 let duplicateDecisionResolver=null;
