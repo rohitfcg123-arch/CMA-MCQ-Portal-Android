@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #195</b> — Fixed a JavaScript syntax error in the uploader that was preventing the entire page script from running; Google Login/Logout buttons can now execute normally.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #197</b> — Fixed Google Login flow: mobile/Android now uses Firebase redirect sign-in, desktop uses popup sign-in, with explicit global login/logout handlers.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -374,32 +374,28 @@ async function login(){
   $("loginMsg").className="msg";
   $("loginMsg").textContent="Opening Google sign-in…";
   try{
-    // Start with popup even on Android. A user-initiated popup is the most
-    // reliable flow for this GitHub Pages uploader. If Chrome blocks it,
-    // fall back to Firebase redirect authentication.
+    // Android/mobile: use Firebase redirect directly. Popup authentication
+    // is unreliable on mobile browsers and can leave the button appearing dead.
+    const mobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||"");
+    if(mobile){
+      $("loginMsg").textContent="Opening Google sign-in page…";
+      await auth.signInWithRedirect(provider);
+      return;
+    }
+    // Desktop: popup keeps the uploader page open.
     const result=await auth.signInWithPopup(provider);
     if(result&&result.user){
       $("loginMsg").className="msg ok";
       $("loginMsg").textContent="Google sign-in successful. Loading uploader…";
     }
   }catch(e){
-    const code=e&&e.code?e.code:"";
-    if(code==="auth/popup-blocked" || code==="auth/popup-closed-by-user"){
-      try{
-        $("loginMsg").className="msg";
-        $("loginMsg").textContent="Popup was blocked. Opening Google sign-in page…";
-        await auth.signInWithRedirect(provider);
-        return;
-      }catch(re){
-        showLoginError(re);
-      }
-    }else{
-      showLoginError(e);
-    }
+    showLoginError(e);
     btn.disabled=false;
     btn.textContent="Continue with Google";
   }
 }
+window.login=login;
+window.logout=logout;
 async function logout(){
   try{
     await auth.signOut();
