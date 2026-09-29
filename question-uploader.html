@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #206</b> — Restored the complete working uploader initialization/auth flow. Google Login is unchanged from the known-working version; only the broken/missing initialization block was restored.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #209</b> — Added strict master chapter validation. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -406,7 +406,7 @@ function populateSubjects(group,selected){
 }
 
 
-/* STRICT CMA CHAPTER MASTER VALIDATION — UPDATE #208 */
+/* STRICT CMA CHAPTER MASTER VALIDATION — UPDATE #209 */
 const CMA_MASTER_URL="config/CMA_Chapter_Topic_Master_v1.json?v=20260929u1";
 let CMA_UPLOAD_MASTER=null;
 
