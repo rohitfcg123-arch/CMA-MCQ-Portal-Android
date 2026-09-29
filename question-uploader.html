@@ -32,7 +32,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #216</b> — Added a mandatory PDF verification gate. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #217</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -86,6 +86,25 @@
 <textarea id="solutionJson" style="margin-top:12px;min-height:180px" placeholder='Paste Solution JSON array here...'></textarea>
 <div class="toolbar"><button class="btn gold" id="importSolutionsBtn">Import Answers JSON</button><button class="btn gray" id="exportSolutionsBtn">Export Answers JSON</button></div><div id="solutionJsonMsg" class="msg"></div>
 </div></section>
+
+<section class="panel verification-panel" id="pendingVerificationPanel">
+<h2>🔐 Pending Verification — Publish Only After PDF Approval</h2>
+<div class="body">
+<div class="note"><b>Safety gate:</b> Imported questions are first staged in this browser only. They are <b>NOT written to Firebase</b> and are <b>NOT visible in the student portal</b> until the verification PDF is downloaded and you explicitly approve the staged questions.</div>
+<div class="verification-status">
+<span class="verification-badge" id="pendingVerificationCount">Pending: 0</span>
+<span class="verification-badge" id="pendingVerificationPdfStatus">PDF: Not generated</span>
+<span class="verification-badge" id="pendingVerificationStatus">No questions are waiting for approval.</span>
+</div>
+<div class="toolbar">
+<button class="btn gold" id="downloadPendingPdfBtn" type="button" disabled>📄 Download Verification PDF</button>
+<button class="btn" id="approvePendingBtn" type="button" disabled>✅ Approve &amp; Publish</button>
+<button class="btn gray" id="discardPendingBtn" type="button" disabled>Discard Pending</button>
+</div>
+<div id="pendingVerificationMsg" class="msg"></div>
+<div id="pendingVerificationPreview" class="verification-preview hidden"></div>
+</div>
+</section>
 
 <section class="panel">
 <section class="panel" id="masterExtractionPanel"><h2>🧩 Master Chapter + Topic Extraction</h2><div class="body">
@@ -1768,6 +1787,7 @@ function pendingQuestionCard(item,index){
 
 function renderPendingVerification(){
   const panel=$("pendingVerificationPanel"),preview=$("pendingVerificationPreview");
+  if(!panel||!preview){ throw new Error("Pending Verification panel is missing from the uploader page. Please refresh after the latest deployment."); }
   if(!PENDING_JSON_IMPORT||!PENDING_JSON_IMPORT.items.length){
     $("pendingVerificationCount").textContent="Pending: 0";
     $("pendingVerificationPdfStatus").textContent="PDF: Not generated";
