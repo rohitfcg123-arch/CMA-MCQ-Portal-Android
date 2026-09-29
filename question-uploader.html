@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #214</b> — Added the complete Financial Management and Business Data Analytics chapter list to the Question Uploader, independent of whether questions have been uploaded. Correction import still changes only Chapter/Chapter ID/Topic. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #215</b> — Fixed the JSON import validation dependency so strict Group + Subject + Chapter validation can run without relying on normalizeGroupValue. Subject and Chapter validation rules remain strict; invalid or duplicate metadata is still rejected rather than silently accepted.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
