@@ -90,7 +90,7 @@
 <button class="btn gold" id="saveBulkMarks">Save as Pending</button>
 <button class="btn" id="approveBulkMarks">Approve Pending</button>
 <button class="btn gray" id="clearBulkMarks">Clear</button>
-<span class="count" id="bulkMarksStatus"></span><span class="count" id="bulkMarksThreePartCount" style="margin-left:12px"></span><span class="count" id="bulkMarksPendingCount" style="margin-left:12px"></span>
+<span class="count" id="bulkMarksStatus"></span><span class="count" id="bulkMarksThreePartCount" style="margin-left:12px"></span><span class="count" id="bulkMarksPendingCount" style="margin-left:12px"></span><span class="count" id="bulkMarksCorrectionCount" style="margin-left:12px"></span>
 </div>
 <div class="tablewrap" style="margin-top:12px"><table style="min-width:1000px"><thead><tr><th><input id="bulkMarksSelectAll" type="checkbox"></th><th>Attempt</th><th>Question</th><th>Current Marks</th><th>Pending Marks</th><th>Subject</th><th>Chapter</th></tr></thead><tbody id="bulkMarksRows"></tbody></table></div>
 <div id="bulkMarksMsg" class="msg"></div>
@@ -749,6 +749,17 @@ function bulkMarksFiltered(){
     return true;
   });
 }
+function isThreePartQuestion(x, rows){
+  const raw=String(x.q||"").trim();
+  const m=raw.match(/^(\d+)\s*[\(\[]?\s*([A-Za-z])\s*[\)\]]?$/);
+  if(!m)return false;
+  const base=m[1];
+  const siblings=rows.filter(y=>{
+    const z=String(y.q||"").trim().match(/^(\d+)\s*[\(\[]?\s*([A-Za-z])\s*[\)\]]?$/);
+    return z&&z[1]===base&&String(y.group||"")===String(x.group||"")&&String(y.subject||"")===String(x.subject||"")&&String(y.attempt||"")===String(x.attempt||") && String(y.chapter||"")===String(x.chapter||"");
+  }).map(y=>String(y.q||"").trim().match(/^(\d+)\s*[\(\[]?\s*([A-Za-z])\s*[\)\]]?$/)[2].toUpperCase());
+  return ["A","B","C"].every(p=>siblings.includes(p));
+}
 function renderBulkMarks(){
   const rows=bulkMarksFiltered();
   $("bulkMarksRows").innerHTML=rows.map(x=>{
@@ -767,6 +778,13 @@ function renderBulkMarks(){
   const threePartCount=[...threePartSets.values()].filter(parts=>parts.has("A")&&parts.has("B")&&parts.has("C")).length;
   $("bulkMarksStatus").textContent=rows.length+" question(s) shown";
   $("bulkMarksThreePartCount").textContent="3-Part Questions (A+B+C): "+threePartCount;
+  const correctionCount=rows.filter(x=>{
+    if(isThreePartQuestion(x,rows))return false;
+    const raw=String(x.q||"").trim();
+    const hasSubPart=/^\d+\s*[A-Za-z]\s*$|^\d+\s*[\(\[]\s*[A-Za-z]\s*[\)\]]\s*$/.test(raw);
+    return (hasSubPart ? Number(x.marks) !== 14 : Number(x.marks) !== 7);
+  }).length;
+  $("bulkMarksCorrectionCount").textContent="Marks Correction Needed: "+correctionCount;
   $("bulkMarksPendingCount").textContent="Pending Questions: "+pendingCount;
 }
 $("previewBulkMarks").onclick=()=>{renderBulkMarks();$("bulkMarksMsg").className="msg ok";$("bulkMarksMsg").textContent="Questions loaded. Select the rows you want to update.";};
