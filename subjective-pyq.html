@@ -134,7 +134,7 @@ function getRowsForSubject(subject){
     return (window.FA_SUBJECTIVE_PYQ||[]).map(x=>({s:"Financial Accounting",a:String(x.a||"").trim(),q:String(x.q||"").trim(),t:String(x.t||"").trim(),html:String(x.html||""),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],marks:x.marks}));
   }
   if(subject==="Strategic Financial Management"){
-    return (window.SFM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]}));
+    return (window.SFM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],marks:x.marks}));
   }
   if(subject==="Strategic Cost Management"){
     return (window.SCM_SUBJECTIVE_PYQ||[]).map(x=>({
@@ -143,7 +143,8 @@ function getRowsForSubject(subject){
       q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),
       t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
       html:String(x.html||x.questionHtml||x.qHtml||""),
-      solutionHtml:String(x.solutionHtml||"").trim()
+      solutionHtml:String(x.solutionHtml||"").trim(),
+      marks:x.marks
     }));
   }
   if(subject==="Business Laws and Ethics"){
@@ -168,7 +169,7 @@ function getRowsForSubject(subject){
       t:String(x.chapter||x.t||window.DIT_QUESTION_CHAPTERS[String(x.q||"").trim()]||"").trim(),
       html:String(x.html||""),
       solutionHtml:String(x.solutionHtml||"").trim(),
-      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
+      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],marks:x.marks
     }));
   }
   const currentGroup=g.value;
@@ -176,7 +177,7 @@ function getRowsForSubject(subject){
     const gc=String(x.group||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
     const wantedGroup=String(currentGroup||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
     return gc===wantedGroup && normalize(x.subject)===normalize(subject);
-  }).map(x=>({s:x.subject,a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:x.solutionHtml,solutionHtmls:x.solutionHtmls}));
+  }).map(x=>({s:x.subject,a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:x.solutionHtml,solutionHtmls:x.solutionHtmls,marks:x.marks}));
 }
 function render(){
   results.innerHTML="";
