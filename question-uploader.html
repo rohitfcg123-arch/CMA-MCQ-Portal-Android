@@ -32,7 +32,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #215</b> — Fixed the JSON import validation dependency so strict Group + Subject + Chapter validation can run without relying on normalizeGroupValue. Subject and Chapter validation rules remain strict; invalid or duplicate metadata is still rejected rather than silently accepted.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #216</b> — Added a mandatory PDF verification gate. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -1220,7 +1220,31 @@ function payload(){
 }
 $("previewBtn").onclick=()=>{try{$("preview").innerHTML="<h3 style=\"margin:0 0 8px;color:var(--teal)\">Question Preview</h3>"+$("html").value+($("solution").value.trim()?"<div class=\"solution-preview\"><b>Institute Solution Preview</b>"+$("solution").value+"</div>":"");$("preview").classList.remove("hidden")}catch(e){}};
 $("clearBtn").onclick=()=>{["qno","marks","sort","html","solution"].forEach(id=>$(id).value="");$("preview").classList.add("hidden");$("msg").textContent=""};
-$("saveBtn").onclick=async()=>{const btn=$("saveBtn");try{setBusy(btn,true,"Validating chapter…");let d=payload();d=canonicalizeAgainstStrictMaster(d,"Question");const snap=await db.collection("subjectiveQuestions").get();const key=questionIdentityKey(d);const hit=snap.docs.find(doc=>questionIdentityKey(doc.data())===key);if(hit){const decision=await askDuplicateDecisions([{key,x:d,existing:{id:hit.id,data:hit.data()}}]);if(decision===null){$("msg").textContent="Upload cancelled. Existing question was not changed.";$("msg").className="msg";return}if(decision.get(key)!=="replace"){$("msg").textContent="Skipped. Existing question was kept unchanged.";$("msg").className="msg";return}await db.collection("subjectiveQuestions").doc(hit.id).set(d,{merge:true});$("msg").textContent="Existing question replaced/overwritten successfully.";}else{await db.collection("subjectiveQuestions").add(d);$("msg").textContent="Question uploaded successfully. It will appear in the user portal automatically.";}$("msg").className="msg ok";$("clearBtn").click();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{setBusy(btn,false,"Upload Question")}};
+$("saveBtn").onclick=async()=>{const btn=$("saveBtn");try{
+  setBusy(btn,true,"Preparing verification…");
+  let d=payload();d=canonicalizeAgainstStrictMaster(d,"Question");
+  const snap=await db.collection("subjectiveQuestions").get();
+  const key=questionIdentityKey(d);
+  const hit=snap.docs.find(doc=>questionIdentityKey(doc.data())===key);
+  let item={id:null,data:{
+    group:d.group,subject:d.subject,chapter:d.chapter,chapterId:String(d.chapterId||"").trim(),topic:String(d.topic||"").trim(),
+    attempt:d.attempt,q:d.q,marks:d.marks===""||d.marks==null?null:Number(d.marks),html:String(d.html||""),
+    solutionHtml:String(d.solutionHtml||"").trim(),solutionHtmls:String(d.solutionHtml||"").trim()?[String(d.solutionHtml).trim()]:[],sort:Number(d.sort)||0
+  },update:false};
+  if(hit){
+    const decision=await askDuplicateDecisions([{key,x:d,existing:{id:hit.id,data:hit.data()}}]);
+    if(decision===null){$("msg").textContent="Upload cancelled. Existing question was not changed.";$("msg").className="msg";return}
+    if(decision.get(key)!=="replace"){$("msg").textContent="Skipped. Existing question was kept unchanged.";$("msg").className="msg";return}
+    item.id=hit.id;item.update=true;
+  }
+  PENDING_JSON_IMPORT={items:[item],createdAt:new Date().toISOString(),sourceCount:1,added:item.update?0:1,updated:item.update?1:0,skipped:0};
+  renderPendingVerification();
+  $("clearBtn").click();
+  $("msg").textContent="Question validated and staged for PDF verification. Firebase was NOT changed.";
+  $("msg").className="msg ok";
+  $("pendingVerificationPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  await generatePendingVerificationPdf();
+}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{setBusy(btn,false,"Upload Question")}};
 
 let duplicateDecisionResolver=null;
 function duplicatePreviewText(v){
