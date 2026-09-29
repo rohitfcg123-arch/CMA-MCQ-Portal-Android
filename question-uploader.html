@@ -1770,23 +1770,27 @@ function renderPendingVerification(){
 
 async function generatePendingVerificationPdf(){
   if(!PENDING_JSON_IMPORT||!PENDING_JSON_IMPORT.items.length)return;
-  const btn=$("downloadPendingPdfBtn");
+  let stage=null;
   try{
     if(!window.jspdf||!window.jspdf.jsPDF)throw new Error("PDF engine could not be loaded. Refresh the page and try the JSON import again.");
     const source=$("pendingVerificationPreview");
-    const stage=document.createElement("div");
+    stage=document.createElement("div");
     stage.className="pdf-stage";
     stage.innerHTML='<div class="pdf-header"><h1>CMA Zone — Question Verification PDF</h1><p>Generated from the exact staged question HTML. This PDF is for verification only.</p><p>Questions: '+PENDING_JSON_IMPORT.items.length+' · Generated: '+new Date().toLocaleString("en-IN")+'</p></div>'+source.innerHTML;
     document.body.appendChild(stage);
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     const {jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:"p",unit:"pt",format:"a4",compress:true});
-    await doc.html(stage,{
-      x:28,y:28,width:538,windowWidth:794,
-      margin:[28,28,32,28],
-      autoPaging:"text",
-      html2canvas:{scale:1.35,useCORS:true,backgroundColor:"#ffffff",logging:false},
-      callback:()=>{}
+    await new Promise((resolve,reject)=>{
+      try{
+        doc.html(stage,{
+          x:28,y:28,width:538,windowWidth:794,
+          margin:[28,28,32,28],
+          autoPaging:"text",
+          html2canvas:{scale:1.35,useCORS:true,backgroundColor:"#ffffff",logging:false},
+          callback:pdf=>resolve(pdf)
+        });
+      }catch(err){reject(err);}
     });
     PENDING_JSON_IMPORT.pdfBlob=doc.output("blob");
     PENDING_JSON_IMPORT.pdfName="CMA_Zone_Verification_"+new Date().toISOString().slice(0,19).replace(/[:T]/g,"-")+".pdf";
@@ -1803,7 +1807,7 @@ async function generatePendingVerificationPdf(){
     $("approvePendingBtn").disabled=true;
     throw e;
   }finally{
-    stage&&stage.remove();
+    if(stage)stage.remove();
   }
 }
 
