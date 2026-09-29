@@ -52,7 +52,9 @@
 <input id="jsonFile" type="file" accept=".json,application/json" multiple style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <div class="count" style="margin-top:6px">Select <b>one or multiple Question JSON files</b> at the same time, or paste JSON below. You can select all 6 attempts together.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
-<div class="toolbar"><button class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button></div><div id="jsonMsg" class="msg"></div>
+<div class="toolbar"><button class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL Portal Questions + Topic Data</button></div>
+<div class="count" id="portalQuestionExportCount" style="margin-top:8px"></div>
+<div id="jsonMsg" class="msg"></div>
 <div style="height:1px;background:var(--line);margin:18px 0"></div>
 <div class="note"><b>Solution JSON Update</b> — Use this for an answer-only JSON. It matches existing Firestore questions <b>and</b> the hard-coded SFM questions already in the user portal. Matching uses <code>group + subject + attempt + q</code> with chapter as an additional exact match when available. If a question exists only in the hard-coded SFM file, the system creates one Firestore copy carrying the same question + solution, so the solution appears without creating a duplicate in the user portal.</div>
 <input id="solutionJsonFile" type="file" accept=".json,application/json" multiple style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
@@ -1395,6 +1397,45 @@ $("exportSolutionsBtn").onclick=async()=>{
   }
 };
 $("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" question(s) updated/created with "+result.answersApplied+" answer version(s). Multiple alternative answers for the same question are stored together."+(result.missing&&result.missing.length?" "+result.missing.length+" unmatched answer item(s) skipped; no blank questions were created.":"")+" Answers are now editable from Edit / Answer.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
+$("exportPortalQuestionsBtn").onclick=async()=>{
+  const btn=$("exportPortalQuestionsBtn");
+  try{
+    setBusy(btn,true,"Reading All Portal Questions…");
+    const snap=await db.collection("subjectiveQuestions").get();
+    const questions=snap.docs.map(d=>{
+      const x=d.data();
+      const out={...x};
+      delete out.updatedAt;
+      delete out.updatedBy;
+      out.id=d.id;
+      out.topic=String(x.topic||x.topicName||"").trim();
+      out.chapter=String(x.chapter||x.chapterName||"").trim();
+      return out;
+    });
+    const topicCount=questions.filter(x=>x.topic).length;
+    const payload={
+      exportVersion:"1.0",
+      exportedAt:new Date().toISOString(),
+      source:"CMA Zone Firebase subjectiveQuestions",
+      totalQuestions:questions.length,
+      questionsWithTopic:topicCount,
+      questionsWithoutTopic:questions.length-topicCount,
+      note:"This export contains every currently uploaded subjective question. Existing topic values are preserved when present; blank topic values are intentionally left blank so ChatGPT can classify them from the question content.",
+      questions
+    };
+    downloadJson("CMA_Zone_ALL_Portal_Questions_Topic_Audit.json",payload);
+    $("portalQuestionExportCount").textContent="Exported "+questions.length.toLocaleString("en-IN")+" questions — "+topicCount.toLocaleString("en-IN")+" already have topic data; "+(questions.length-topicCount).toLocaleString("en-IN")+" need topic classification.";
+    $("portalQuestionExportCount").className="count ok";
+    $("jsonMsg").textContent="Complete portal question data downloaded. Send this JSON to ChatGPT; no old JSON files are required.";
+    $("jsonMsg").className="msg ok";
+  }catch(e){
+    $("portalQuestionExportCount").textContent="";
+    $("jsonMsg").textContent="Could not export portal questions: "+(e.message||e);
+    $("jsonMsg").className="msg err";
+  }finally{
+    setBusy(btn,false,"📥 Download ALL Portal Questions + Topic Data");
+  }
+};
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
 
 /* CMA Zone Master Chapter + Topic Extraction — UPDATE #207 */
