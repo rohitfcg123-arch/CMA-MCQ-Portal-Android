@@ -54,6 +54,12 @@
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
 <div class="toolbar"><button class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL JSONs</button></div>
 <div class="count" id="portalQuestionExportCount" style="margin-top:8px"></div>
+<div style="height:1px;background:var(--line);margin:18px 0"></div>
+<div class="note"><b>🔧 Chapter + Topic Correction JSON:</b> Upload the correction JSON generated from the exported portal questions. It uses Group + Subject + Attempt + Question No. + HTML hash to identify the exact existing Firestore question. It updates <b>only</b> Chapter/Chapter ID where correction is required and Topic; question HTML, marks, attempt, q, subject and solution remain untouched. The complete file is validated before any Firestore write, so an ambiguous/missing match blocks the whole operation.</div>
+<input id="correctionJsonFile" type="file" accept=".json,application/json" style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
+<textarea id="correctionJson" style="margin-top:12px;min-height:160px" placeholder='Paste Chapter + Topic Correction JSON here...'></textarea>
+<div class="toolbar"><button class="btn gold" id="importCorrectionsBtn">🔧 Apply Chapter + Topic Corrections</button></div>
+<div id="correctionJsonMsg" class="msg"></div>
 <div id="jsonMsg" class="msg"></div>
 <div style="height:1px;background:var(--line);margin:18px 0"></div>
 <div class="note"><b>Solution JSON Update</b> — Use this for an answer-only JSON. It matches existing Firestore questions <b>and</b> the hard-coded SFM questions already in the user portal. Matching uses <code>group + subject + attempt + q</code> with chapter as an additional exact match when available. If a question exists only in the hard-coded SFM file, the system creates one Firestore copy carrying the same question + solution, so the solution appears without creating a duplicate in the user portal.</div>
@@ -1527,6 +1533,41 @@ $("exportPortalQuestionsBtn").onclick=async()=>{
     setBusy(btn,false,"📥 Download ALL JSONs");
   }
 };
+$("importCorrectionsBtn").onclick=async()=>{const btn=$("importCorrectionsBtn");try{
+  setBusy(btn,true,"Validating Corrections…");
+  let raw=$("correctionJson").value.trim();
+  const file=$("correctionJsonFile").files[0];
+  if(!raw&&file) raw=await readTextFile(file);
+  if(!raw)throw Error("Please select or paste the Chapter + Topic Correction JSON first.");
+  const payload=JSON.parse(raw);
+  const corrections=Array.isArray(payload)?payload:payload.corrections;
+  if(!Array.isArray(corrections)||!corrections.length)throw Error("Correction JSON must contain a non-empty corrections[] array.");
+  const snap=await db.collection("subjectiveQuestions").get();
+  const byIdentity=new Map();
+  snap.docs.forEach(d=>{const x=d.data();const key=[x.group,x.subject,x.attempt,x.q].map(v=>String(v||"").trim()).join("||");if(!byIdentity.has(key))byIdentity.set(key,[]);byIdentity.get(key).push(d);});
+  const enc=new TextEncoder();
+  const hash=async s=>{const buf=await crypto.subtle.digest("SHA-256",enc.encode(String(s||"")));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");};
+  const planned=[];const errors=[];
+  for(let i=0;i<corrections.length;i++){
+    const r=corrections[i],m=r&&r.match;
+    if(!m||!m.group||!m.subject||!m.attempt||!m.q||!m.htmlSha256){errors.push("Correction "+(i+1)+": missing exact match fields.");continue;}
+    const key=[m.group,m.subject,m.attempt,m.q].map(v=>String(v||"").trim()).join("||");
+    const candidates=byIdentity.get(key)||[];
+    const targetHash=String(m.htmlSha256).toLowerCase();
+    const matches=[];
+    for(const d of candidates){if((await hash(d.data().html||""))===targetHash)matches.push(d);}
+    if(matches.length!==1){errors.push("Correction "+(i+1)+": exact question match not found or ambiguous for "+m.subject+" / "+m.attempt+" / "+m.q+".");continue;}
+    const data={};
+    if(Object.prototype.hasOwnProperty.call(r,"chapter")){if(!String(r.chapter||"").trim()||!String(r.chapterId||"").trim())errors.push("Correction "+(i+1)+": chapter correction requires chapter and chapterId.");else{data.chapter=String(r.chapter).trim();data.chapterId=String(r.chapterId).trim();}}
+    if(Object.prototype.hasOwnProperty.call(r,"topic"))data.topic=String(r.topic||"").trim();
+    if(!Object.keys(data).length){errors.push("Correction "+(i+1)+": no permitted correction fields supplied.");continue;}
+    planned.push({ref:matches[0].ref,data});
+  }
+  if(errors.length)throw Error("No data was changed. Validation failed for "+errors.length+" item(s):\\n"+errors.slice(0,8).join("\\n")+(errors.length>8?"\\n…":""));
+  for(let i=0;i<planned.length;i+=450){const batch=db.batch();planned.slice(i,i+450).forEach(x=>batch.set(x.ref,{...x.data,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL},{merge:true}));await batch.commit();}
+  $("correctionJsonMsg").textContent=planned.length+" question(s) corrected safely. Only Chapter/Chapter ID where supplied and Topic were changed; all other question data was left untouched.";
+  $("correctionJsonMsg").className="msg ok";$("correctionJson").value="";$("correctionJsonFile").value="";await loadQuestions();
+}catch(e){$("correctionJsonMsg").textContent=e.message;$("correctionJsonMsg").className="msg err"}finally{setBusy(btn,false,"🔧 Apply Chapter + Topic Corrections")}};
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
 
 /* CMA Zone Master Chapter + Topic Extraction — UPDATE #207 */
