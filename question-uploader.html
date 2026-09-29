@@ -70,6 +70,7 @@
 </div>
 <div class="toolbar">
 <button class="btn" id="downloadMasterBtn" type="button">⬇️ Download Master Chapter JSON</button>
+<button class="btn gold" id="downloadPortalPackageBtn" type="button">📦 Download Master + All Portal Questions</button>
 <button class="btn" id="loadMasterBtn" type="button">Load Master</button>
 <button class="btn gold" id="runExtractionBtn" type="button">Extract Chapter + Topic</button>
 <button class="btn gray" id="downloadExtractionBtn" type="button" disabled>Download Corrected JSON</button>
@@ -1414,6 +1415,24 @@ function buildCurrentMasterChapterJson(){
   });
   return {version:"1.0",generatedAt:new Date().toISOString(),source:"CMA Zone Question Uploader — current uploader master",note:"Use this file as the Master Chapter JSON for chapter/topic extraction. Chapter names are taken directly from the uploader's current Group → Subject → Chapter configuration.",subjects};
 }
+$("downloadPortalPackageBtn").onclick=async()=>{
+  const btn=$("downloadPortalPackageBtn");
+  try{
+    setBusy(btn,true,"Preparing Portal Data…");
+    const master=buildCurrentMasterChapterJson();
+    downloadJson("CMA_Zone_Master_Chapter_Registry.json",master);
+    const snap=await db.collection("subjectiveQuestions").get();
+    const rows=snap.docs.map(d=>{const x=d.data();const {updatedAt,updatedBy,...clean}=x;return clean;});
+    downloadJson("CMA_Zone_All_Portal_Questions.json",rows);
+    $("masterExtractionMsg").textContent="Done: Master Chapter JSON + "+rows.length+" uploaded portal questions downloaded. Send both files to ChatGPT; you do not need to keep old JSON files.";
+    $("masterExtractionMsg").className="msg ok";
+  }catch(e){
+    $("masterExtractionMsg").textContent="Could not export portal data: "+(e.message||e);
+    $("masterExtractionMsg").className="msg err";
+  }finally{
+    setBusy(btn,false,"📦 Download Master + All Portal Questions");
+  }
+};
 $("downloadMasterBtn").onclick=()=>{
   try{
     const master=buildCurrentMasterChapterJson();
