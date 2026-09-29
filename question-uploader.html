@@ -1729,6 +1729,7 @@ $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing
 /* Pending Question Verification — PDF gate */
 let PENDING_JSON_IMPORT=null;
 let PENDING_PDF_READY=false;
+let PENDING_PDF_DOWNLOADED=false;
 
 function pendingQuestionCard(item,index){
   const x=item.data||item;
@@ -1766,6 +1767,7 @@ function renderPendingVerification(){
   $("pendingVerificationMsg").className="msg";
   $("pendingVerificationMsg").textContent="PDF verification is being prepared. Approval will remain locked until PDF generation succeeds.";
   PENDING_PDF_READY=false;
+  PENDING_PDF_DOWNLOADED=false;
 }
 
 async function generatePendingVerificationPdf(){
@@ -1795,12 +1797,14 @@ async function generatePendingVerificationPdf(){
     PENDING_JSON_IMPORT.pdfBlob=doc.output("blob");
     PENDING_JSON_IMPORT.pdfName="CMA_Zone_Verification_"+new Date().toISOString().slice(0,19).replace(/[:T]/g,"-")+".pdf";
     PENDING_PDF_READY=true;
-    $("pendingVerificationPdfStatus").textContent="PDF: Ready ✓";
+    PENDING_PDF_DOWNLOADED=false;
+    $("pendingVerificationPdfStatus").textContent="PDF: Ready — download required";
     $("pendingVerificationMsg").textContent="Verification PDF is ready. Download it, compare it with the original paper, then approve only if everything matches.";
     $("pendingVerificationMsg").className="msg ok";
-    $("approvePendingBtn").disabled=false;
+    $("approvePendingBtn").disabled=true;
   }catch(e){
     PENDING_PDF_READY=false;
+    PENDING_PDF_DOWNLOADED=false;
     $("pendingVerificationPdfStatus").textContent="PDF: Failed";
     $("pendingVerificationMsg").textContent="PDF generation failed: "+(e.message||e)+". Nothing was published.";
     $("pendingVerificationMsg").className="msg err";
@@ -1818,7 +1822,10 @@ $("downloadPendingPdfBtn").onclick=async()=>{
     const url=URL.createObjectURL(PENDING_JSON_IMPORT.pdfBlob);
     const a=document.createElement("a");a.href=url;a.download=PENDING_JSON_IMPORT.pdfName||"CMA_Zone_Verification.pdf";
     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
-    $("pendingVerificationMsg").textContent="PDF downloaded. Verify it against the original question paper before approving.";
+    PENDING_PDF_DOWNLOADED=true;
+    $("approvePendingBtn").disabled=false;
+    $("pendingVerificationPdfStatus").textContent="PDF: Downloaded ✓";
+    $("pendingVerificationMsg").textContent="PDF downloaded. Now compare it with the original question paper. Approve only after your verification.";
     $("pendingVerificationMsg").className="msg ok";
   }catch(e){}
 };
@@ -1833,7 +1840,7 @@ $("discardPendingBtn").onclick=()=>{
 
 $("approvePendingBtn").onclick=async()=>{
   const btn=$("approvePendingBtn");
-  if(!PENDING_JSON_IMPORT||!PENDING_PDF_READY)return;
+  if(!PENDING_JSON_IMPORT||!PENDING_PDF_READY||!PENDING_PDF_DOWNLOADED)return;
   if(!confirm("Have you downloaded and checked the verification PDF against the original question paper? Only continue if everything is correct."))return;
   try{
     setBusy(btn,true,"Publishing…");
@@ -1851,7 +1858,7 @@ $("approvePendingBtn").onclick=async()=>{
       await batch.commit();
     }
     const count=items.length;
-    PENDING_JSON_IMPORT=null;PENDING_PDF_READY=false;
+    PENDING_JSON_IMPORT=null;PENDING_PDF_READY=false;PENDING_PDF_DOWNLOADED=false;
     renderPendingVerification();
     $("pendingVerificationMsg").textContent=count+" question(s) approved and published to the user portal. Only the verified staged data was written.";
     $("pendingVerificationMsg").className="msg ok";
