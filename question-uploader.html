@@ -1591,8 +1591,7 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
   // Staging must finish before PDF rendering starts. PDF generation can be
   // expensive on mobile browsers, so never await it inside the import handler.
   // The verification panel becomes usable immediately while the PDF renders.
-  $("pendingVerificationPdfStatus").textContent="PDF: Ready to generate";
-  $("pendingVerificationMsg").textContent="Questions are staged. Tap “Generate / Download Verification PDF” above to create the verification PDF. Firebase is still unchanged.";
+  $("pendingVerificationMsg").textContent="Questions are staged. Tap “Preview Uploaded JSON” to verify the live portal preview. Firebase is still unchanged.";
   $("pendingVerificationMsg").className="msg ok";
 }catch(e){
   $("jsonMsg").textContent="Import failed: "+(e&&e.message?e.message:e);
