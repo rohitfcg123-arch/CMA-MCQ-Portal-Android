@@ -16,7 +16,7 @@
 <div id="status" class="status">Choose a group, subject and topic to begin.</div><div id="scmLoadStatus" class="status" style="display:none"></div>
 <section id="results"></section>
 </main>
-<div class="update-strip"><b>UPDATE #98 — Subject / Chapter / Firebase sync fixed</b> · SCM now always loads all 26 chapters, normalizes chapter matching, and refreshes results after Firebase data arrives.</div>
+<div class="update-strip"><b>UPDATE #99 — Paper 10 subject/chapter structure added</b> · SCM now always loads all 26 chapters, normalizes chapter matching, and refreshes results after Firebase data arrives.</div>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
@@ -68,6 +68,21 @@ window.DIT_QUESTION_CHAPTERS={
 const groups={"inter1":[["Business Laws and Ethics","inter-group-1-business-laws-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operations Management and Strategic Management","inter-group-2-operations-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Corporate and Economic Laws","final-group-3-corporate-and-economic-laws"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax Laws and International Taxation","final-group-3-direct-tax-laws-international-taxation"],["Strategic Cost Management","final-group-3-strategic-cost-management"]],"final4":[["Cost and Management Audit","final-group-4-cost-management-audit"],["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Indirect Tax Laws and Practice","final-group-4-indirect-tax-laws-practice"],["Entrepreneurship and Startup","final-group-4-entrepreneurship-startup"],["Risk Management, Banking and Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance Management and Business Valuation","final-group-4-strategic-performance-business-valuation"]]}
 const FA_CHAPTERS=["Accounting Fundamentals","Bills of Exchange","Consignment","Joint Venture","Preparation of Final Accounts of Commercial Organisations","Preparation of Final Accounts of Not-for-Profit Organisations","Preparation of Final Accounts from Incomplete Records","Partnership Accounting","Lease Accounting","Branch (including Foreign Branch) and Departmental Accounts","Insurance Claim for Loss of Stock and Loss of Profit","Hire Purchase and Installment Sale Transactions","Accounting Standards"];
 const COST_ACCOUNTING_CHAPTERS=["Introduction to Cost Accounting","Cost Ascertainment – Elements of Cost","Cost Accounting Standards (CAS 1 to CAS 24)","Cost Book Keeping","Methods of Costing","Cost Accounting Techniques"];
+window.CAA_SECTIONED_CHAPTERS=[
+  {section:"Section A: Corporate Accounting",chapters:[
+    "Accounting for Shares and Debentures",
+    "Preparation of the Statement of Profit and Loss and Balance Sheet (As per Schedule III of Companies Act, 2013)",
+    "Cash Flow Statement",
+    "Accounts of Banking, Electricity and Insurance Companies",
+    "Accounting Standards"
+  ]},
+  {section:"Section B: Auditing",chapters:[
+    "Basic Concepts of Auditing",
+    "Provision Relating to Audit under Companies Act, 2013",
+    "Auditing of Different Types of Undertakings"
+  ]}
+];
+window.CAA_CHAPTERS=window.CAA_SECTIONED_CHAPTERS.flatMap(x=>x.chapters);
 const OSM_CHAPTERS=["Operation Management – Introduction","Operations Planning","Designing of Operational System and Control","Production Planning and Control","Productivity Management and Quality Management","Project Management","Economics of Maintenance and Spares Management","Introduction","Strategic Analysis and Strategic Planning","Formulation and Implementation of Strategy","Digital Strategy"];
 const g=document.getElementById("group"),s=document.getElementById("subject"),t=document.getElementById("topic"),status=document.getElementById("status"),results=document.getElementById("results"),note=document.getElementById("topicNote");
 const filters=document.querySelector(".filters");
@@ -86,6 +101,10 @@ function setChaptersFor(subject){
   }else if(subject==="Strategic Cost Management"){
     fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
+  }else if(subject==="Corporate Accounting and Auditing"){
+    fill(t,[["All Chapters","all"],...window.CAA_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all";
+    note.textContent="Paper 10 follows the syllabus structure shown in the CMA study material: Section A — Corporate Accounting (5 modules) and Section B — Auditing (3 modules).";
   }else if(subject==="Cost Accounting"){
     fill(t,[["All Chapters","all"],...COST_ACCOUNTING_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
@@ -110,6 +129,10 @@ s.addEventListener("change",function(){
     fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
     note.textContent="SCM follows the 26 chapter names supplied for this portal. Uploaded SCM PYQs are loaded automatically from Firebase.";
+  }else if(subject==="Corporate Accounting and Auditing"){
+    fill(t,[["All Chapters","all"],...window.CAA_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    t.value="all";
+    note.textContent="Paper 10 follows Section A — Corporate Accounting and Section B — Auditing, with 8 modules in total."; 
   }else if(subject==="Financial Accounting"){
     fill(t,[["All Chapters","all"],...FA_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all"; note.textContent="Financial Accounting follows the Paper 6 structure. Bills of Exchange, Consignment and Joint Venture are separate chapters.";
