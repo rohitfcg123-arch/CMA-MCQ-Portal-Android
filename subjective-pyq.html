@@ -978,13 +978,13 @@ function normalize(v){return String(v||"").trim().replace(/\\s+/g," ").toUpperCa
 // Attempts are chronological when more than one attempt is displayed.
 function cmaAttemptSortKey(v){
   const s=String(v||"").trim().toLowerCase();
-  const m=s.match(/(\\d{4})/); const year=m?Number(m[1]):9999;
+  const m=s.match(/(\d{4})/); const year=m?Number(m[1]):9999;
   const month=/june|jun/.test(s)?6:/december|dec/.test(s)?12:/march|mar/.test(s)?3:/september|sep/.test(s)?9:99;
   return year*100+month;
 }
 function cmaQuestionSortKey(v){
   const s=String(v||"").trim().toLowerCase().replace(/question/g,"").replace(/[^0-9a-z]+/g," ");
-  const m=s.match(/(\\d+)\\s*([a-z])?/);
+  const m=s.match(/(\d+)\s*([a-z])?/);
   if(!m)return [999999,""];
   return [Number(m[1]),String(m[2]||"")];
 }
