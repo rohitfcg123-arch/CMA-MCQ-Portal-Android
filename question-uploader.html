@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #213</b> — Added the complete Financial Management and Business Data Analytics chapter list to the Question Uploader, independent of whether questions have been uploaded. Correction import still changes only Chapter/Chapter ID/Topic. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #214</b> — Added the complete Financial Management and Business Data Analytics chapter list to the Question Uploader, independent of whether questions have been uploaded. Correction import still changes only Chapter/Chapter ID/Topic. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -1415,15 +1415,15 @@ importItems=validateAllQuestionsAgainstStrictMaster(importItems);
 
 const existingSnap=await db.collection("subjectiveQuestions").get();
 const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-const normalizeGroupValue=v=>{
-  const n=canon(v);
+function normalizeGroupValue(v){
+  const n=String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
   if(n==="foundation"||n==="cmafoundation")return "foundation";
   if(n==="inter1"||n==="intergroup1"||n==="cmaintermediategroup1")return "inter1";
   if(n==="inter2"||n==="intergroup2"||n==="cmaintermediategroup2")return "inter2";
   if(n==="final3"||n==="finalgroup3"||n==="cmafinalgroup3")return "final3";
   if(n==="final4"||n==="finalgroup4"||n==="cmafinalgroup4")return "final4";
   return "";
-};
+}
 const canonicalKey=x=>questionIdentityKey(x);
 const existing=new Map();
 existingSnap.docs.forEach(d=>{
