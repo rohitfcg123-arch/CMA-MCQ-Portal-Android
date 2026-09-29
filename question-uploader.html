@@ -32,7 +32,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #226</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #227</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -1822,6 +1822,7 @@ function cmaQuestionCompare(a,b){
 let PENDING_JSON_IMPORT=null;
 let PENDING_PDF_READY=false;
 let PENDING_PDF_DOWNLOADED=false;
+let PENDING_PREVIEW_OPENED=false;
 
 function pendingQuestionCard(item,index){
   const x=item.data||item;
@@ -1928,6 +1929,7 @@ $("downloadPendingPdfBtn").onclick=()=>{
   const preview=$("pendingVerificationPreview");
   if(!preview)return;
   const open=preview.classList.toggle("hidden");
+  PENDING_PREVIEW_OPENED=!open;
   const buttons=[$("downloadPendingPdfBtn"),$("downloadPendingPdfTopBtn")].filter(Boolean);
   buttons.forEach(b=>b.textContent=open?"👁️ Preview Uploaded JSON":"✕ Hide JSON Preview");
   $("pendingVerificationMsg").textContent=open
@@ -1945,6 +1947,14 @@ $("downloadPendingPdfTopBtn").onclick=()=>{
 $("approvePendingBtn").onclick=async()=>{
   const btn=$("approvePendingBtn");
   if(!PENDING_JSON_IMPORT||!PENDING_JSON_IMPORT.items.length)return;
+  if(!PENDING_PREVIEW_OPENED){
+    $("pendingVerificationMsg").textContent="Please click Preview Uploaded JSON and verify the staged questions before publishing.";
+    $("pendingVerificationMsg").className="msg";
+    $("pendingVerificationPreview").classList.remove("hidden");
+    PENDING_PREVIEW_OPENED=true;
+    $("pendingVerificationPreview").scrollIntoView({behavior:"smooth",block:"start"});
+    return;
+  }
   if(!confirm("Have you checked the Live Question Preview above against the original paper? Publish these staged questions to the user portal?"))return;
   try{
     setBusy(btn,true,"Publishing…");
