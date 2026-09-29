@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #198</b> — Restored the previously working Google Login flow. No other portal functionality was changed.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #199</b> — Restored the complete working uploader initialization/auth flow. Google Login is unchanged from the known-working version; only the broken/missing initialization block was restored.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -254,7 +254,36 @@ $("loginBtn").onclick=login;
 $("logout").onclick=logout;
 auth.getRedirectResult().then(r=>{
   if(r&&r.user) return;
-}).catch(showLoginError);\nasync function loadQuestions(){populateBulkNumberFilters();
+}).catch(showLoginError);
+$("group").onchange=()=>populateSubjects($("group").value);
+populateSubjects($("group").value,"Strategic Financial Management");
+auth.onAuthStateChanged(async u=>{
+  if(!u){
+    $("login").classList.remove("hidden");
+    $("app").classList.add("hidden");
+    $("who").textContent="";
+    $("loginBtn").disabled=false;
+    $("loginBtn").textContent="Continue with Google";
+    return;
+  }
+  if(norm(u.email)!==ADMIN_EMAIL){
+    $("login").classList.remove("hidden");
+    $("app").classList.add("hidden");
+    $("loginMsg").className="msg err";
+    $("loginMsg").textContent="This Google account is not authorised. Please sign in with "+ADMIN_EMAIL+".";
+    await auth.signOut();
+    return;
+  }
+  $("login").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("who").textContent=u.email;
+  $("loginMsg").textContent="";
+  try{await loadQuestions()}catch(e){
+    $("msg").className="msg err";
+    $("msg").textContent="Could not load questions: "+(e.message||e);
+  }
+});
+async function loadQuestions(){populateBulkNumberFilters();
  const snap=await db.collection("subjectiveQuestions").get();
  DATA=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.attempt||"").localeCompare(b.attempt||"")||(a.sort||0)-(b.sort||0));
  fillSelect("listGroup",DATA.map(x=>x.group),"All Groups");
