@@ -63,12 +63,13 @@
 
 <section class="panel">
 <section class="panel" id="masterExtractionPanel"><h2>🧩 Master Chapter + Topic Extraction</h2><div class="body">
-<div class="note"><b>Safe extraction:</b> upload the Master Chapter JSON first, then upload an existing Question JSON. The tool keeps the original <b>html/question data unchanged</b> and adds only Chapter, Topic, IDs and available Marks. It never writes to Firebase until you export the reviewed result.</div>
+<div class="note"><b>Step 1:</b> Click <b>Download Master Chapter JSON</b> and send that file to ChatGPT. <b>Step 2:</b> Click <b>Export All Questions JSON</b> above and send that file too. <b>Step 3:</b> ChatGPT will map and audit the chapter data. The extractor never writes to Firebase until you explicitly import. The tool keeps the original <b>html/question data unchanged</b> and adds only Chapter, Topic, IDs and available Marks. It never writes to Firebase until you export the reviewed result.</div>
 <div class="grid" style="margin-top:14px">
 <div class="field"><label>Master Chapter JSON</label><input id="masterChapterFile" type="file" accept=".json,application/json"></div>
 <div class="field"><label>Existing Question JSON</label><input id="extractQuestionFile" type="file" accept=".json,application/json"></div>
 </div>
 <div class="toolbar">
+<button class="btn" id="downloadMasterBtn" type="button">⬇️ Download Master Chapter JSON</button>
 <button class="btn" id="loadMasterBtn" type="button">Load Master</button>
 <button class="btn gold" id="runExtractionBtn" type="button">Extract Chapter + Topic</button>
 <button class="btn gray" id="downloadExtractionBtn" type="button" disabled>Download Corrected JSON</button>
@@ -1395,7 +1396,36 @@ $("exportSolutionsBtn").onclick=async()=>{
 $("importSolutionsBtn").onclick=async()=>{const btn=$("importSolutionsBtn");try{setBusy(btn,true,"Updating Solutions…");const raw=$("solutionJson").value.trim();if(!raw)throw Error("Please select a Solution JSON file or paste the solution array first.");const arr=JSON.parse(raw);const result=await applySolutionArray(arr);$("solutionJsonMsg").textContent=(result.updated+result.created)+" question(s) updated/created with "+result.answersApplied+" answer version(s). Multiple alternative answers for the same question are stored together."+(result.missing&&result.missing.length?" "+result.missing.length+" unmatched answer item(s) skipped; no blank questions were created.":"")+" Answers are now editable from Edit / Answer.";$("solutionJsonMsg").className="msg ok";$("solutionJson").value="";await loadQuestions()}catch(e){$("solutionJsonMsg").textContent=e.message;$("solutionJsonMsg").className="msg err"}finally{setBusy(btn,false,"Import Solutions JSON")}};
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
 
-/* CMA Zone Master Chapter + Topic Extraction — UPDATE #206 */
+/* CMA Zone Master Chapter + Topic Extraction — UPDATE #207 */
+function slugId(v){return String(v||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,28);}
+function buildCurrentMasterChapterJson(){
+  const groupLabels={foundation:"CMA Foundation",inter1:"CMA Intermediate Group 1",inter2:"CMA Intermediate Group 2",final3:"CMA Final Group 3",final4:"CMA Final Group 4"};
+  const subjects=[];
+  Object.keys(SUBJECTS).forEach(groupKey=>{
+    (SUBJECTS[groupKey]||[]).forEach(subject=>{
+      let chapters=[];
+      if(subject==="Corporate Accounting and Auditing" && Array.isArray(CAA_SECTIONED_CHAPTERS)){
+        CAA_SECTIONED_CHAPTERS.forEach(section=>(section.chapters||[]).forEach(chapter=>chapters.push({chapter,section:section.section})));
+      }else{
+        chapters=(CHAPTERS_BY_SUBJECT[subject]||[]).map(chapter=>({chapter}));
+      }
+      subjects.push({group:groupLabels[groupKey]||groupKey,groupKey,subject,chapterMaster:chapters.map((x,i)=>({chapterId:groupKey+"-"+slugId(subject)+"-C"+String(i+1).padStart(2,"0"),chapter:x.chapter,...(x.section?{section:x.section}:{})}))});
+    });
+  });
+  return {version:"1.0",generatedAt:new Date().toISOString(),source:"CMA Zone Question Uploader — current uploader master",note:"Use this file as the Master Chapter JSON for chapter/topic extraction. Chapter names are taken directly from the uploader's current Group → Subject → Chapter configuration.",subjects};
+}
+$("downloadMasterBtn").onclick=()=>{
+  try{
+    const master=buildCurrentMasterChapterJson();
+    downloadJson("CMA_Zone_Master_Chapter_Registry.json",master);
+    $("masterExtractionMsg").textContent=master.subjects.length+" subjects exported with "+master.subjects.reduce((n,s)=>n+s.chapterMaster.length,0)+" master chapters. Send this JSON to ChatGPT together with your existing Question JSON files.";
+    $("masterExtractionMsg").className="msg ok";
+  }catch(e){
+    $("masterExtractionMsg").textContent="Could not create Master JSON: "+(e.message||e);
+    $("masterExtractionMsg").className="msg err";
+  }
+};
+/* CMA Zone Master Chapter + Topic Extraction — UPDATE #207 */
 let CMA_MASTER=null, CMA_EXTRACTED=[];
 const normMaster=v=>String(v??'').trim().toLowerCase().replace(/[–—]/g,'-').replace(/[^a-z0-9]+/g,'');
 function readTextFile(file){return new Promise((resolve,reject)=>{if(!file)return reject(new Error('Please select the file first.'));const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>reject(r.error||new Error('Could not read file.'));r.readAsText(file);});}
