@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #191</b> — Google login changed to Firebase popup authentication for GitHub Pages; redirect/storage failure removed and exact auth errors are shown.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #192</b> — Restored the previously working mobile-redirect / desktop-popup Google login flow and logout page reset.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn">Continue with Google</button>
@@ -369,41 +369,34 @@ function showLoginError(e){
 }
 async function login(){
   const btn=$("loginBtn");
-  setBusy(btn,true,"Opening Google…");
+  btn.disabled=true; btn.textContent="Opening Google…";
   $("loginMsg").className="msg";
-  $("loginMsg").textContent="Opening Google sign-in…";
+  $("loginMsg").textContent="Google sign-in is opening. Please select rohit.fcg123@gmail.com.";
   try{
-    // GitHub Pages is not Firebase Hosting. Use popup authentication here;
-    // Firebase documents popup as the workaround for redirect/storage issues
-    // on non-Firebase-hosted sites.
-    const result=await auth.signInWithPopup(provider);
-    if(result&&result.user){
-      $("loginMsg").className="msg ok";
-      $("loginMsg").textContent="Google sign-in successful. Loading uploader…";
+    const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(isMobile){
+      await auth.signInWithRedirect(provider);
+      return;
     }
+    await auth.signInWithPopup(provider);
   }catch(e){
     showLoginError(e);
-    setBusy(btn,false,"Continue with Google");
+    btn.disabled=false; btn.textContent="Continue with Google";
   }
 }
 async function logout(){
-  const btn=$("logout");
-  setBusy(btn,true,"Logging out…");
   try{
     await auth.signOut();
-    $("app").classList.add("hidden");
-    $("login").classList.remove("hidden");
-    $("who").textContent="";
-    $("loginMsg").className="msg ok";
-    $("loginMsg").textContent="Logged out successfully.";
-    setBusy($("loginBtn"),false,"Continue with Google");
+    window.location.replace(window.location.pathname+"?loggedout=1");
   }catch(e){
     showLoginError(e);
-    setBusy(btn,false,"Logout");
   }
 }
 $("loginBtn").onclick=login;
 $("logout").onclick=logout;
+auth.getRedirectResult().then(r=>{
+  if(r&&r.user) return;
+}).catch(showLoginError);
 
 auth.onAuthStateChanged(async u=>{
   if(!u){
