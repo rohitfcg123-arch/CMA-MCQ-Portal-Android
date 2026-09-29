@@ -73,6 +73,29 @@
 <div id="bulkNumMsg" class="msg"></div>
 </div></section>
 
+<section class="panel">
+<h2>📝 Bulk Update Marks</h2>
+<div class="body">
+<div class="note"><b>Bulk marks editor:</b> filter the questions, enter marks for selected rows, then use <b>Save as Pending</b>. Pending marks are visible here but are <b>not live</b> on the student portal until you approve them.</div>
+<div class="grid" style="margin-top:14px">
+<div class="field"><label>Group</label><select id="bulkMarksGroup"><option value="">All Groups</option></select></div>
+<div class="field"><label>Subject</label><select id="bulkMarksSubject"><option value="">All Subjects</option></select></div>
+<div class="field"><label>Attempt</label><select id="bulkMarksAttempt"><option value="">All Attempts</option></select></div>
+<div class="field"><label>Chapter / Topic</label><select id="bulkMarksChapter"><option value="">All Chapters / Topics</option></select></div>
+<div class="field"><label>Question No. (optional)</label><input id="bulkMarksQ" placeholder="e.g. 8A or 8"></div>
+<div class="field"><label>Marks to apply</label><input id="bulkMarksValue" type="number" min="0" step="1" placeholder="14"></div>
+</div>
+<div class="toolbar">
+<button class="btn" id="previewBulkMarks">Show Questions</button>
+<button class="btn gold" id="saveBulkMarks">Save as Pending</button>
+<button class="btn" id="approveBulkMarks">Approve Pending</button>
+<button class="btn gray" id="clearBulkMarks">Clear</button>
+<span class="count" id="bulkMarksStatus"></span>
+</div>
+<div class="tablewrap" style="margin-top:12px"><table style="min-width:1000px"><thead><tr><th><input id="bulkMarksSelectAll" type="checkbox"></th><th>Attempt</th><th>Question</th><th>Current Marks</th><th>Pending Marks</th><th>Subject</th><th>Chapter</th></tr></thead><tbody id="bulkMarksRows"></tbody></table></div>
+<div id="bulkMarksMsg" class="msg"></div>
+</div></section>
+
 <section class="panel"><h2>Uploaded Questions <span class="count" id="count"></span></h2><div class="body">
 <div class="view-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="btn gold view-tab active" id="questionsViewBtn" type="button">📚 Questions <span id="questionViewCount"></span></button><button class="btn gray view-tab" id="answersViewBtn" type="button">📖 Answers <span id="answerViewCount"></span></button></div><div class="note" style="margin-bottom:12px"><b>Find a question quickly:</b> use any combination of Group, Subject, Attempt, Chapter/Topic and Question No., or type in Search. Filters and search work together.</div>
 <div class="question-filters">
@@ -426,6 +449,7 @@ async function loadQuestions(){populateBulkNumberFilters();
  const snap=await db.collection("subjectiveQuestions").get();
  DATA=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.attempt||"").localeCompare(b.attempt||"")||(a.sort||0)-(b.sort||0));
  fillSelect("listGroup",DATA.map(x=>x.group),"All Groups");
+ populateBulkMarksFilters();
  updateQuestionListFilters();
 }
 function uniqueSorted(values){return [...new Set(values.map(v=>String(v||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}))}
@@ -521,7 +545,7 @@ function renderRows(){
    return;
  }
  $("filterCount").textContent=filtered.length===DATA.length?filtered.length+" questions":filtered.length+" matching / "+DATA.length+" total";
- $("rows").innerHTML=filtered.map(x=>'<tr><td><input class="selectionCheck rowCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt)+'</td><td><b>'+esc(x.q)+'</b></td><td>'+esc(x.marks==null||x.marks===""?"":x.marks)+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.chapter)+'</td><td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn gold" onclick="openMetadataEditor(\''+x.id+'\')">Edit / Answer</button> <button class="btn red" onclick="removeQ(\''+x.id+'\')">Delete</button></td></tr>').join("")||'<tr><td colspan="9">No matching questions found. Try Clear Filters.</td></tr>';
+ $("rows").innerHTML=filtered.map(x=>'<tr><td><input class="selectionCheck rowCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt)+'</td><td><b>'+esc(x.q)+'</b></td><td>'+esc(x.marks==null||x.marks===""?"":x.marks)+(pendingMarksValue(x)!=null?"<br><span style="color:var(--gold);font-weight:800">Pending: "+esc(pendingMarksValue(x))+"</span>":"")+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.chapter)+'</td><td>'+esc(fmt(x.updatedAt))+'</td><td><button class="btn gold" onclick="openMetadataEditor(\''+x.id+'\')">Edit / Answer</button> <button class="btn red" onclick="removeQ(\''+x.id+'\')">Delete</button></td></tr>').join("")||'<tr><td colspan="9">No matching questions found. Try Clear Filters.</td></tr>';
  document.querySelectorAll(".selectionCheck").forEach(b=>b.onchange=updateSelectedCount);
  updateSelectedCount();
 }
@@ -685,6 +709,111 @@ $("saveMetadata").onclick=async()=>{
   }finally{
     setBusy(btn,false,"Save Metadata");
   }
+};
+
+function pendingBulkMark(x){
+  if(x&&x.pendingMarks!=null&&x.pendingMarks!==""){
+    const n=Number(x.pendingMarks); return Number.isFinite(n)&&n>=0?n:null;
+  }
+  return null;
+}
+function populateBulkMarksFilters(){
+  const groups=Object.keys(SUBJECTS);
+  $("bulkMarksGroup").innerHTML='<option value="">All Groups</option>'+groups.map(g=>'<option value="'+esc(g)+'">'+esc(g)+'</option>').join("");
+  $("bulkMarksGroup").onchange=()=>{
+    const g=$("bulkMarksGroup").value;
+    const subs=g?(SUBJECTS[g]||[]):[...new Set(DATA.map(x=>x.subject).filter(Boolean))].sort();
+    $("bulkMarksSubject").innerHTML='<option value="">All Subjects</option>'+subs.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join("");
+    populateBulkMarksAttempts();
+    populateBulkMarksChapters();
+  };
+  $("bulkMarksSubject").onchange=()=>{populateBulkMarksAttempts();populateBulkMarksChapters()};
+  $("bulkMarksAttempt").onchange=populateBulkMarksChapters;
+  populateBulkMarksAttempts(); populateBulkMarksChapters();
+}
+function populateBulkMarksAttempts(){
+  const g=$("bulkMarksGroup").value,s=$("bulkMarksSubject").value;
+  const rows=DATA.filter(x=>(!g||x.group===g)&&(!s||x.subject===s));
+  $("bulkMarksAttempt").innerHTML='<option value="">All Attempts</option>'+uniqueSorted(rows.map(x=>x.attempt)).map(a=>'<option value="'+esc(a)+'">'+esc(a)+'</option>').join("");
+}
+function populateBulkMarksChapters(){
+  const g=$("bulkMarksGroup").value,s=$("bulkMarksSubject").value,a=$("bulkMarksAttempt").value;
+  const rows=DATA.filter(x=>(!g||x.group===g)&&(!s||x.subject===s)&&(!a||x.attempt===a));
+  $("bulkMarksChapter").innerHTML='<option value="">All Chapters / Topics</option>'+uniqueSorted(rows.map(x=>x.chapter)).map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
+}
+function bulkMarksFiltered(){
+  const g=$("bulkMarksGroup").value,s=$("bulkMarksSubject").value,a=$("bulkMarksAttempt").value,ch=$("bulkMarksChapter").value,q=norm($("bulkMarksQ").value);
+  return DATA.filter(x=>{
+    if(g&&x.group!==g)return false;
+    if(s&&x.subject!==s)return false;
+    if(a&&x.attempt!==a)return false;
+    if(ch&&x.chapter!==ch)return false;
+    if(q&&!norm(x.q).includes(q))return false;
+    return true;
+  });
+}
+function renderBulkMarks(){
+  const rows=bulkMarksFiltered();
+  $("bulkMarksRows").innerHTML=rows.map(x=>{
+    const p=pendingBulkMark(x);
+    return '<tr><td><input class="bulkMarksCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt||"")+'</td><td><b>'+esc(x.q||"")+'</b></td><td>'+esc(x.marks==null||x.marks===""?"—":x.marks)+'</td><td>'+(p==null?"—":"<b style='color:var(--gold)'>"+esc(p)+"</b>")+'</td><td>'+esc(x.subject||"")+'</td><td>'+esc(x.chapter||"")+'</td></tr>';
+  }).join("")||'<tr><td colspan="7">No questions match these filters.</td></tr>';
+  $("bulkMarksStatus").textContent=rows.length+" question(s) shown";
+}
+$("previewBulkMarks").onclick=()=>{renderBulkMarks();$("bulkMarksMsg").className="msg ok";$("bulkMarksMsg").textContent="Questions loaded. Select the rows you want to update.";};
+$("bulkMarksSelectAll").onchange=()=>document.querySelectorAll(".bulkMarksCheck").forEach(x=>x.checked=$("bulkMarksSelectAll").checked);
+$("saveBulkMarks").onclick=async()=>{
+  const raw=$("bulkMarksValue").value.trim();
+  const n=Number(raw);
+  const ids=[...document.querySelectorAll(".bulkMarksCheck:checked")].map(x=>x.value);
+  if(!raw||!Number.isFinite(n)||n<0){$("bulkMarksMsg").className="msg err";$("bulkMarksMsg").textContent="Enter valid non-negative marks first.";return}
+  if(!ids.length){$("bulkMarksMsg").className="msg err";$("bulkMarksMsg").textContent="Select at least one question.";return}
+  const btn=$("saveBulkMarks");
+  try{
+    setBusy(btn,true,"Saving…");
+    for(let i=0;i<ids.length;i+=450){
+      const batch=db.batch();
+      ids.slice(i,i+450).forEach(id=>batch.update(db.collection("subjectiveQuestions").doc(id),{
+        pendingMarks:n,marksApprovalStatus:"pending",marksRequestedBy:ADMIN_EMAIL,
+        marksRequestedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL
+      }));
+      await batch.commit();
+    }
+    await loadQuestions(); populateBulkMarksFilters(); renderBulkMarks();
+    $("bulkMarksMsg").className="msg ok";
+    $("bulkMarksMsg").textContent=ids.length+" question(s) saved as pending marks: "+n+". They are not live yet.";
+  }catch(e){$("bulkMarksMsg").className="msg err";$("bulkMarksMsg").textContent="Bulk marks update failed: "+(e.message||e)}
+  finally{setBusy(btn,false,"Save as Pending")}
+};
+$("approveBulkMarks").onclick=async()=>{
+  const ids=[...document.querySelectorAll(".bulkMarksCheck:checked")].map(x=>x.value);
+  const valid=ids.filter(id=>pendingBulkMark(DATA.find(x=>x.id===id))!=null);
+  if(!valid.length){$("bulkMarksMsg").className="msg err";$("bulkMarksMsg").textContent="Select questions that have pending marks.";return}
+  const btn=$("approveBulkMarks");
+  try{
+    setBusy(btn,true,"Approving…");
+    for(let i=0;i<valid.length;i+=450){
+      const batch=db.batch();
+      valid.slice(i,i+450).forEach(id=>{
+        const x=DATA.find(q=>q.id===id),p=pendingBulkMark(x);
+        batch.update(db.collection("subjectiveQuestions").doc(id),{
+          marks:p,pendingMarks:firebase.firestore.FieldValue.delete(),marksApprovalStatus:"approved",
+          marksApprovedBy:ADMIN_EMAIL,marksApprovedAt:firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL
+        });
+      });
+      await batch.commit();
+    }
+    await loadQuestions(); populateBulkMarksFilters(); renderBulkMarks();
+    $("bulkMarksMsg").className="msg ok";
+    $("bulkMarksMsg").textContent=valid.length+" pending mark(s) approved and are now live on the PYQ Portal.";
+  }catch(e){$("bulkMarksMsg").className="msg err";$("bulkMarksMsg").textContent="Bulk approval failed: "+(e.message||e)}
+  finally{setBusy(btn,false,"Approve Pending")}
+};
+$("clearBulkMarks").onclick=()=>{
+  $("bulkMarksQ").value="";$("bulkMarksValue").value="";
+  $("bulkMarksRows").innerHTML="";$("bulkMarksStatus").textContent="";$("bulkMarksMsg").textContent="";
 };
 function populateBulkNumberFilters(){
   const groups=Object.keys(SUBJECTS);
