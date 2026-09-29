@@ -7,7 +7,7 @@
 <header class="topbar"><div class="topbar-inner"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to Index</a></div></header>
 <div class="madeby">✨ Made by CMA Students, for CMA Students ✨</div>
 <main>
-<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #191</b> — Fixed Financial Accounting Firebase PYQ loading; uploaded Paper 6 subjective questions now sync, filter and display correctly.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
+<section class="hero"><span class="eyebrow">PREVIOUS YEAR PRACTICE</span><div class="update-strip" style="margin-top:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff"><b style="color:#ead39b">UPDATE #200</b> — Fixed Firebase sync error and restored Cost Accounting chapter dropdown refresh after uploaded PYQs load.<h1>✍️ Practice Previous Year Subjective Questions</h1><p>Select the CMA group, subject and chapter. SFM keeps its existing chapter system; Strategic Cost Management now uses the supplied 26-chapter list and loads uploaded SCM subjective PYQs from the same Firebase collection.</p></section>
 <section class="filters">
 <div class="field"><label for="group">1. Choose CMA Group</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
 <div class="field"><label for="subject">2. Choose Subject</label><select id="subject" disabled><option value="">First choose group</option></select></div>
@@ -356,8 +356,15 @@ const ditUnique=new Map();
     const topic=document.getElementById("topic");
     const scmStatus=document.getElementById("scmLoadStatus");
     if(scmStatus){scmStatus.style.display="block";scmStatus.textContent="Firebase sync complete: FA "+faRemote.length+" · SFM "+sfmRemote.length+" · SCM "+scmRemote.length+" · DT "+ditRemote.length+" · CEL "+celRemote.length+" · BLE "+bleRemote.length+" subjective PYQs loaded."}
-    if(topic)topic.dispatchEvent(new Event("change"));
-    if(s) s.dispatchEvent(new Event("change"));
+    // Re-run the visible subject/chapter filter after Firebase data arrives.
+    // `s` is scoped to the first IIFE, so use the DOM element here instead of
+    // referencing an out-of-scope variable (which was causing: `s is not defined`).
+    const subjectSelect=document.getElementById("subject");
+    const topicSelect=document.getElementById("topic");
+    if(subjectSelect && subjectSelect.value){
+      subjectSelect.dispatchEvent(new Event("change"));
+    }
+    if(topicSelect){topicSelect.dispatchEvent(new Event("change"));}
     console.info("Subjective PYQ sync: FA",faRemote.length,"SFM",sfmRemote.length,"SCM",scmRemote.length,"DT",ditRemote.length,"CEL",celRemote.length,"BLE",bleRemote.length);
   }catch(e){
     console.warn("Subjective PYQ sync failed:",e.message);
