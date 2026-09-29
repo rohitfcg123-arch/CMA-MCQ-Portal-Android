@@ -1,0 +1,1190 @@
+{
+  "version": "1.0",
+  "purpose": "CMA Zone Chapter-Topic Master",
+  "rule": "Chapter names are preserved from the uploaded ICMAI syllabus screenshots. Topics will be identified later from the actual questions.",
+  "subjects": [
+    {
+      "group": "Inter Group 1",
+      "paper": "Paper 5",
+      "subject": "Business Laws and Ethics",
+      "subjectCode": "BLE",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper5-C01",
+          "chapter": "Introduction to Law and Legal System in India",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C02",
+          "chapter": "Indian Contracts Act, 1872",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C03",
+          "chapter": "Sale of Goods Act, 1930",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C04",
+          "chapter": "Negotiable Instruments Act, 1881",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C05",
+          "chapter": "Indian Partnership Act, 1932",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C06",
+          "chapter": "Limited Liability Partnership Act, 2008",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C07",
+          "chapter": "Factories Act, 1948",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C08",
+          "chapter": "Payment of Gratuity Act, 1972",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C09",
+          "chapter": "Employees Provident Fund and Miscellaneous Provisions Act, 1952",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C10",
+          "chapter": "Employees State Insurance Act, 1948",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C11",
+          "chapter": "The Code on Wages, 2019",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C12",
+          "chapter": "Companies Act, 2013",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper5-C13",
+          "chapter": "Business Ethics and Emotional Intelligence",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Inter Group 1",
+      "paper": "Paper 6",
+      "subject": "Financial Accounting",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper6-C01",
+          "chapter": "Accounting Fundamentals",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper6-C02",
+          "chapter": "Bills of Exchange, Consignment, Joint Venture",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper6-C03",
+          "chapter": "Preparation of Final Accounts of Commercial Organisations, Not-for-Profit Organisations and from Incomplete Records",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper6-C04",
+          "chapter": "Partnership Accounting",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper6-C05",
+          "chapter": "Lease Accounting",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper6-C06",
+          "chapter": "Branch (including Foreign Branch) and Departmental Accounts",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper6-C07",
+          "chapter": "Insurance Claim for Loss of Stock and Loss of Profit",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper6-C08",
+          "chapter": "Hire Purchase and Installment Sale Transactions",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper6-C09",
+          "chapter": "Accounting Standards",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Inter Group 1",
+      "paper": "Paper 7",
+      "subject": "Direct and Indirect Taxation",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper7-C01",
+          "section": "Direct Taxation",
+          "chapter": "Basics of Income Tax Act",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper7-C02",
+          "section": "Direct Taxation",
+          "chapter": "Heads of Income",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper7-C03",
+          "section": "Direct Taxation",
+          "chapter": "Total Income and Tax Liability of Individuals & HUF",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper7-C04",
+          "section": "Indirect Taxation",
+          "chapter": "Concept of Indirect Taxes",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper7-C05",
+          "section": "Indirect Taxation",
+          "chapter": "Goods and Services Tax (GST) Laws",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper7-C06",
+          "section": "Indirect Taxation",
+          "chapter": "Customs Act & Rules",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Inter Group 1",
+      "paper": "Paper 8",
+      "subject": "Cost Accounting",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper8-C01",
+          "chapter": "Introduction to Cost Accounting",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper8-C02",
+          "chapter": "Cost Ascertainment — Elements of Cost",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper8-C03",
+          "chapter": "Cost Accounting Standards (CAS 1 to CAS 24)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper8-C04",
+          "chapter": "Cost Book Keeping",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper8-C05",
+          "chapter": "Methods of Costing",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper8-C06",
+          "chapter": "Cost Accounting Techniques",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Inter Group 2",
+      "paper": "Paper 9",
+      "subject": "Operations Management and Strategic Management",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper9-C01",
+          "chapter": "Operation Management — Introduction",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C02",
+          "chapter": "Operations Planning",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C03",
+          "chapter": "Designing of Operational System and Control",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C04",
+          "chapter": "Production Planning and Control",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C05",
+          "chapter": "Productivity Management and Quality Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C06",
+          "chapter": "Project Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C07",
+          "chapter": "Economics of Maintenance and Spares Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C08",
+          "chapter": "Introduction",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C09",
+          "chapter": "Strategic Analysis and Strategic Planning",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C10",
+          "chapter": "Formulation and Implementation of Strategy",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper9-C11",
+          "chapter": "Digital Strategy",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Inter Group 2",
+      "paper": "Paper 10",
+      "subject": "Corporate Accounting and Auditing",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper10-C01",
+          "chapter": "Accounting for Shares and Debentures",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper10-C02",
+          "chapter": "Preparation of the Statement of Profit and Loss and Balance Sheet (As per Schedule III of Companies Act, 2013)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper10-C03",
+          "chapter": "Cash Flow Statement",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper10-C04",
+          "chapter": "Accounts of Banking, Electricity and Insurance Companies",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper10-C05",
+          "chapter": "Accounting Standards",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper10-C06",
+          "chapter": "Basic Concepts of Auditing",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper10-C07",
+          "chapter": "Provision Relating to Audit under Companies Act, 2013",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper10-C08",
+          "chapter": "Auditing of Different Types of Undertakings",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Inter Group 2",
+      "paper": "Paper 11",
+      "subject": "Financial Management and Business Data Analytics",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper11-C01",
+          "chapter": "Fundamentals of Financial Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C02",
+          "chapter": "Institutions and Instruments in Financial Markets",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C03",
+          "chapter": "Tools for Financial Analyses",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C04",
+          "chapter": "Sources of Finance and Cost of Capital",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C05",
+          "chapter": "Capital Budgeting",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C06",
+          "chapter": "Working Capital Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C07",
+          "chapter": "Financing Decision of a Firm",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C08",
+          "chapter": "Introduction to Data Science for Business Decision-making",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C09",
+          "chapter": "Data Processing, Organisation, Cleaning and Validation",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C10",
+          "chapter": "Data Presentation: Visualisation and Graphical Presentation",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper11-C11",
+          "chapter": "Data Analysis and Modelling",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Inter Group 2",
+      "paper": "Paper 12",
+      "subject": "Management Accounting",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper12-C01",
+          "chapter": "Introduction to Management Accounting",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper12-C02",
+          "chapter": "Activity Based Costing",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper12-C03",
+          "chapter": "Marginal Costing",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper12-C04",
+          "chapter": "Applications of Marginal Costing in Short Term Decision Making",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper12-C05",
+          "chapter": "Transfer Pricing",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper12-C06",
+          "chapter": "Standard Costing and Variance Analysis",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper12-C07",
+          "chapter": "Forecasting, Budgeting and Budgetary Control",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper12-C08",
+          "chapter": "Divisional Performance Measurement",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper12-C09",
+          "chapter": "Responsibility Accounting",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper12-C10",
+          "chapter": "Decision Theory",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 3",
+      "paper": "Paper 13",
+      "subject": "Corporate and Economic Laws",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper13-C01",
+          "chapter": "The Companies Act, 2013",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C02",
+          "chapter": "Insolvency and Bankruptcy Code, 2016",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C03",
+          "chapter": "Corporate Governance and Social Responsibility and Sustainability",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C04",
+          "chapter": "SEBI Regulations",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C05",
+          "chapter": "The Competition Act, 2002",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C06",
+          "chapter": "Foreign Exchange Management Act, 1999",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C07",
+          "chapter": "Laws and Regulations related to Banking Sector",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C08",
+          "chapter": "Laws and Regulations related to Insurance Sector",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C09",
+          "chapter": "Specific Legal Provisions related to MSME Sector",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C10",
+          "chapter": "Laws and Regulations related to Cyber Security and Data Privacy",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper13-C11",
+          "chapter": "Laws and Regulations related to Anti-Money Laundering",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 3",
+      "paper": "Paper 14",
+      "subject": "Strategic Financial Management",
+      "subjectCode": "SFM",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper14-C01",
+          "chapter": "Investment Decisions, Project Planning and Control",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C02",
+          "chapter": "Evaluation of Risky Proposal for Investment Decisions",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C03",
+          "chapter": "Leasing Decisions",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C04",
+          "chapter": "Securitization",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C05",
+          "chapter": "Introduction",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C06",
+          "chapter": "Equity and Bond Valuation and Evaluation of Performance",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C07",
+          "chapter": "Mutual Funds",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C08",
+          "chapter": "Portfolio Theory and Practice",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C09",
+          "chapter": "Asset Pricing Theories",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C10",
+          "chapter": "Portfolio Performance Evaluation and Portfolio Revision",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C11",
+          "chapter": "Efficient Market Hypothesis",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C12",
+          "chapter": "Risks in Financial Market",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C13",
+          "chapter": "Financial Derivatives - Instruments for Risk Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C14",
+          "chapter": "The International Financial Environment",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C15",
+          "chapter": "Foreign Exchange Market",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C16",
+          "chapter": "Foreign Exchange Risk Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper14-C17",
+          "chapter": "Digital Finance",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 3",
+      "paper": "Paper 15",
+      "subject": "Direct Tax Laws and International Taxation",
+      "subjectCode": "DIT",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper15-C01",
+          "chapter": "Assessment of Income and Computation of Tax Liability of Various Entities",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C02",
+          "chapter": "Tax Management, Return and Assessment Procedure",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C03",
+          "chapter": "Grievance Redressal",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C04",
+          "chapter": "Penalties and Prosecutions",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C05",
+          "chapter": "Business Restructuring",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C06",
+          "chapter": "Different Aspects of Tax Planning",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C07",
+          "chapter": "CBDT and Other Authorities",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C08",
+          "chapter": "E-commerce Transaction and Liability in Special Cases",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C09",
+          "chapter": "Income Computation and Disclosure Standards (ICDS)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C10",
+          "chapter": "Black Money Act, 2015",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C11",
+          "chapter": "Case Study",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C12",
+          "chapter": "Double Taxation and Avoidance Agreements (DTAA) [Sec.90, 90A and 91]",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C13",
+          "chapter": "Transfer Pricing",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper15-C14",
+          "chapter": "GAAR",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 3",
+      "paper": "Paper 16",
+      "subject": "Strategic Cost Management",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper16-C01",
+          "chapter": "Introduction to Strategic Cost Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C02",
+          "chapter": "Quality Cost Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C03",
+          "chapter": "Decision Making Techniques",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C04",
+          "chapter": "Activity Based Management and Just in Time (JIT)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C05",
+          "chapter": "Evaluating Performance",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C06",
+          "chapter": "Linear Programming",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C07",
+          "chapter": "Transportation",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C08",
+          "chapter": "Assignment",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C09",
+          "chapter": "Game theory",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C10",
+          "chapter": "Simulation",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C11",
+          "chapter": "Network analysis - PERT, CPM",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C12",
+          "chapter": "Learning Curve",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C13",
+          "chapter": "Business Application of Maxima and Minima",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C14",
+          "chapter": "Business Forecasting Models — Time Series and Regression Analysis",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper16-C15",
+          "chapter": "Introduction to Tools for Data Analytics",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 4",
+      "paper": "Paper 17",
+      "subject": "Cost and Management Audit",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper17-C01",
+          "chapter": "Basics of Cost Audit",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C02",
+          "chapter": "Companies (Cost Records and Audit) Rules, 2014 (as amended)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C03",
+          "chapter": "Cost Auditor",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C04",
+          "chapter": "Overview of Cost Accounting Standards and GACAP",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C05",
+          "chapter": "Cost Auditing and Assurance Standards",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C06",
+          "chapter": "Cost Audit Programme",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C07",
+          "chapter": "Cost Audit Documentation, Audit Process and Execution",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C08",
+          "chapter": "Preparation and Filing of Cost Audit Report",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C09",
+          "chapter": "Basics of Management Audit",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C10",
+          "chapter": "Management Reporting Issues and Analysis",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C11",
+          "chapter": "Management Audit in Different Functions",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C12",
+          "chapter": "Evaluation of Corporate Image",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C13",
+          "chapter": "Information Systems Security Audit",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C14",
+          "chapter": "Internal Control and Internal Audit",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C15",
+          "chapter": "Operational Audit and Internal Audit under Companies Act, 2013",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C16",
+          "chapter": "Audit of Different Service Organisations",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C17",
+          "chapter": "Forensic Audit",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper17-C18",
+          "chapter": "Anti-Money Laundering",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 4",
+      "paper": "Paper 18",
+      "subject": "Corporate Financial Reporting",
+      "subjectCode": "CFR",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper18-C01",
+          "chapter": "Specific Accounting Standards",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper18-C02",
+          "chapter": "Valuation of Shares (Including Determination of Goodwill, Post-Valuation of Tangible and Intangible Assets)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper18-C03",
+          "chapter": "Accounting of Financial Instruments",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper18-C04",
+          "chapter": "NBFCs — Provisioning Norms, Accounting and Reporting",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper18-C05",
+          "chapter": "Accounting for Business Combinations and Restructuring",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper18-C06",
+          "chapter": "Consolidated Financial Statements and Separate Financial Statements",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper18-C07",
+          "chapter": "Recent Developments in Financial Reporting",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper18-C08",
+          "chapter": "Government Accounting in India",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 4",
+      "paper": "Paper 19",
+      "subject": "Indirect Tax Laws and Practice",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper19-C01",
+          "chapter": "Supply under GST - A Refresh",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C02",
+          "chapter": "Time of Supply (Advanced)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C03",
+          "chapter": "Place of Supply",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C04",
+          "chapter": "Valuation (Advanced)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C05",
+          "chapter": "Input Tax Credit (Advanced)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C06",
+          "chapter": "Zero Rated Supplies and Deemed Exports",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C07",
+          "chapter": "TDS & TCS under GST",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C08",
+          "chapter": "E-way Bill",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C09",
+          "chapter": "GST Refunds- Inverted Duty Structure and Zero-rated Supplies",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C10",
+          "chapter": "GST Returns",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C11",
+          "chapter": "Accounts and Records",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C12",
+          "chapter": "GST Annual Return and GST Audit Return",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C13",
+          "chapter": "Transition to GST (Transitional Provisions)",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C14",
+          "chapter": "Dispute Resolution Mechanism under GST",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C15",
+          "chapter": "Inspection, Search, Seizure, Arrest and Prosecution",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C16",
+          "chapter": "Anti-profiteering",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C17",
+          "chapter": "Walkthrough of GSTN Portal",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C18",
+          "chapter": "Valuation and Related Party Transactions",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C19",
+          "chapter": "Customs Procedures - Baggage & Courier / Post",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C20",
+          "chapter": "Manufacture in Bond",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C21",
+          "chapter": "Duty Drawback",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C22",
+          "chapter": "Customs (Import of Goods at Concessional Rate of Duty) Rules, 2017",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C23",
+          "chapter": "Remission of Duties",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C24",
+          "chapter": "Refund",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C25",
+          "chapter": "Trade Facilitation Measures",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C26",
+          "chapter": "Export Promotion Schemes under Foreign Trade Policy",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper19-C27",
+          "chapter": "Special Economic Zone Scheme (With Amended SEZ Rules)",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 4",
+      "paper": "Paper 20A",
+      "subject": "Strategic Performance Management & Business Valuation",
+      "subjectCode": "SPMBV",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper20A-C01",
+          "chapter": "Introduction to Performance Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20A-C02",
+          "chapter": "Performance Measurement, Evaluation and Improvement Tools",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20A-C03",
+          "chapter": "Economic Efficiency of the Firm — Performance Analysis",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20A-C04",
+          "chapter": "Enterprise Risk Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20A-C05",
+          "chapter": "Fundamentals of Business Valuation",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20A-C06",
+          "chapter": "Laws and Compliance in Business Valuation",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20A-C07",
+          "chapter": "Business Valuation Methods and Approaches",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20A-C08",
+          "chapter": "Valuation of Assets and Liabilities",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20A-C09",
+          "chapter": "Valuation in Mergers and Acquisitions",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 4",
+      "paper": "Paper 20B",
+      "subject": "Risk Management in Banking and Insurance",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper20B-C01",
+          "chapter": "Introduction to Risk Management",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20B-C02",
+          "chapter": "Interest Rate Risk and Market Risk",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20B-C03",
+          "chapter": "Credit Risk and Liquidity Risk",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20B-C04",
+          "chapter": "Sovereign Risk and Insolvency Risk",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20B-C05",
+          "chapter": "Operational Risk and Off-Balance Sheet Risk",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20B-C06",
+          "chapter": "Introduction to Insurance Business",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20B-C07",
+          "chapter": "Insurance Intermediaries, General Insurance, Health Insurance and Life Insurance",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20B-C08",
+          "chapter": "Managing Risk in Insurance Business",
+          "topics": []
+        }
+      ]
+    },
+    {
+      "group": "Final Group 4",
+      "paper": "Paper 20C",
+      "subject": "Entrepreneurship and Start-Up",
+      "subjectCode": "ENTS",
+      "chapterMaster": [
+        {
+          "chapterId": "Paper20C-C01",
+          "chapter": "Entrepreneurial Skill Sets",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20C-C02",
+          "chapter": "The Entrepreneurial Eco-system",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20C-C03",
+          "chapter": "Idea to Action",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20C-C04",
+          "chapter": "Value Addition",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20C-C05",
+          "chapter": "Scalability, Scaling up and Stabilisation of Sustainable Business",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20C-C06",
+          "chapter": "Risk Management Strategies",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20C-C07",
+          "chapter": "Leadership",
+          "topics": []
+        },
+        {
+          "chapterId": "Paper20C-C08",
+          "chapter": "Types of New Age Business",
+          "topics": []
+        }
+      ]
+    }
+  ]
+}
