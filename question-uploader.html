@@ -32,7 +32,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #223</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #225</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -90,7 +90,7 @@
 <section class="panel verification-panel" id="pendingVerificationPanel">
 <h2>👁️ Live Question Preview — Check Order & Formatting</h2>
 <div class="body">
-<div class="note"><b>Preview first:</b> JSON upload ke turant baad yahin questions exactly as HTML will be shown. Order is automatically corrected to <b>2(a), 2(b), 2(c), 2(d)…</b> within each attempt. These questions are still <b>NOT written to Firebase</b> until you explicitly approve them.</div>
+<div class="note"><b>Preview first:</b> JSON upload ke turant baad yahin questions exactly as HTML will be shown. Order is automatically corrected to <b>2(a), 2(b), 2(c), 2(d)…</b> within each attempt. Questions are still <b>NOT written to Firebase</b> until you click <b>Approve & Publish</b>. PDF is optional now.</div>
 <div class="verification-status">
 <span class="verification-badge" id="pendingVerificationCount">Pending: 0</span>
 <span class="verification-badge" id="pendingVerificationPdfStatus">PDF: Not generated</span>
@@ -1864,8 +1864,8 @@ function renderPendingVerification(){
   $("downloadPendingPdfTopBtn").disabled=false;
   $("downloadPendingPdfBtn").textContent="📄 Generate / Download Verification PDF";
   $("downloadPendingPdfTopBtn").textContent="📄 Generate / Download Verification PDF";
-  $("approvePendingBtn").disabled=true;
-  $("approvePendingTopBtn").disabled=true;
+  $("approvePendingBtn").disabled=false;
+  $("approvePendingTopBtn").disabled=false;
   $("discardPendingBtn").disabled=false;
   $("pendingVerificationPdfStatus").textContent="PDF: Generating…";
   $("pendingVerificationMsg").className="msg";
@@ -1916,8 +1916,8 @@ async function generatePendingVerificationPdf(){
     $("pendingVerificationPdfStatus").textContent="PDF: Failed";
     $("pendingVerificationMsg").textContent="PDF generation failed: "+(e.message||e)+". Nothing was published.";
     $("pendingVerificationMsg").className="msg err";
-    $("approvePendingBtn").disabled=true;
-    $("approvePendingTopBtn").disabled=true;
+    $("approvePendingBtn").disabled=false;
+    $("approvePendingTopBtn").disabled=false;
     throw e;
   }finally{
     if(stage)stage.remove();
@@ -1968,8 +1968,8 @@ $("discardPendingBtn").onclick=()=>{
 
 $("approvePendingBtn").onclick=async()=>{
   const btn=$("approvePendingBtn");
-  if(!PENDING_JSON_IMPORT||!PENDING_PDF_READY||!PENDING_PDF_DOWNLOADED)return;
-  if(!confirm("Have you downloaded and checked the verification PDF against the original question paper? Only continue if everything is correct."))return;
+  if(!PENDING_JSON_IMPORT||!PENDING_JSON_IMPORT.items.length)return;
+  if(!confirm("Have you checked the Live Question Preview above against the original paper? Publish these staged questions to the user portal?"))return;
   try{
     setBusy(btn,true,"Publishing…");
     const items=PENDING_JSON_IMPORT.items;
