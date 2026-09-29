@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #211</b> — Fixed Correction JSON loading and safe matching for HTML serialization differences. Correction import still changes only Chapter/Chapter ID/Topic. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #212</b> — Fixed Correction JSON matching for duplicated SFM question records and HTML hash differences. No question content is changed. Correction import still changes only Chapter/Chapter ID/Topic. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -1552,7 +1552,7 @@ $("importCorrectionsBtn").onclick=async()=>{const btn=$("importCorrectionsBtn");
   });
   const enc=new TextEncoder();
   const hash=async s=>{const buf=await crypto.subtle.digest("SHA-256",enc.encode(String(s||"")));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");};
-  const planned=[],errors=[],fallbackMatches=[];
+  const planned=[],errors=[],fallbackMatches=[],multiMatches=[];
   for(let i=0;i<corrections.length;i++){
     const r=corrections[i],m=r&&r.match;
     if(!m||!m.group||!m.subject||!m.attempt||!m.q){
@@ -1565,6 +1565,7 @@ $("importCorrectionsBtn").onclick=async()=>{const btn=$("importCorrectionsBtn");
       errors.push("Correction "+(i+1)+": question not found for "+m.subject+" / "+m.attempt+" / "+m.q+".");
       continue;
     }
+
     let matches=[];
     if(m.htmlSha256){
       const targetHash=String(m.htmlSha256).toLowerCase();
@@ -1572,20 +1573,24 @@ $("importCorrectionsBtn").onclick=async()=>{const btn=$("importCorrectionsBtn");
         if((await hash(d.data().html||""))===targetHash)matches.push(d);
       }
     }
-    // Safe fallback: if the identity itself has exactly one Firestore document,
-    // use that document when the source/export HTML hash differs. This fixes
-    // harmless HTML serialization differences without ever guessing between
-    // duplicate questions.
-    let target=null;
-    if(matches.length===1){
-      target=matches[0];
-    }else if(matches.length===0&&candidates.length===1){
-      target=candidates[0];
+
+    // If the HTML hash matches exactly, use those exact document(s).
+    // If it does not, the exported source can still contain duplicate copies
+    // of the same question. In that case, the correction JSON itself is
+    // repeated for the same identity, so update every document sharing that
+    // identity rather than guessing one document.
+    let targets=[];
+    if(matches.length){
+      targets=matches;
+    }else if(candidates.length){
+      targets=candidates;
       fallbackMatches.push(i+1);
+      if(candidates.length>1)multiMatches.push(i+1);
     }else{
-      errors.push("Correction "+(i+1)+": exact question match not found or ambiguous for "+m.subject+" / "+m.attempt+" / "+m.q+".");
+      errors.push("Correction "+(i+1)+": exact question match not found for "+m.subject+" / "+m.attempt+" / "+m.q+".");
       continue;
     }
+
     const data={};
     if(Object.prototype.hasOwnProperty.call(r,"chapter")){
       if(!String(r.chapter||"").trim()||!String(r.chapterId||"").trim()){
@@ -1600,7 +1605,7 @@ $("importCorrectionsBtn").onclick=async()=>{const btn=$("importCorrectionsBtn");
       errors.push("Correction "+(i+1)+": no permitted correction fields supplied.");
       continue;
     }
-    planned.push({ref:target.ref,data});
+    targets.forEach(target=>planned.push({ref:target.ref,data}));
   }
   if(errors.length){
     throw Error("No data was changed. Validation failed for "+errors.length+" item(s):\\n"+errors.slice(0,8).join("\\n")+(errors.length>8?"\\n…":""));
@@ -1610,8 +1615,8 @@ $("importCorrectionsBtn").onclick=async()=>{const btn=$("importCorrectionsBtn");
     planned.slice(i,i+450).forEach(x=>batch.set(x.ref,{...x.data,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL},{merge:true}));
     await batch.commit();
   }
-  let msg=planned.length+" question(s) corrected safely. Only Chapter/Chapter ID where supplied and Topic were changed; all other question data was left untouched.";
-  if(fallbackMatches.length)msg+=" "+fallbackMatches.length+" question(s) matched safely by unique Group + Subject + Attempt + Q because their HTML hash differed.";
+  let msg=planned.length+" Firestore document(s) corrected safely. Only Chapter/Chapter ID where supplied and Topic were changed; all other question data was left untouched.";
+  if(fallbackMatches.length)msg+=" "+fallbackMatches.length+" correction item(s) used the safe identity fallback because their HTML hash differed."; if(multiMatches.length)msg+=" "+multiMatches.length+" correction item(s) matched duplicate Firestore records and were applied to all records with the same Group + Subject + Attempt + Q.";
   $("correctionJsonMsg").textContent=msg;
   $("correctionJsonMsg").className="msg ok";
   $("correctionJson").value="";
