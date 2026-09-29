@@ -186,6 +186,10 @@ provider.setCustomParameters({prompt:"select_account"});
 provider.addScope("email");
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
 const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();
+function questionIdentityKey(x){
+  const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+  return [canon(x&&x.group),canon(x&&x.subject),canon(x&&x.attempt),canon(x&&x.q)].join("|");
+}
 function setupPortalSections(){
  const sections=[...document.querySelectorAll("#app > section.panel")];
  const select=$("portalSectionSelect");
