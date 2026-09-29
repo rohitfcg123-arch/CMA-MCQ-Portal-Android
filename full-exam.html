@@ -35,7 +35,7 @@
 <div class="ins"><b>Auto Submit</b><span>Time complete hote hi paper submit.</span></div>
 </div>
 <div class="msg">🔔 <b>Bell schedule:</b> 15 minutes elapsed → first bell; every hour → bell; 15 minutes remaining → warning bell; 3 hours → automatic submission. Bell audio starts after you press Start Exam.</div>
-<div class="toolbar"><button class="btn primary" id="startBtn" disabled>▶ Start Full Exam</button><button class="btn" id="backBtn">Back</button></div><div id="setupMsg" class="msg"></div></div>
+<div class="toolbar"><button class="btn primary" id="startBtn" disabled>▶ Start Full Exam</button><button class="btn gold" id="testBellBtn" type="button">🔔 Test Bell</button><button class="btn" id="backBtn">Back</button></div><div id="setupMsg" class="msg"></div></div>
 <div class="card"><h2>How the random paper is prepared</h2><div class="sub">Random mode does not create new questions. It selects from the existing MCQ bank and existing subjective/PYQ pool for the selected subject. Subjective selection is spread across the available previous attempts when possible, so repeated attempts can produce a different paper. The exact ICMAI paper pattern is not being claimed; this is a CMA Zone full-length practice exam.</div></div>
 </section>
 
@@ -107,7 +107,7 @@ function populateSubjects(){
 }
 $("group").onchange=populateSubjects;
 $("subject").onchange=()=>{$("startBtn").disabled=!($("group").value&&$("subject").value)};
-$("backBtn").onclick=()=>location.href="index.html";
+$("backBtn").onclick=()=>location.href="index.html";$("testBellBtn").onclick=async()=>{try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")await audioCtx.resume();ring("normal");$("setupMsg").textContent="🔔 Test bell played — this is the same normal bell used during the exam.";$("setupMsg").className="msg ok";}catch(e){$("setupMsg").textContent="Bell could not be played. Please allow sound in the browser.";$("setupMsg").className="msg err";}};
 function ring(kind){
   try{
     if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
