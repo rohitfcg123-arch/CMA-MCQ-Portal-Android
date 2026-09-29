@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #209</b> — Added strict master chapter validation. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #210</b> — Added Download All JSONs export for all Firestore-uploaded subjective questions. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -52,7 +52,7 @@
 <input id="jsonFile" type="file" accept=".json,application/json" multiple style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <div class="count" style="margin-top:6px">Select <b>one or multiple Question JSON files</b> at the same time, or paste JSON below. You can select all 6 attempts together.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
-<div class="toolbar"><button class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL Portal Questions + Topic Data</button></div>
+<div class="toolbar"><button class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL JSONs</button></div>
 <div class="count" id="portalQuestionExportCount" style="margin-top:8px"></div>
 <div id="jsonMsg" class="msg"></div>
 <div style="height:1px;background:var(--line);margin:18px 0"></div>
@@ -1517,14 +1517,14 @@ $("exportPortalQuestionsBtn").onclick=async()=>{
     downloadJson("CMA_Zone_ALL_Portal_Questions_Topic_Audit.json",payload);
     $("portalQuestionExportCount").textContent="Exported "+questions.length.toLocaleString("en-IN")+" questions — "+topicCount.toLocaleString("en-IN")+" already have topic data; "+(questions.length-topicCount).toLocaleString("en-IN")+" need topic classification.";
     $("portalQuestionExportCount").className="count ok";
-    $("jsonMsg").textContent="Complete portal question data downloaded. Send this JSON to ChatGPT; no old JSON files are required.";
+    $("jsonMsg").textContent="All uploaded Firestore questions have been exported as JSON. Send this JSON to ChatGPT for chapter correction and topic assignment.";
     $("jsonMsg").className="msg ok";
   }catch(e){
     $("portalQuestionExportCount").textContent="";
     $("jsonMsg").textContent="Could not export portal questions: "+(e.message||e);
     $("jsonMsg").className="msg err";
   }finally{
-    setBusy(btn,false,"📥 Download ALL Portal Questions + Topic Data");
+    setBusy(btn,false,"📥 Download ALL JSONs");
   }
 };
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
