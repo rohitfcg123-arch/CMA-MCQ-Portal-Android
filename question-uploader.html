@@ -1589,7 +1589,13 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
   $("jsonMsg").textContent=incoming.size+" unique question(s) validated and staged for verification — "+added+" new, "+updated+" replacement(s), "+skipped+" skipped. Firebase was NOT changed.";
   $("jsonMsg").className="msg ok";
   $("pendingVerificationPanel").scrollIntoView({behavior:"smooth",block:"start"});
-  await generatePendingVerificationPdf();
+  // Staging must finish before PDF rendering starts. PDF generation can be
+  // expensive on mobile browsers, so never await it inside the import handler.
+  // The verification panel becomes usable immediately while the PDF renders.
+  $("pendingVerificationPdfStatus").textContent="PDF: Generating…";
+  $("pendingVerificationMsg").textContent="Questions are staged. PDF generation is running separately — Firebase is still unchanged.";
+  $("pendingVerificationMsg").className="msg";
+  setTimeout(()=>generatePendingVerificationPdf().catch(()=>{}),0);
 }catch(e){
   $("jsonMsg").textContent="Import failed: "+(e&&e.message?e.message:e);
   $("jsonMsg").className="msg err";
@@ -1809,7 +1815,8 @@ function renderPendingVerification(){
   $("pendingVerificationStatus").textContent="These questions are staged locally only. They are NOT in Firestore and are NOT visible in the user portal.";
   preview.innerHTML=items.map(pendingQuestionCard).join("");
   preview.classList.remove("hidden");
-  $("downloadPendingPdfBtn").disabled=false;
+  // Download remains locked until a real PDF blob exists.
+  $("downloadPendingPdfBtn").disabled=true;
   $("approvePendingBtn").disabled=true;
   $("discardPendingBtn").disabled=false;
   $("pendingVerificationPdfStatus").textContent="PDF: Generating…";
@@ -1850,6 +1857,7 @@ async function generatePendingVerificationPdf(){
     $("pendingVerificationPdfStatus").textContent="PDF: Ready — download required";
     $("pendingVerificationMsg").textContent="Verification PDF is ready. Download it, compare it with the original paper, then approve only if everything matches.";
     $("pendingVerificationMsg").className="msg ok";
+    $("downloadPendingPdfBtn").disabled=false;
     $("approvePendingBtn").disabled=true;
   }catch(e){
     PENDING_PDF_READY=false;
