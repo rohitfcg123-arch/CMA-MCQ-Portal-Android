@@ -6,10 +6,28 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/sfm-subjective-pyq-v29.js?v=20260927u50"></script>
 <style>
 :root{--teal:#0d3b3e;--dark:#082627;--gold:#c8a24a;--cream:#faf6ee;--paper:#fffdf8;--line:#e3dbc9;--muted:#65716f;--red:#a43c32;--green:#2f7042}
-*{box-sizing:border-box}body{margin:0;background:var(--cream);color:#22302f;font-family:Inter,Segoe UI,Arial,sans-serif}.top{background:var(--teal);color:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:20px;font-weight:850}.brand span{color:#ead39b}.wrap{max-width:1250px;margin:auto;padding:18px}.panel{background:var(--paper);border:1px solid var(--line);border-radius:17px;margin:14px 0;box-shadow:0 5px 18px #0826270b}.panel h2{margin:0;padding:15px 17px;border-bottom:1px solid var(--line);font-size:16px;color:var(--dark)}.body{padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:var(--teal)}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f}textarea{min-height:180px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}.btn{border:0;border-radius:9px;padding:10px 13px;background:var(--teal);color:#fff;font-weight:800;cursor:pointer}.gold{background:var(--gold);color:var(--dark)}.gray{background:#687572}.red{background:var(--red)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.msg{font-size:13px;margin-top:10px;min-height:18px}.ok{color:var(--green)}.err{color:var(--red)}.note{background:#f4eee2;border:1px solid var(--line);padding:11px;border-radius:10px;color:var(--muted);font-size:12px;line-height:1.5}.login{max-width:430px;margin:70px auto;padding:28px;background:var(--paper);border:1px solid var(--line);border-radius:18px}.hidden{display:none!important}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:9px;border-bottom:1px solid #eee7da;text-align:left;font-size:12px;vertical-align:top}th{background:#f2ecdf}.preview{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px;line-height:1.6}.preview table{min-width:0}.preview th,.preview td{border:1px solid #ccc}.solution-preview{background:#f5fbf8;border:1px solid #cfe3d8;border-radius:12px;padding:14px;margin-top:10px;line-height:1.6}.count{color:var(--muted);font-size:12px}.spinner{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:7px}@keyframes spin{to{transform:rotate(360deg)}}button:disabled{opacity:.65;cursor:not-allowed}.portal-section-hidden{display:none!important} .question-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:12px;background:#f7f2e9;border:1px solid var(--line);border-radius:12px}.question-filters .field label{font-size:11px}.edit-modal{position:fixed;inset:0;background:#08262799;display:flex;align-items:center;justify-content:center;padding:18px;z-index:100}.edit-card{width:min(980px,100%);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #08262740}.edit-card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);color:var(--dark)}.edit-card .body{padding:18px}.edit-question{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;max-height:260px;overflow:auto;line-height:1.6}.edit-question table{min-width:0}.edit-question th,.edit-question td{border:0}.edit-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}.duplicate-modal{position:fixed;inset:0;background:#08262799;display:flex;align-items:center;justify-content:center;padding:18px;z-index:120}.duplicate-card{width:min(1050px,100%);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #08262740}.duplicate-card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);color:var(--dark)}.duplicate-card .body{padding:18px}.duplicate-row{border:1px solid var(--line);border-radius:12px;background:#fff;padding:12px;margin-bottom:10px}.duplicate-meta{font-size:12px;color:var(--muted);margin-bottom:8px}.duplicate-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.duplicate-side{border:1px solid #eee7da;border-radius:9px;padding:10px;background:#fafafa;font-size:12px;line-height:1.5}.duplicate-side b{display:block;color:var(--teal);margin-bottom:5px}.duplicate-choice{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.duplicate-choice button{padding:7px 10px;border:0;border-radius:8px;font-weight:800;cursor:pointer}.dup-replace{background:var(--gold);color:var(--dark)}.dup-skip{background:#687572;color:#fff}.duplicate-choice .selected{outline:3px solid #0d3b3e33}.duplicate-status{font-size:12px;font-weight:800;margin-top:7px}.duplicate-footer{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}@media(max-width:700px){.duplicate-columns{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:#22302f;font-family:Inter,Segoe UI,Arial,sans-serif}.top{background:var(--teal);color:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:20px;font-weight:850}.brand span{color:#ead39b}.wrap{max-width:1250px;margin:auto;padding:18px}.panel{background:var(--paper);border:1px solid var(--line);border-radius:17px;margin:14px 0;box-shadow:0 5px 18px #0826270b}.panel h2{margin:0;padding:15px 17px;border-bottom:1px solid var(--line);font-size:16px;color:var(--dark)}.body{padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:var(--teal)}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f}textarea{min-height:180px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}.btn{border:0;border-radius:9px;padding:10px 13px;background:var(--teal);color:#fff;font-weight:800;cursor:pointer}.gold{background:var(--gold);color:var(--dark)}.gray{background:#687572}.red{background:var(--red)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.msg{font-size:13px;margin-top:10px;min-height:18px}.ok{color:var(--green)}.err{color:var(--red)}.note{background:#f4eee2;border:1px solid var(--line);padding:11px;border-radius:10px;color:var(--muted);font-size:12px;line-height:1.5}.login{max-width:430px;margin:70px auto;padding:28px;background:var(--paper);border:1px solid var(--line);border-radius:18px}.hidden{display:none!important}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:9px;border-bottom:1px solid #eee7da;text-align:left;font-size:12px;vertical-align:top}th{background:#f2ecdf}.preview{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px;line-height:1.6}.preview table{min-width:0}.preview th,.preview td{border:1px solid #ccc}.solution-preview{background:#f5fbf8;border:1px solid #cfe3d8;border-radius:12px;padding:14px;margin-top:10px;line-height:1.6}.count{color:var(--muted);font-size:12px}.spinner{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:7px}@keyframes spin{to{transform:rotate(360deg)}}button:disabled{opacity:.65;cursor:not-allowed}.portal-section-hidden{display:none!important}
+.verification-panel{border:2px solid var(--gold);background:#fffdf8}
+.verification-status{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.verification-badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850}
+.verification-preview{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:12px}
+.verification-question{background:#fff;border:1px solid #e3dbc9;border-radius:14px;padding:18px;margin:0 0 14px;line-height:1.65;break-inside:avoid;page-break-inside:avoid}
+.verification-question .vq-meta{font-size:12px;color:#65716f;font-weight:800;margin-bottom:9px}
+.verification-question .vq-title{font-size:17px;font-weight:850;color:#0d3b3e;margin-bottom:10px}
+.verification-question table{width:100%;min-width:0;border-collapse:collapse;margin:10px 0}
+.verification-question th,.verification-question td{border:1px solid #bfc7c5;padding:7px;vertical-align:top}
+.verification-question th{background:#f2ecdf}
+.verification-question ol,.verification-question ul{margin-top:6px;margin-bottom:12px;padding-left:26px}
+.verification-question p{margin:0 0 10px}
+.pdf-stage{position:fixed;left:-100000px;top:0;width:794px;background:#fff;padding:24px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#22302f}
+.pdf-stage .pdf-header{border-bottom:2px solid #0d3b3e;padding-bottom:12px;margin-bottom:16px}
+.pdf-stage .pdf-header h1{margin:0 0 5px;color:#0d3b3e;font-size:22px}
+.pdf-stage .pdf-header p{margin:3px 0;color:#65716f;font-size:12px}
+@media(max-width:700px){.verification-preview{padding:10px}.verification-question{padding:13px}} .question-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:12px;background:#f7f2e9;border:1px solid var(--line);border-radius:12px}.question-filters .field label{font-size:11px}.edit-modal{position:fixed;inset:0;background:#08262799;display:flex;align-items:center;justify-content:center;padding:18px;z-index:100}.edit-card{width:min(980px,100%);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #08262740}.edit-card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);color:var(--dark)}.edit-card .body{padding:18px}.edit-question{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;max-height:260px;overflow:auto;line-height:1.6}.edit-question table{min-width:0}.edit-question th,.edit-question td{border:0}.edit-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}.duplicate-modal{position:fixed;inset:0;background:#08262799;display:flex;align-items:center;justify-content:center;padding:18px;z-index:120}.duplicate-card{width:min(1050px,100%);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #08262740}.duplicate-card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);color:var(--dark)}.duplicate-card .body{padding:18px}.duplicate-row{border:1px solid var(--line);border-radius:12px;background:#fff;padding:12px;margin-bottom:10px}.duplicate-meta{font-size:12px;color:var(--muted);margin-bottom:8px}.duplicate-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.duplicate-side{border:1px solid #eee7da;border-radius:9px;padding:10px;background:#fafafa;font-size:12px;line-height:1.5}.duplicate-side b{display:block;color:var(--teal);margin-bottom:5px}.duplicate-choice{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.duplicate-choice button{padding:7px 10px;border:0;border-radius:8px;font-weight:800;cursor:pointer}.dup-replace{background:var(--gold);color:var(--dark)}.dup-skip{background:#687572;color:#fff}.duplicate-choice .selected{outline:3px solid #0d3b3e33}.duplicate-status{font-size:12px;font-weight:800;margin-top:7px}.duplicate-footer{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}@media(max-width:700px){.duplicate-columns{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1402,88 +1420,136 @@ async function applySolutionArray(arr){
  await batch.commit();
  return {updated,created,missing,grouped:grouped.size,answersApplied:[...grouped.values()].reduce((n,x)=>n+[...new Set(x.answers)].length,0)};
 }
-$("importBtn").onclick=async()=>{const btn=$("importBtn");try{setBusy(btn,true,"Reading JSON…");$("jsonMsg").className="msg";$("jsonMsg").textContent="Reading and validating the selected questions…";let raw=$("json").value.trim();if(!raw){const files=Array.from($("jsonFile").files||[]);if(files.length){const combined=[];for(const file of files){const parsed=normalizeQuestionJsonPayload(await file.text());if(!Array.isArray(parsed)||!parsed.length)throw Error(file.name+" does not contain any questions.");combined.push(...parsed)}raw=JSON.stringify(combined);}else throw Error("Please select a JSON file above or paste the JSON array in the box first.");}const arr=normalizeQuestionJsonPayload(raw);if(!Array.isArray(arr)||!arr.length)throw Error("JSON must contain at least one question.");if(arr[0]&&arr[0].solutionHtml&&!arr[0].html){const result=await applySolutionArray(arr);$("jsonMsg").textContent=(result.updated+result.created)+" solution(s) applied ("+result.updated+" existing + "+result.created+" static SFM question(s) added to Firestore). Answer-only JSON was automatically detected."; $("jsonMsg").className="msg ok";$("json").value="";await loadQuestions();return;}let importItems=[];
-if(arr.length&&arr[0]&&Array.isArray(arr[0].questions)){
-  arr.forEach((section,si)=>{
-    if(!section.chapter||!Array.isArray(section.questions))throw Error("Chapter section "+(si+1)+" is invalid. Required: chapter and questions[].");
-    section.questions.forEach(q=>importItems.push({...q,chapter:q.chapter||section.chapter}));
-  });
-}else importItems=arr;
-
-/* HARD STOP: every question must belong to the exact Group + Subject + Chapter
-   combination in CMA_Chapter_Topic_Master_v1.json. No write happens before
-   the entire file passes this validation. */
-importItems=validateAllQuestionsAgainstStrictMaster(importItems);
-
-const existingSnap=await db.collection("subjectiveQuestions").get();
-const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-function normalizeGroupValue(v){
-  const n=String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-  if(n==="foundation"||n==="cmafoundation")return "foundation";
-  if(n==="inter1"||n==="intergroup1"||n==="cmaintermediategroup1")return "inter1";
-  if(n==="inter2"||n==="intergroup2"||n==="cmaintermediategroup2")return "inter2";
-  if(n==="final3"||n==="finalgroup3"||n==="cmafinalgroup3")return "final3";
-  if(n==="final4"||n==="finalgroup4"||n==="cmafinalgroup4")return "final4";
-  return "";
-}
-const canonicalKey=x=>questionIdentityKey(x);
-const existing=new Map();
-existingSnap.docs.forEach(d=>{
-  const x=d.data(), key=canonicalKey(x);
-  if(!existing.has(key))existing.set(key,{id:d.id,data:x});
-});
-const incoming=new Map();
-importItems.forEach((raw,i)=>{
-  const x={...raw,group:normalizeGroupValue(raw.group)};
-  if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");
-  if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+(raw.group||"unknown group")+". Use the exact subject from the dropdown.");
-  if(typeof x.chapter!=="string" || !x.chapter.trim())throw Error("Item "+(i+1)+" is missing a chapter.");
-  incoming.set(canonicalKey(x),x);
-});
-
-// IMPORTANT: Do not silently overwrite an existing question.
-// First detect all conflicts, show them to the administrator, and wait for
-// an explicit Replace/Overwrite or Skip decision before any Firestore write.
-const conflicts=[];
-incoming.forEach((x,key)=>{
-  if(existing.has(key)) conflicts.push({key,x,existing:existing.get(key)});
-});
-let decisions=new Map();
-if(conflicts.length){
-  decisions=await askDuplicateDecisions(conflicts);
-  if(decisions===null){
-    $("jsonMsg").textContent="Import cancelled. No questions were changed.";
-    $("jsonMsg").className="msg";
-    return;
+$("importBtn").onclick=async()=>{const btn=$("importBtn");try{
+  setBusy(btn,true,"Validating JSON…");
+  $("jsonMsg").className="msg";
+  $("jsonMsg").textContent="Reading, validating and preparing the questions for verification…";
+  let raw=$("json").value.trim();
+  if(!raw){
+    const files=Array.from($("jsonFile").files||[]);
+    if(files.length){
+      const combined=[];
+      for(const file of files){
+        const parsed=normalizeQuestionJsonPayload(await file.text());
+        if(!Array.isArray(parsed)||!parsed.length)throw Error(file.name+" does not contain any questions.");
+        combined.push(...parsed);
+      }
+      raw=JSON.stringify(combined);
+    }else throw Error("Please select a JSON file above or paste the JSON array in the box first.");
   }
-}
-let added=0,updated=0;
-const writeItems=[];
-incoming.forEach(x=>{
-  const key=canonicalKey(x);
-  const data={group:x.group,subject:x.subject,chapter:x.chapter,chapterId:String(x.chapterId||"").trim(),topic:String(x.topic||x.topicName||"").trim(),attempt:x.attempt,q:x.q,marks:x.marks===""||x.marks==null?null:Number(x.marks),html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):String(x.solutionHtml||"").trim()?[String(x.solutionHtml).trim()]:[],sort:Number(x.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
-  if(existing.has(key)){
-    if(decisions.get(key)==="replace"){
-      writeItems.push({id:existing.get(key).id,data,update:true});
-      updated++;
+  const arr=normalizeQuestionJsonPayload(raw);
+  if(!Array.isArray(arr)||!arr.length)throw Error("JSON must contain at least one question.");
+
+  if(arr[0]&&arr[0].solutionHtml&&!arr[0].html){
+    throw Error("Answer-only / Solution JSON cannot be published through Question JSON. Use Import Answers JSON below.");
+  }
+
+  let importItems=[];
+  if(arr.length&&arr[0]&&Array.isArray(arr[0].questions)){
+    arr.forEach((section,si)=>{
+      if(!section.chapter||!Array.isArray(section.questions))throw Error("Chapter section "+(si+1)+" is invalid. Required: chapter and questions[].");
+      section.questions.forEach(q=>importItems.push({...q,chapter:q.chapter||section.chapter}));
+    });
+  }else importItems=arr;
+
+  /* HARD STOP: strict Group + Subject + Chapter master validation happens
+     before any staging or Firebase write. Subject and chapter are NEVER
+     silently changed to make an invalid JSON pass. */
+  importItems=validateAllQuestionsAgainstStrictMaster(importItems);
+
+  const existingSnap=await db.collection("subjectiveQuestions").get();
+  const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+  function normalizeGroupValue(v){
+    const n=String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+    if(n==="foundation"||n==="cmafoundation")return "foundation";
+    if(n==="inter1"||n==="intergroup1"||n==="cmaintermediategroup1")return "inter1";
+    if(n==="inter2"||n==="intergroup2"||n==="cmaintermediategroup2")return "inter2";
+    if(n==="final3"||n==="finalgroup3"||n==="cmafinalgroup3")return "final3";
+    if(n==="final4"||n==="finalgroup4"||n==="cmafinalgroup4")return "final4";
+    return "";
+  }
+  const canonicalKey=x=>questionIdentityKey(x);
+  const existing=new Map();
+  existingSnap.docs.forEach(d=>{
+    const x=d.data(),key=canonicalKey(x);
+    if(!existing.has(key))existing.set(key,{id:d.id,data:x});
+  });
+
+  const incoming=new Map();
+  importItems.forEach((rawItem,i)=>{
+    const x={...rawItem,group:normalizeGroupValue(rawItem.group)};
+    if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");
+    if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+(rawItem.group||"unknown group")+". Use the exact subject from the dropdown. The uploader will not change the subject automatically.");
+    if(typeof x.chapter!=="string"||!x.chapter.trim())throw Error("Item "+(i+1)+" is missing a chapter.");
+    incoming.set(canonicalKey(x),x);
+  });
+
+  const conflicts=[];
+  incoming.forEach((x,key)=>{if(existing.has(key))conflicts.push({key,x,existing:existing.get(key)});});
+  let decisions=new Map();
+  if(conflicts.length){
+    decisions=await askDuplicateDecisions(conflicts);
+    if(decisions===null){
+      $("jsonMsg").textContent="Import cancelled. No questions were changed or staged.";
+      $("jsonMsg").className="msg";
+      return;
     }
-    return;
   }
-  writeItems.push({id:null,data,update:false});
-  added++;
-});
-// Firestore WriteBatch supports up to 500 writes. Split large imports into
-// smaller batches so 501, 1,000, 5,000 etc. questions can be uploaded in one go.
-for(let i=0;i<writeItems.length;i+=450){
-  const batch=db.batch();
-  writeItems.slice(i,i+450).forEach(item=>{
-    const ref=item.update?db.collection("subjectiveQuestions").doc(item.id):db.collection("subjectiveQuestions").doc();
-    batch.set(ref,item.data,{merge:item.update});
+
+  let added=0,updated=0,skipped=0;
+  const pendingItems=[];
+  incoming.forEach(x=>{
+    const key=canonicalKey(x);
+    const cleanData={
+      group:x.group,
+      subject:x.subject,
+      chapter:x.chapter,
+      chapterId:String(x.chapterId||"").trim(),
+      topic:String(x.topic||x.topicName||"").trim(),
+      attempt:x.attempt,
+      q:x.q,
+      marks:x.marks===""||x.marks==null?null:Number(x.marks),
+      html:String(x.html||""),
+      solutionHtml:String(x.solutionHtml||"").trim(),
+      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):(String(x.solutionHtml||"").trim()?[String(x.solutionHtml).trim()]:[]),
+      sort:Number(x.sort)||0
+    };
+    if(existing.has(key)){
+      if(decisions.get(key)==="replace"){
+        pendingItems.push({id:existing.get(key).id,data:cleanData,update:true});
+        updated++;
+      }else skipped++;
+      return;
+    }
+    pendingItems.push({id:null,data:cleanData,update:false});
+    added++;
   });
-  await batch.commit();
-}
-$("jsonMsg").textContent=incoming.size+" unique question(s) processed — "+added+" added, "+updated+" replaced/overwritten, "+(conflicts.length-updated)+" skipped. Duplicate decisions were confirmed before any write.";
-$("jsonMsg").className="msg ok";$("json").value="";await loadQuestions()}catch(e){$("jsonMsg").textContent="Import failed: "+(e&&e.message?e.message:e);$("jsonMsg").className="msg err";$("jsonMsg").scrollIntoView({behavior:"smooth",block:"center"});}finally{setBusy(btn,false,"Import Questions JSON")}};
+
+  if(!pendingItems.length)throw Error("Nothing to stage. All imported questions were skipped as duplicates.");
+
+  PENDING_JSON_IMPORT={
+    items:pendingItems,
+    createdAt:new Date().toISOString(),
+    sourceCount:incoming.size,
+    added,
+    updated,
+    skipped
+  };
+  renderPendingVerification();
+  $("json").value="";
+  $("jsonFile").value="";
+  $("jsonMsg").textContent=incoming.size+" unique question(s) validated and staged for verification — "+added+" new, "+updated+" replacement(s), "+skipped+" skipped. Firebase was NOT changed.";
+  $("jsonMsg").className="msg ok";
+  $("pendingVerificationPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  await generatePendingVerificationPdf();
+}catch(e){
+  $("jsonMsg").textContent="Import failed: "+(e&&e.message?e.message:e);
+  $("jsonMsg").className="msg err";
+  $("jsonMsg").scrollIntoView({behavior:"smooth",block:"center"});
+}finally{
+  setBusy(btn,false,"Import Questions JSON");
+}};
+
 $("exportSolutionsBtn").onclick=async()=>{
   try{
     const snap=await db.collection("subjectiveQuestions").get();
@@ -1659,6 +1725,142 @@ $("correctionJsonFile").addEventListener("change",async()=>{
   }
 });
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
+
+/* Pending Question Verification — PDF gate */
+let PENDING_JSON_IMPORT=null;
+let PENDING_PDF_READY=false;
+
+function pendingQuestionCard(item,index){
+  const x=item.data||item;
+  const solutionAvailable=Array.isArray(x.solutionHtmls)?x.solutionHtmls.length>0:!!String(x.solutionHtml||"").trim();
+  return '<article class="verification-question">'+
+    '<div class="vq-meta">Question '+esc(x.q||"")+' · '+esc(x.attempt||"")+' · '+esc(x.marks==null?"":String(x.marks)+" Marks")+'</div>'+
+    '<div class="vq-title">'+esc(x.subject||"")+' — '+esc(x.chapter||"")+'</div>'+
+    '<div class="vq-content">'+String(x.html||"")+'</div>'+
+    (solutionAvailable?'<div style="margin-top:12px;padding:8px 11px;border:1px solid #cfe3d8;border-radius:8px;color:#2f7042;font-weight:800;font-size:12px">✓ Suggested answer available — hidden in this verification preview, as in the user portal before “View Solution”.</div>':"")+
+    '</article>';
+}
+
+function renderPendingVerification(){
+  const panel=$("pendingVerificationPanel"),preview=$("pendingVerificationPreview");
+  if(!PENDING_JSON_IMPORT||!PENDING_JSON_IMPORT.items.length){
+    $("pendingVerificationCount").textContent="Pending: 0";
+    $("pendingVerificationPdfStatus").textContent="PDF: Not generated";
+    $("pendingVerificationStatus").textContent="No questions are waiting for approval.";
+    $("pendingVerificationMsg").textContent="";
+    $("downloadPendingPdfBtn").disabled=true;
+    $("approvePendingBtn").disabled=true;
+    $("discardPendingBtn").disabled=true;
+    preview.classList.add("hidden");preview.innerHTML="";
+    return;
+  }
+  const items=PENDING_JSON_IMPORT.items;
+  $("pendingVerificationCount").textContent="Pending: "+items.length.toLocaleString("en-IN");
+  $("pendingVerificationStatus").textContent="These questions are staged locally only. They are NOT in Firestore and are NOT visible in the user portal.";
+  preview.innerHTML=items.map(pendingQuestionCard).join("");
+  preview.classList.remove("hidden");
+  $("downloadPendingPdfBtn").disabled=false;
+  $("approvePendingBtn").disabled=true;
+  $("discardPendingBtn").disabled=false;
+  $("pendingVerificationPdfStatus").textContent="PDF: Generating…";
+  $("pendingVerificationMsg").className="msg";
+  $("pendingVerificationMsg").textContent="PDF verification is being prepared. Approval will remain locked until PDF generation succeeds.";
+  PENDING_PDF_READY=false;
+}
+
+async function generatePendingVerificationPdf(){
+  if(!PENDING_JSON_IMPORT||!PENDING_JSON_IMPORT.items.length)return;
+  const btn=$("downloadPendingPdfBtn");
+  try{
+    if(!window.jspdf||!window.jspdf.jsPDF)throw new Error("PDF engine could not be loaded. Refresh the page and try the JSON import again.");
+    const source=$("pendingVerificationPreview");
+    const stage=document.createElement("div");
+    stage.className="pdf-stage";
+    stage.innerHTML='<div class="pdf-header"><h1>CMA Zone — Question Verification PDF</h1><p>Generated from the exact staged question HTML. This PDF is for verification only.</p><p>Questions: '+PENDING_JSON_IMPORT.items.length+' · Generated: '+new Date().toLocaleString("en-IN")+'</p></div>'+source.innerHTML;
+    document.body.appendChild(stage);
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:"p",unit:"pt",format:"a4",compress:true});
+    await doc.html(stage,{
+      x:28,y:28,width:538,windowWidth:794,
+      margin:[28,28,32,28],
+      autoPaging:"text",
+      html2canvas:{scale:1.35,useCORS:true,backgroundColor:"#ffffff",logging:false},
+      callback:()=>{}
+    });
+    PENDING_JSON_IMPORT.pdfBlob=doc.output("blob");
+    PENDING_JSON_IMPORT.pdfName="CMA_Zone_Verification_"+new Date().toISOString().slice(0,19).replace(/[:T]/g,"-")+".pdf";
+    PENDING_PDF_READY=true;
+    $("pendingVerificationPdfStatus").textContent="PDF: Ready ✓";
+    $("pendingVerificationMsg").textContent="Verification PDF is ready. Download it, compare it with the original paper, then approve only if everything matches.";
+    $("pendingVerificationMsg").className="msg ok";
+    $("approvePendingBtn").disabled=false;
+  }catch(e){
+    PENDING_PDF_READY=false;
+    $("pendingVerificationPdfStatus").textContent="PDF: Failed";
+    $("pendingVerificationMsg").textContent="PDF generation failed: "+(e.message||e)+". Nothing was published.";
+    $("pendingVerificationMsg").className="msg err";
+    $("approvePendingBtn").disabled=true;
+    throw e;
+  }finally{
+    stage&&stage.remove();
+  }
+}
+
+$("downloadPendingPdfBtn").onclick=async()=>{
+  if(!PENDING_JSON_IMPORT||!PENDING_PDF_READY)return;
+  try{
+    if(!PENDING_JSON_IMPORT.pdfBlob)await generatePendingVerificationPdf();
+    const url=URL.createObjectURL(PENDING_JSON_IMPORT.pdfBlob);
+    const a=document.createElement("a");a.href=url;a.download=PENDING_JSON_IMPORT.pdfName||"CMA_Zone_Verification.pdf";
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    $("pendingVerificationMsg").textContent="PDF downloaded. Verify it against the original question paper before approving.";
+    $("pendingVerificationMsg").className="msg ok";
+  }catch(e){}
+};
+
+$("discardPendingBtn").onclick=()=>{
+  if(!PENDING_JSON_IMPORT)return;
+  if(!confirm("Discard all pending questions? Nothing has been published yet."))return;
+  PENDING_JSON_IMPORT=null;PENDING_PDF_READY=false;renderPendingVerification();
+  $("pendingVerificationMsg").textContent="Pending questions discarded. Firestore was not changed.";
+  $("pendingVerificationMsg").className="msg";
+};
+
+$("approvePendingBtn").onclick=async()=>{
+  const btn=$("approvePendingBtn");
+  if(!PENDING_JSON_IMPORT||!PENDING_PDF_READY)return;
+  if(!confirm("Have you downloaded and checked the verification PDF against the original question paper? Only continue if everything is correct."))return;
+  try{
+    setBusy(btn,true,"Publishing…");
+    const items=PENDING_JSON_IMPORT.items;
+    for(let i=0;i<items.length;i+=450){
+      const batch=db.batch();
+      items.slice(i,i+450).forEach(item=>{
+        const ref=item.update?db.collection("subjectiveQuestions").doc(item.id):db.collection("subjectiveQuestions").doc();
+        batch.set(ref,{
+          ...item.data,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+          updatedBy:ADMIN_EMAIL
+        },{merge:item.update});
+      });
+      await batch.commit();
+    }
+    const count=items.length;
+    PENDING_JSON_IMPORT=null;PENDING_PDF_READY=false;
+    renderPendingVerification();
+    $("pendingVerificationMsg").textContent=count+" question(s) approved and published to the user portal. Only the verified staged data was written.";
+    $("pendingVerificationMsg").className="msg ok";
+    $("jsonMsg").textContent="Approved successfully. "+count+" question(s) are now live in Firestore.";
+    $("jsonMsg").className="msg ok";
+    await loadQuestions();
+  }catch(e){
+    $("pendingVerificationMsg").textContent="Publish failed: "+(e.message||e)+". No approval was recorded after this error; pending data remains staged.";
+    $("pendingVerificationMsg").className="msg err";
+  }finally{
+    setBusy(btn,false,"✅ Approve & Publish");
+  }
+};
 
 /* CMA Zone Master Chapter + Topic Extraction — UPDATE #207 */
 function slugId(v){return String(v||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,28);}
