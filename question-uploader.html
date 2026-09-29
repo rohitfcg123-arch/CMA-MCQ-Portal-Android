@@ -32,7 +32,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #227</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #228</b> — Fixed the JSON import crash caused by the removed PDF status element. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -1843,7 +1843,6 @@ function renderPendingVerification(){
   if(!panel||!preview){ throw new Error("Pending Verification panel is missing from the uploader page. Please refresh after the latest deployment."); }
   if(!PENDING_JSON_IMPORT||!PENDING_JSON_IMPORT.items.length){
     $("pendingVerificationCount").textContent="Pending: 0";
-    $("pendingVerificationPdfStatus").textContent="PDF: Not generated";
     $("pendingVerificationStatus").textContent="No questions are waiting for approval.";
     $("pendingVerificationMsg").textContent="";
     $("downloadPendingPdfBtn").disabled=true;
@@ -1902,7 +1901,6 @@ async function generatePendingVerificationPdf(){
     PENDING_JSON_IMPORT.pdfName="CMA_Zone_Verification_"+new Date().toISOString().slice(0,19).replace(/[:T]/g,"-")+".pdf";
     PENDING_PDF_READY=true;
     PENDING_PDF_DOWNLOADED=false;
-    $("pendingVerificationPdfStatus").textContent="PDF: Ready — download required";
     $("pendingVerificationMsg").textContent="Verification PDF is ready. Download it, compare it with the original paper, then approve only if everything matches.";
     $("pendingVerificationMsg").className="msg ok";
     $("downloadPendingPdfBtn").disabled=false;
@@ -1913,7 +1911,6 @@ async function generatePendingVerificationPdf(){
   }catch(e){
     PENDING_PDF_READY=false;
     PENDING_PDF_DOWNLOADED=false;
-    $("pendingVerificationPdfStatus").textContent="PDF: Failed";
     $("pendingVerificationMsg").textContent="PDF generation failed: "+(e.message||e)+". Nothing was published.";
     $("pendingVerificationMsg").className="msg err";
     $("approvePendingBtn").disabled=false;
