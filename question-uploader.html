@@ -481,7 +481,9 @@ function canonicalizeAgainstStrictMaster(raw,indexLabel){
   if(!ms) throw new Error((indexLabel||"Question")+" has an invalid Group + Subject combination. Use the exact subject from the master chapter registry.");
   const mapped=strictFindMasterChapter(ms,x.chapter,x.chapterId);
   if(mapped.error) throw new Error((indexLabel||"Question")+" rejected: "+mapped.error);
-  x.group=normalizeGroupValue(x.group)||x.group;
+  const groupKey=strictGroupKey(x.group);
+  const groupMap={foundation:"foundation",intergroup1:"inter1",intergroup2:"inter2",finalgroup3:"final3",finalgroup4:"final4"};
+  x.group=groupMap[groupKey]||x.group;
   x.subject=ms.subject;
   x.chapter=mapped.row.chapter;
   x.chapterId=mapped.row.chapterId;
