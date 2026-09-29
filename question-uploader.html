@@ -32,7 +32,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #229</b> — Fixed the JSON import crash caused by the removed PDF status element. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #230</b> — Fixed the JSON import crash caused by the removed PDF status element. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -1921,32 +1921,42 @@ async function generatePendingVerificationPdf(){
 }
 
 $("downloadPendingPdfBtn").onclick=()=>{
-  if(!PENDING_JSON_IMPORT||!PENDING_JSON_IMPORT.items.length)return;
-  const preview=$("pendingVerificationPreview");
-  const panel=$("pendingVerificationPanel");
-  if(!preview||!panel)return;
-  const isHidden=preview.classList.toggle("hidden");
-  PENDING_PREVIEW_OPENED=!isHidden;
-  const buttons=[$("downloadPendingPdfBtn"),$("downloadPendingPdfTopBtn")].filter(Boolean);
-  buttons.forEach(b=>b.textContent=isHidden?"👁️ Preview Uploaded JSON":"✕ Hide JSON Preview");
-  $("pendingVerificationMsg").textContent=isHidden
-    ?"Preview hidden. Click Preview Uploaded JSON again whenever you want to verify it."
-    :"Preview opened below. Verify question order, numbering, paragraphs, lists, tables, marks and attempt before publishing.";
-  $("pendingVerificationMsg").className="msg ok";
-  if(!isHidden){
-    setTimeout(()=>panel.scrollIntoView({behavior:"smooth",block:"start"}),80);
+  try{
+    if(!PENDING_JSON_IMPORT||!Array.isArray(PENDING_JSON_IMPORT.items)||!PENDING_JSON_IMPORT.items.length){
+      $("pendingVerificationMsg").textContent="No questions are currently staged. Import the Question JSON first.";
+      $("pendingVerificationMsg").className="msg err";
+      return;
+    }
+    const preview=$("pendingVerificationPreview");
+    const panel=$("pendingVerificationPanel");
+    if(!preview||!panel)throw new Error("Preview container is missing from the page.");
+    
+    // Rebuild the preview at click-time so the button never depends on a
+    // previously rendered/hidden DOM state.
+    PENDING_JSON_IMPORT.items.sort((A,B)=>cmaQuestionCompare(A.data||A,B.data||B));
+    preview.innerHTML='<div class="portal-preview-label">STUDENT PORTAL PREVIEW — '+PENDING_JSON_IMPORT.items.length.toLocaleString("en-IN")+' QUESTION(S)</div>'+PENDING_JSON_IMPORT.items.map(pendingQuestionCard).join("");
+    preview.classList.remove("hidden");
+    preview.style.setProperty("display","block","important");
+    preview.style.visibility="visible";
+    PENDING_PREVIEW_OPENED=true;
+    
+    const buttons=[$("downloadPendingPdfBtn"),$("downloadPendingPdfTopBtn")].filter(Boolean);
+    buttons.forEach(b=>b.textContent="✕ Hide JSON Preview");
+    $("pendingVerificationMsg").textContent="Preview opened below. Verify question order, numbering, paragraphs, lists, tables, marks and attempt before publishing.";
+    $("pendingVerificationMsg").className="msg ok";
+    
+    setTimeout(()=>{
+      preview.scrollIntoView({behavior:"smooth",block:"start"});
+    },100);
+  }catch(e){
+    $("pendingVerificationMsg").textContent="Preview error: "+(e.message||e);
+    $("pendingVerificationMsg").className="msg err";
   }
 };
 
 $("downloadPendingPdfTopBtn").onclick=()=>{
   const b=$("downloadPendingPdfBtn");
-  if(b){
-    b.click();
-    setTimeout(()=>{
-      const panel=$("pendingVerificationPanel");
-      if(panel)panel.scrollIntoView({behavior:"smooth",block:"start"});
-    },120);
-  }
+  if(b)b.click();
 };
 
 $("approvePendingBtn").onclick=async()=>{
