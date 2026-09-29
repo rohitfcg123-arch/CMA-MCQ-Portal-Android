@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #210</b> — Added Download All JSONs export for all Firestore-uploaded subjective questions. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #211</b> — Fixed Correction JSON loading and safe matching for HTML serialization differences. Correction import still changes only Chapter/Chapter ID/Topic. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -1544,30 +1544,99 @@ $("importCorrectionsBtn").onclick=async()=>{const btn=$("importCorrectionsBtn");
   if(!Array.isArray(corrections)||!corrections.length)throw Error("Correction JSON must contain a non-empty corrections[] array.");
   const snap=await db.collection("subjectiveQuestions").get();
   const byIdentity=new Map();
-  snap.docs.forEach(d=>{const x=d.data();const key=[x.group,x.subject,x.attempt,x.q].map(v=>String(v||"").trim()).join("||");if(!byIdentity.has(key))byIdentity.set(key,[]);byIdentity.get(key).push(d);});
+  snap.docs.forEach(d=>{
+    const x=d.data();
+    const key=[x.group,x.subject,x.attempt,x.q].map(v=>String(v||"").trim()).join("||");
+    if(!byIdentity.has(key))byIdentity.set(key,[]);
+    byIdentity.get(key).push(d);
+  });
   const enc=new TextEncoder();
   const hash=async s=>{const buf=await crypto.subtle.digest("SHA-256",enc.encode(String(s||"")));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");};
-  const planned=[];const errors=[];
+  const planned=[],errors=[],fallbackMatches=[];
   for(let i=0;i<corrections.length;i++){
     const r=corrections[i],m=r&&r.match;
-    if(!m||!m.group||!m.subject||!m.attempt||!m.q||!m.htmlSha256){errors.push("Correction "+(i+1)+": missing exact match fields.");continue;}
+    if(!m||!m.group||!m.subject||!m.attempt||!m.q){
+      errors.push("Correction "+(i+1)+": missing exact match fields.");
+      continue;
+    }
     const key=[m.group,m.subject,m.attempt,m.q].map(v=>String(v||"").trim()).join("||");
     const candidates=byIdentity.get(key)||[];
-    const targetHash=String(m.htmlSha256).toLowerCase();
-    const matches=[];
-    for(const d of candidates){if((await hash(d.data().html||""))===targetHash)matches.push(d);}
-    if(matches.length!==1){errors.push("Correction "+(i+1)+": exact question match not found or ambiguous for "+m.subject+" / "+m.attempt+" / "+m.q+".");continue;}
+    if(!candidates.length){
+      errors.push("Correction "+(i+1)+": question not found for "+m.subject+" / "+m.attempt+" / "+m.q+".");
+      continue;
+    }
+    let matches=[];
+    if(m.htmlSha256){
+      const targetHash=String(m.htmlSha256).toLowerCase();
+      for(const d of candidates){
+        if((await hash(d.data().html||""))===targetHash)matches.push(d);
+      }
+    }
+    // Safe fallback: if the identity itself has exactly one Firestore document,
+    // use that document when the source/export HTML hash differs. This fixes
+    // harmless HTML serialization differences without ever guessing between
+    // duplicate questions.
+    let target=null;
+    if(matches.length===1){
+      target=matches[0];
+    }else if(matches.length===0&&candidates.length===1){
+      target=candidates[0];
+      fallbackMatches.push(i+1);
+    }else{
+      errors.push("Correction "+(i+1)+": exact question match not found or ambiguous for "+m.subject+" / "+m.attempt+" / "+m.q+".");
+      continue;
+    }
     const data={};
-    if(Object.prototype.hasOwnProperty.call(r,"chapter")){if(!String(r.chapter||"").trim()||!String(r.chapterId||"").trim())errors.push("Correction "+(i+1)+": chapter correction requires chapter and chapterId.");else{data.chapter=String(r.chapter).trim();data.chapterId=String(r.chapterId).trim();}}
+    if(Object.prototype.hasOwnProperty.call(r,"chapter")){
+      if(!String(r.chapter||"").trim()||!String(r.chapterId||"").trim()){
+        errors.push("Correction "+(i+1)+": chapter correction requires chapter and chapterId.");
+      }else{
+        data.chapter=String(r.chapter).trim();
+        data.chapterId=String(r.chapterId).trim();
+      }
+    }
     if(Object.prototype.hasOwnProperty.call(r,"topic"))data.topic=String(r.topic||"").trim();
-    if(!Object.keys(data).length){errors.push("Correction "+(i+1)+": no permitted correction fields supplied.");continue;}
-    planned.push({ref:matches[0].ref,data});
+    if(!Object.keys(data).length){
+      errors.push("Correction "+(i+1)+": no permitted correction fields supplied.");
+      continue;
+    }
+    planned.push({ref:target.ref,data});
   }
-  if(errors.length)throw Error("No data was changed. Validation failed for "+errors.length+" item(s):\\n"+errors.slice(0,8).join("\\n")+(errors.length>8?"\\n…":""));
-  for(let i=0;i<planned.length;i+=450){const batch=db.batch();planned.slice(i,i+450).forEach(x=>batch.set(x.ref,{...x.data,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL},{merge:true}));await batch.commit();}
-  $("correctionJsonMsg").textContent=planned.length+" question(s) corrected safely. Only Chapter/Chapter ID where supplied and Topic were changed; all other question data was left untouched.";
-  $("correctionJsonMsg").className="msg ok";$("correctionJson").value="";$("correctionJsonFile").value="";await loadQuestions();
-}catch(e){$("correctionJsonMsg").textContent=e.message;$("correctionJsonMsg").className="msg err"}finally{setBusy(btn,false,"🔧 Apply Chapter + Topic Corrections")}};
+  if(errors.length){
+    throw Error("No data was changed. Validation failed for "+errors.length+" item(s):\\n"+errors.slice(0,8).join("\\n")+(errors.length>8?"\\n…":""));
+  }
+  for(let i=0;i<planned.length;i+=450){
+    const batch=db.batch();
+    planned.slice(i,i+450).forEach(x=>batch.set(x.ref,{...x.data,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL},{merge:true}));
+    await batch.commit();
+  }
+  let msg=planned.length+" question(s) corrected safely. Only Chapter/Chapter ID where supplied and Topic were changed; all other question data was left untouched.";
+  if(fallbackMatches.length)msg+=" "+fallbackMatches.length+" question(s) matched safely by unique Group + Subject + Attempt + Q because their HTML hash differed.";
+  $("correctionJsonMsg").textContent=msg;
+  $("correctionJsonMsg").className="msg ok";
+  $("correctionJson").value="";
+  $("correctionJsonFile").value="";
+  await loadQuestions();
+}catch(e){
+  $("correctionJsonMsg").textContent=e.message;
+  $("correctionJsonMsg").className="msg err";
+}finally{
+  setBusy(btn,false,"🔧 Apply Chapter + Topic Corrections");
+}};
+
+$("correctionJsonFile").addEventListener("change",async()=>{
+  const file=$("correctionJsonFile").files[0];
+  if(!file)return;
+  try{
+    const raw=await readTextFile(file);
+    $("correctionJson").value=raw;
+    $("correctionJsonMsg").textContent="Correction JSON loaded into the box — "+raw.length.toLocaleString("en-IN")+" characters. Review it, then click Apply Chapter + Topic Corrections.";
+    $("correctionJsonMsg").className="msg ok";
+  }catch(e){
+    $("correctionJsonMsg").textContent="Could not read the selected JSON: "+(e.message||e);
+    $("correctionJsonMsg").className="msg err";
+  }
+});
 $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing JSON…");const clean=DATA.map(({id,updatedAt,updatedBy,...x})=>x);const blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cma-zone-subjective-questions.json";a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);setBusy(btn,false,"Export All Questions JSON")},800)};
 
 /* CMA Zone Master Chapter + Topic Extraction — UPDATE #207 */
