@@ -32,7 +32,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #222</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #223</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -88,9 +88,9 @@
 </div></section>
 
 <section class="panel verification-panel" id="pendingVerificationPanel">
-<h2>🔐 Pending Verification — Publish Only After PDF Approval</h2>
+<h2>👁️ Live Question Preview — Check Order & Formatting</h2>
 <div class="body">
-<div class="note"><b>Safety gate:</b> Imported questions are first staged in this browser only. They are <b>NOT written to Firebase</b> and are <b>NOT visible in the student portal</b> until the verification PDF is downloaded and you explicitly approve the staged questions.</div>
+<div class="note"><b>Preview first:</b> JSON upload ke turant baad yahin questions exactly as HTML will be shown. Order is automatically corrected to <b>2(a), 2(b), 2(c), 2(d)…</b> within each attempt. These questions are still <b>NOT written to Firebase</b> until you explicitly approve them.</div>
 <div class="verification-status">
 <span class="verification-badge" id="pendingVerificationCount">Pending: 0</span>
 <span class="verification-badge" id="pendingVerificationPdfStatus">PDF: Not generated</span>
@@ -1796,6 +1796,29 @@ $("exportBtn").onclick=()=>{const btn=$("exportBtn");setBusy(btn,true,"Preparing
   const topApprove=$("approvePendingTopBtn"), existingApprove=$("approvePendingBtn");
   if(topApprove&&existingApprove) topApprove.onclick=()=>existingApprove.click();
 })();
+
+// Stable CMA subjective question ordering: attempt chronology first, then
+// question number/part (2(a), 2(b), 2(c)...). Chapter/topic never controls
+// the paper sequence.
+function cmaAttemptSortKey(v){
+  const s=String(v||"").trim().toLowerCase();
+  const m=s.match(/(\d{4})/); const year=m?Number(m[1]):9999;
+  const month=/june|jun/.test(s)?6:/december|dec/.test(s)?12:/march|mar/.test(s)?3:/september|sep/.test(s)?9:99;
+  return year*100+month;
+}
+function cmaQuestionSortKey(v){
+  const s=String(v||"").trim().toLowerCase().replace(/question/g,"").replace(/[^0-9a-z]+/g," ");
+  const m=s.match(/(\d+)\s*([a-z])?/);
+  if(!m)return [999999,""];
+  return [Number(m[1]),String(m[2]||"")];
+}
+function cmaQuestionCompare(a,b){
+  const ak=cmaAttemptSortKey(a?.attempt||a?.a), bk=cmaAttemptSortKey(b?.attempt||b?.a);
+  if(ak!==bk)return ak-bk;
+  const aq=cmaQuestionSortKey(a?.q), bq=cmaQuestionSortKey(b?.q);
+  if(aq[0]!==bq[0])return aq[0]-bq[0];
+  return aq[1].localeCompare(bq[1],undefined,{numeric:true,sensitivity:"base"});
+}
 /* Pending Question Verification — PDF gate */
 let PENDING_JSON_IMPORT=null;
 let PENDING_PDF_READY=false;
@@ -1828,6 +1851,8 @@ function renderPendingVerification(){
     preview.classList.add("hidden");preview.innerHTML="";
     return;
   }
+  // Always show the staged paper in exact attempt + question order.
+  PENDING_JSON_IMPORT.items.sort((A,B)=>cmaQuestionCompare(A.data||A,B.data||B));
   const items=PENDING_JSON_IMPORT.items;
   $("pendingVerificationCount").textContent="Pending: "+items.length.toLocaleString("en-IN");
   $("pendingVerificationStatus").textContent="These questions are staged locally only. They are NOT in Firestore and are NOT visible in the user portal.";
