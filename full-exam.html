@@ -112,7 +112,7 @@ function ring(kind){
   try{
     if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
     if(audioCtx.state==="suspended")audioCtx.resume();
-    const base=kind==="warning"?620:560;
+    const base=kind==="warning"?600:520;
     const strikes=kind==="warning"?5:3;
     const gap=kind==="warning"?.42:.62;
     const now=audioCtx.currentTime;
@@ -123,7 +123,7 @@ function ring(kind){
         o.type=j===0?"sine":"triangle";
         o.frequency.setValueAtTime(base*mult,t);
         o.detune.value=j%2?3:-2;
-        const peak=j===0?.22:j===1?.11:j===2?.055:.025;
+        const peak=j===0?.28:j===1?.14:j===2?.07:.035;
         g.gain.setValueAtTime(.0001,t);
         g.gain.exponentialRampToValueAtTime(peak,t+.012);
         g.gain.exponentialRampToValueAtTime(.0001,t+.62);
