@@ -173,7 +173,12 @@ $("newExamBtn").onclick=()=>{paper=[];current=0;show("setupScreen");$("setupMsg"
 $("startBtn").onclick=async()=>{
   const btn=$("startBtn");selectedGroup=$("group").value;const opt=$("subject").selectedOptions[0];selectedSubject=opt?.dataset.subject||opt?.textContent||"";
   try{
-    btn.disabled=true;btn.textContent="Loading Exam…";$("setupMsg").className="msg";$("setupMsg").textContent="Building your randomized paper from the selected subject's MCQ and subjective pools…";
+    btn.disabled=true;btn.textContent="Checking Login…";
+    if(!currentUser){
+      const cred=await auth.signInWithPopup(provider);
+      currentUser=cred.user;
+    }
+    btn.textContent="Loading Exam…";$("setupMsg").className="msg";$("setupMsg").textContent="Building your randomized paper from the selected subject's MCQ and subjective pools…";
     const [mcqs,subs]=await Promise.all([loadMcqs($("subject").value),loadSubjective(selectedGroup,selectedSubject)]);
     paper=makePaper(mcqs,subs);current=0;startedAt=Date.now();endAt=startedAt+TOTAL;bellFired=new Set();audioCtx=null;
     audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")await audioCtx.resume();ring("normal");
