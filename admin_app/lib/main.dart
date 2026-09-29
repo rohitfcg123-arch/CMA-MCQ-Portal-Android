@@ -1,4 +1,5 @@
 import 'offers_page.dart';
+import 'question_uploader_page.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -294,11 +295,7 @@ class Dashboard extends StatelessWidget {
 
   Widget _questionUploaderAction(BuildContext context) => Card(margin:EdgeInsets.zero,child:InkWell(
     borderRadius:BorderRadius.circular(14),
-    onTap:() async {
-      final uri=Uri.parse('https://rohitfcg123-arch.github.io/CMA-MCQ-Portal-Android/question-uploader.html');
-      final ok=await launchUrl(uri,mode:LaunchMode.externalApplication);
-      if(!ok && context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Could not open Question Uploader.')));
-    },
+    onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const QuestionUploaderPage())),
     child:Padding(padding:const EdgeInsets.all(13),child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[
       Container(width:38,height:38,decoration:BoxDecoration(color:const Color(0xFFEAD39B),borderRadius:BorderRadius.circular(11)),child:const Icon(Icons.upload_file_outlined,color:Color(0xFF0D3B3E),size:21)),
       const SizedBox(height:9),const Text('Question Uploader',style:TextStyle(fontWeight:FontWeight.w800,fontSize:13,color:Color(0xFF0D3B3E))),
