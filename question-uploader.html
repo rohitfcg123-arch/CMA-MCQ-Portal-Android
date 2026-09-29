@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #203</b> — Restored the complete working uploader initialization/auth flow. Google Login is unchanged from the known-working version; only the broken/missing initialization block was restored.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #205</b> — Restored the complete working uploader initialization/auth flow. Google Login is unchanged from the known-working version; only the broken/missing initialization block was restored.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -48,7 +48,7 @@
 </div></section>
 
 <section class="panel"><h2>JSON Upload / Backup</h2><div class="body">
-<div class="note"><b>Bulk JSON Upload:</b> You can upload 3, 10, 100, 500 or more questions in a single JSON file. All questions are validated first, duplicates are merged by Group + Subject + Attempt + Question Number, and large uploads are automatically split into safe Firestore batches.  For <b>Direct Tax Laws and International Taxation</b>, use the exact 14 module names from the chapter dropdown. For <b>Strategic Cost Management</b>, use the exact 26 chapter names from the chapter dropdown (including COST OF QUALITY, DECISION MAKING MAKE OR BUY, TRANSFER PRICING, STANDARD COSTING AND VARIANCE ANALYSIS, LINEAR PROGRAMMING, TRANSPORTATION, ASSIGNMENT, GAME THEORY, SIMULATION, PROJECT MANAGEMENT, LEARNING CURVE, BUSINESS APPLICATION OF MAXIMA AND MINIMA and BUSINESS FORECASTING MODELS). Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Optional: <b>marks, solutionHtml</b>.</div>
+<div class="note"><b>Bulk JSON Upload:</b> You can upload 3, 10, 100, 500 or more questions in a single JSON file. All questions are validated first, duplicates are merged by Group + Subject + Attempt + Question Number, and large uploads are automatically split into safe Firestore batches.  For <b>Corporate Accounting and Auditing (Paper 10)</b> uses the exact 8 modules shown in the syllabus, grouped as Section A: Corporate Accounting and Section B: Auditing. <b>Direct Tax Laws and International Taxation</b> uses the exact 14 module names from the chapter dropdown. <b>Strategic Cost Management</b> uses the exact 26 chapter names from the chapter dropdown (including COST OF QUALITY, DECISION MAKING MAKE OR BUY, TRANSFER PRICING, STANDARD COSTING AND VARIANCE ANALYSIS, LINEAR PROGRAMMING, TRANSPORTATION, ASSIGNMENT, GAME THEORY, SIMULATION, PROJECT MANAGEMENT, LEARNING CURVE, BUSINESS APPLICATION OF MAXIMA AND MINIMA and BUSINESS FORECASTING MODELS). Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Optional: <b>marks, solutionHtml</b>.</div>
 <input id="jsonFile" type="file" accept=".json,application/json" multiple style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <div class="count" style="margin-top:6px">Select <b>one or multiple Question JSON files</b> at the same time, or paste JSON below. You can select all 6 attempts together.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
@@ -326,7 +326,16 @@ const CHAPTERS_BY_SUBJECT={
     "Formulation and Implementation of Strategy",
     "Digital Strategy"
   ],
-  "Corporate Accounting and Auditing":["Corporate Accounting","Auditing"],
+  "Corporate Accounting and Auditing":[
+    "Accounting for Shares and Debentures",
+    "Preparation of the Statement of Profit and Loss and Balance Sheet (As per Schedule III of Companies Act, 2013)",
+    "Cash Flow Statement",
+    "Accounts of Banking, Electricity and Insurance Companies",
+    "Accounting Standards",
+    "Basic Concepts of Auditing",
+    "Provision Relating to Audit under Companies Act, 2013",
+    "Auditing of Different Types of Undertakings"
+  ],
   "Financial Management and Business Data Analytics":["Financial Management","Business Data Analytics"],
   "Management Accounting":["Management Accounting"],
   "Direct and Indirect Taxation":["Basics of Income Tax Act","Heads of Income","Total Income and Tax Liability of Individuals & HUF","Concept of Indirect Taxes","Goods and Services Tax (GST) Laws","Customs Act & Rules"],
@@ -419,9 +428,30 @@ $("logout").onclick=logout;
 auth.getRedirectResult().then(r=>{
   if(r&&r.user) return;
 }).catch(showLoginError);
+const CAA_SECTIONED_CHAPTERS=[
+  {section:"Section A: Corporate Accounting",chapters:[
+    "Accounting for Shares and Debentures",
+    "Preparation of the Statement of Profit and Loss and Balance Sheet (As per Schedule III of Companies Act, 2013)",
+    "Cash Flow Statement",
+    "Accounts of Banking, Electricity and Insurance Companies",
+    "Accounting Standards"
+  ]},
+  {section:"Section B: Auditing",chapters:[
+    "Basic Concepts of Auditing",
+    "Provision Relating to Audit under Companies Act, 2013",
+    "Auditing of Different Types of Undertakings"
+  ]}
+];
+function chapterOptions(subject){
+  if(subject==="Corporate Accounting and Auditing"){
+    return '<option value="">Select Chapter</option>'+CAA_SECTIONED_CHAPTERS.map(g=>'<optgroup label="'+esc(g.section)+'">'+g.chapters.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("")+'</optgroup>').join("");
+  }
+  const list=CHAPTERS_BY_SUBJECT[subject]||[];
+  return '<option value="">Select Chapter</option>'+list.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+}
 function populateUploadChapters(subject,selected){
   const list=CHAPTERS_BY_SUBJECT[subject]||[];
-  $("chapter").innerHTML='<option value="">Select Chapter</option>'+list.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+  $("chapter").innerHTML=chapterOptions(subject);
   if(selected&&list.includes(selected))$("chapter").value=selected;
 }
 $("group").onchange=()=>{populateSubjects($("group").value); populateUploadChapters($("subject").value);};
@@ -567,7 +597,7 @@ function populateEditSubjects(group,selected){
 }
 function populateEditChapters(subject,selected){
   const list=CHAPTERS_BY_SUBJECT[subject]||[];
-  $("editChapter").innerHTML='<option value="">Select Chapter</option>'+list.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+  $("editChapter").innerHTML=chapterOptions(subject);
   if(selected&&list.includes(selected))$("editChapter").value=selected;
 }
 
