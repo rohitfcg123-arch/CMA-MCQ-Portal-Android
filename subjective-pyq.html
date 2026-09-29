@@ -16,13 +16,895 @@
 <div id="status" class="status">Choose a group, subject and topic to begin.</div><div id="scmLoadStatus" class="status" style="display:none"></div>
 <section id="results"></section>
 </main>
-<div class="update-strip"><b>UPDATE #99 — Paper 10 subject/chapter structure added</b> · SCM now always loads all 26 chapters, normalizes chapter matching, and refreshes results after Firebase data arrives.</div>
+<div class="update-strip"><b>UPDATE #100 — Chapter Master synced</b> · All Group 1–4 subject chapter lists now come from the central CMA Zone Chapter Master, independent of uploaded question count.</div>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="js/sfm-subjective-pyq-v29.js?v=20260927u52"></script>
 <script>
-window.BLE_CHAPTERS=["Introduction to Law and Legal System in India","Indian Contracts Act, 1872","Sale of Goods Act, 1930","Negotiable Instruments Act, 1881","Indian Partnership Act, 1932","Limited Liability Partnership Act, 2008","Factories Act, 1948","Payment of Gratuity Act, 1972","Employees Provident Fund and Miscellaneous Provisions Act, 1952","Employees State Insurance Act, 1948","The Code on Wages, 2019","Companies Act, 2013","Business Ethics and Emotional Intelligence"];
+window.CMA_MASTER_CHAPTERS={
+  "inter1": {
+    "Business Laws and Ethics": [
+      [
+        "Introduction to Law and Legal System in India",
+        "Paper5-C01"
+      ],
+      [
+        "Indian Contracts Act, 1872",
+        "Paper5-C02"
+      ],
+      [
+        "Sale of Goods Act, 1930",
+        "Paper5-C03"
+      ],
+      [
+        "Negotiable Instruments Act, 1881",
+        "Paper5-C04"
+      ],
+      [
+        "Indian Partnership Act, 1932",
+        "Paper5-C05"
+      ],
+      [
+        "Limited Liability Partnership Act, 2008",
+        "Paper5-C06"
+      ],
+      [
+        "Factories Act, 1948",
+        "Paper5-C07"
+      ],
+      [
+        "Payment of Gratuity Act, 1972",
+        "Paper5-C08"
+      ],
+      [
+        "Employees Provident Fund and Miscellaneous Provisions Act, 1952",
+        "Paper5-C09"
+      ],
+      [
+        "Employees State Insurance Act, 1948",
+        "Paper5-C10"
+      ],
+      [
+        "The Code on Wages, 2019",
+        "Paper5-C11"
+      ],
+      [
+        "Companies Act, 2013",
+        "Paper5-C12"
+      ],
+      [
+        "Business Ethics and Emotional Intelligence",
+        "Paper5-C13"
+      ]
+    ],
+    "Financial Accounting": [
+      [
+        "Accounting Fundamentals",
+        "Paper6-C01"
+      ],
+      [
+        "Bills of Exchange, Consignment, Joint Venture",
+        "Paper6-C02"
+      ],
+      [
+        "Preparation of Final Accounts of Commercial Organisations, Not-for-Profit Organisations and from Incomplete Records",
+        "Paper6-C03"
+      ],
+      [
+        "Partnership Accounting",
+        "Paper6-C04"
+      ],
+      [
+        "Lease Accounting",
+        "Paper6-C05"
+      ],
+      [
+        "Branch (including Foreign Branch) and Departmental Accounts",
+        "Paper6-C06"
+      ],
+      [
+        "Insurance Claim for Loss of Stock and Loss of Profit",
+        "Paper6-C07"
+      ],
+      [
+        "Hire Purchase and Installment Sale Transactions",
+        "Paper6-C08"
+      ],
+      [
+        "Accounting Standards",
+        "Paper6-C09"
+      ]
+    ],
+    "Direct and Indirect Taxation": [
+      [
+        "Basics of Income Tax Act",
+        "Paper7-C01"
+      ],
+      [
+        "Heads of Income",
+        "Paper7-C02"
+      ],
+      [
+        "Total Income and Tax Liability of Individuals & HUF",
+        "Paper7-C03"
+      ],
+      [
+        "Concept of Indirect Taxes",
+        "Paper7-C04"
+      ],
+      [
+        "Goods and Services Tax (GST) Laws",
+        "Paper7-C05"
+      ],
+      [
+        "Customs Act & Rules",
+        "Paper7-C06"
+      ]
+    ],
+    "Cost Accounting": [
+      [
+        "Introduction to Cost Accounting",
+        "Paper8-C01"
+      ],
+      [
+        "Cost Ascertainment — Elements of Cost",
+        "Paper8-C02"
+      ],
+      [
+        "Cost Accounting Standards (CAS 1 to CAS 24)",
+        "Paper8-C03"
+      ],
+      [
+        "Cost Book Keeping",
+        "Paper8-C04"
+      ],
+      [
+        "Methods of Costing",
+        "Paper8-C05"
+      ],
+      [
+        "Cost Accounting Techniques",
+        "Paper8-C06"
+      ]
+    ]
+  },
+  "inter2": {
+    "Operations Management and Strategic Management": [
+      [
+        "Operation Management — Introduction",
+        "Paper9-C01"
+      ],
+      [
+        "Operations Planning",
+        "Paper9-C02"
+      ],
+      [
+        "Designing of Operational System and Control",
+        "Paper9-C03"
+      ],
+      [
+        "Production Planning and Control",
+        "Paper9-C04"
+      ],
+      [
+        "Productivity Management and Quality Management",
+        "Paper9-C05"
+      ],
+      [
+        "Project Management",
+        "Paper9-C06"
+      ],
+      [
+        "Economics of Maintenance and Spares Management",
+        "Paper9-C07"
+      ],
+      [
+        "Introduction",
+        "Paper9-C08"
+      ],
+      [
+        "Strategic Analysis and Strategic Planning",
+        "Paper9-C09"
+      ],
+      [
+        "Formulation and Implementation of Strategy",
+        "Paper9-C10"
+      ],
+      [
+        "Digital Strategy",
+        "Paper9-C11"
+      ]
+    ],
+    "Corporate Accounting and Auditing": [
+      [
+        "Accounting for Shares and Debentures",
+        "Paper10-C01"
+      ],
+      [
+        "Preparation of the Statement of Profit and Loss and Balance Sheet (As per Schedule III of Companies Act, 2013)",
+        "Paper10-C02"
+      ],
+      [
+        "Cash Flow Statement",
+        "Paper10-C03"
+      ],
+      [
+        "Accounts of Banking, Electricity and Insurance Companies",
+        "Paper10-C04"
+      ],
+      [
+        "Accounting Standards",
+        "Paper10-C05"
+      ],
+      [
+        "Basic Concepts of Auditing",
+        "Paper10-C06"
+      ],
+      [
+        "Provision Relating to Audit under Companies Act, 2013",
+        "Paper10-C07"
+      ],
+      [
+        "Auditing of Different Types of Undertakings",
+        "Paper10-C08"
+      ]
+    ],
+    "Financial Management and Business Data Analytics": [
+      [
+        "Fundamentals of Financial Management",
+        "Paper11-C01"
+      ],
+      [
+        "Institutions and Instruments in Financial Markets",
+        "Paper11-C02"
+      ],
+      [
+        "Tools for Financial Analyses",
+        "Paper11-C03"
+      ],
+      [
+        "Sources of Finance and Cost of Capital",
+        "Paper11-C04"
+      ],
+      [
+        "Capital Budgeting",
+        "Paper11-C05"
+      ],
+      [
+        "Working Capital Management",
+        "Paper11-C06"
+      ],
+      [
+        "Financing Decision of a Firm",
+        "Paper11-C07"
+      ],
+      [
+        "Introduction to Data Science for Business Decision-making",
+        "Paper11-C08"
+      ],
+      [
+        "Data Processing, Organisation, Cleaning and Validation",
+        "Paper11-C09"
+      ],
+      [
+        "Data Presentation: Visualisation and Graphical Presentation",
+        "Paper11-C10"
+      ],
+      [
+        "Data Analysis and Modelling",
+        "Paper11-C11"
+      ]
+    ],
+    "Management Accounting": [
+      [
+        "Introduction to Management Accounting",
+        "Paper12-C01"
+      ],
+      [
+        "Activity Based Costing",
+        "Paper12-C02"
+      ],
+      [
+        "Marginal Costing",
+        "Paper12-C03"
+      ],
+      [
+        "Applications of Marginal Costing in Short Term Decision Making",
+        "Paper12-C04"
+      ],
+      [
+        "Transfer Pricing",
+        "Paper12-C05"
+      ],
+      [
+        "Standard Costing and Variance Analysis",
+        "Paper12-C06"
+      ],
+      [
+        "Forecasting, Budgeting and Budgetary Control",
+        "Paper12-C07"
+      ],
+      [
+        "Divisional Performance Measurement",
+        "Paper12-C08"
+      ],
+      [
+        "Responsibility Accounting",
+        "Paper12-C09"
+      ],
+      [
+        "Decision Theory",
+        "Paper12-C10"
+      ]
+    ]
+  },
+  "final3": {
+    "Corporate and Economic Laws": [
+      [
+        "The Companies Act, 2013",
+        "Paper13-C01"
+      ],
+      [
+        "Insolvency and Bankruptcy Code, 2016",
+        "Paper13-C02"
+      ],
+      [
+        "Corporate Governance and Social Responsibility and Sustainability",
+        "Paper13-C03"
+      ],
+      [
+        "SEBI Regulations",
+        "Paper13-C04"
+      ],
+      [
+        "The Competition Act, 2002",
+        "Paper13-C05"
+      ],
+      [
+        "Foreign Exchange Management Act, 1999",
+        "Paper13-C06"
+      ],
+      [
+        "Laws and Regulations related to Banking Sector",
+        "Paper13-C07"
+      ],
+      [
+        "Laws and Regulations related to Insurance Sector",
+        "Paper13-C08"
+      ],
+      [
+        "Specific Legal Provisions related to MSME Sector",
+        "Paper13-C09"
+      ],
+      [
+        "Laws and Regulations related to Cyber Security and Data Privacy",
+        "Paper13-C10"
+      ],
+      [
+        "Laws and Regulations related to Anti-Money Laundering",
+        "Paper13-C11"
+      ]
+    ],
+    "Strategic Financial Management": [
+      [
+        "Investment Decisions, Project Planning and Control",
+        "Paper14-C01"
+      ],
+      [
+        "Evaluation of Risky Proposal for Investment Decisions",
+        "Paper14-C02"
+      ],
+      [
+        "Leasing Decisions",
+        "Paper14-C03"
+      ],
+      [
+        "Securitization",
+        "Paper14-C04"
+      ],
+      [
+        "Introduction",
+        "Paper14-C05"
+      ],
+      [
+        "Equity and Bond Valuation and Evaluation of Performance",
+        "Paper14-C06"
+      ],
+      [
+        "Mutual Funds",
+        "Paper14-C07"
+      ],
+      [
+        "Portfolio Theory and Practice",
+        "Paper14-C08"
+      ],
+      [
+        "Asset Pricing Theories",
+        "Paper14-C09"
+      ],
+      [
+        "Portfolio Performance Evaluation and Portfolio Revision",
+        "Paper14-C10"
+      ],
+      [
+        "Efficient Market Hypothesis",
+        "Paper14-C11"
+      ],
+      [
+        "Risks in Financial Market",
+        "Paper14-C12"
+      ],
+      [
+        "Financial Derivatives - Instruments for Risk Management",
+        "Paper14-C13"
+      ],
+      [
+        "The International Financial Environment",
+        "Paper14-C14"
+      ],
+      [
+        "Foreign Exchange Market",
+        "Paper14-C15"
+      ],
+      [
+        "Foreign Exchange Risk Management",
+        "Paper14-C16"
+      ],
+      [
+        "Digital Finance",
+        "Paper14-C17"
+      ]
+    ],
+    "Direct Tax Laws and International Taxation": [
+      [
+        "Assessment of Income and Computation of Tax Liability of Various Entities",
+        "Paper15-C01"
+      ],
+      [
+        "Tax Management, Return and Assessment Procedure",
+        "Paper15-C02"
+      ],
+      [
+        "Grievance Redressal",
+        "Paper15-C03"
+      ],
+      [
+        "Penalties and Prosecutions",
+        "Paper15-C04"
+      ],
+      [
+        "Business Restructuring",
+        "Paper15-C05"
+      ],
+      [
+        "Different Aspects of Tax Planning",
+        "Paper15-C06"
+      ],
+      [
+        "CBDT and Other Authorities",
+        "Paper15-C07"
+      ],
+      [
+        "E-commerce Transaction and Liability in Special Cases",
+        "Paper15-C08"
+      ],
+      [
+        "Income Computation and Disclosure Standards (ICDS)",
+        "Paper15-C09"
+      ],
+      [
+        "Black Money Act, 2015",
+        "Paper15-C10"
+      ],
+      [
+        "Case Study",
+        "Paper15-C11"
+      ],
+      [
+        "Double Taxation and Avoidance Agreements (DTAA) [Sec.90, 90A and 91]",
+        "Paper15-C12"
+      ],
+      [
+        "Transfer Pricing",
+        "Paper15-C13"
+      ],
+      [
+        "GAAR",
+        "Paper15-C14"
+      ]
+    ],
+    "Strategic Cost Management": [
+      [
+        "Introduction to Strategic Cost Management",
+        "Paper16-C01"
+      ],
+      [
+        "Quality Cost Management",
+        "Paper16-C02"
+      ],
+      [
+        "Decision Making Techniques",
+        "Paper16-C03"
+      ],
+      [
+        "Activity Based Management and Just in Time (JIT)",
+        "Paper16-C04"
+      ],
+      [
+        "Evaluating Performance",
+        "Paper16-C05"
+      ],
+      [
+        "Linear Programming",
+        "Paper16-C06"
+      ],
+      [
+        "Transportation",
+        "Paper16-C07"
+      ],
+      [
+        "Assignment",
+        "Paper16-C08"
+      ],
+      [
+        "Game theory",
+        "Paper16-C09"
+      ],
+      [
+        "Simulation",
+        "Paper16-C10"
+      ],
+      [
+        "Network analysis - PERT, CPM",
+        "Paper16-C11"
+      ],
+      [
+        "Learning Curve",
+        "Paper16-C12"
+      ],
+      [
+        "Business Application of Maxima and Minima",
+        "Paper16-C13"
+      ],
+      [
+        "Business Forecasting Models — Time Series and Regression Analysis",
+        "Paper16-C14"
+      ],
+      [
+        "Introduction to Tools for Data Analytics",
+        "Paper16-C15"
+      ]
+    ]
+  },
+  "final4": {
+    "Cost and Management Audit": [
+      [
+        "Basics of Cost Audit",
+        "Paper17-C01"
+      ],
+      [
+        "Companies (Cost Records and Audit) Rules, 2014 (as amended)",
+        "Paper17-C02"
+      ],
+      [
+        "Cost Auditor",
+        "Paper17-C03"
+      ],
+      [
+        "Overview of Cost Accounting Standards and GACAP",
+        "Paper17-C04"
+      ],
+      [
+        "Cost Auditing and Assurance Standards",
+        "Paper17-C05"
+      ],
+      [
+        "Cost Audit Programme",
+        "Paper17-C06"
+      ],
+      [
+        "Cost Audit Documentation, Audit Process and Execution",
+        "Paper17-C07"
+      ],
+      [
+        "Preparation and Filing of Cost Audit Report",
+        "Paper17-C08"
+      ],
+      [
+        "Basics of Management Audit",
+        "Paper17-C09"
+      ],
+      [
+        "Management Reporting Issues and Analysis",
+        "Paper17-C10"
+      ],
+      [
+        "Management Audit in Different Functions",
+        "Paper17-C11"
+      ],
+      [
+        "Evaluation of Corporate Image",
+        "Paper17-C12"
+      ],
+      [
+        "Information Systems Security Audit",
+        "Paper17-C13"
+      ],
+      [
+        "Internal Control and Internal Audit",
+        "Paper17-C14"
+      ],
+      [
+        "Operational Audit and Internal Audit under Companies Act, 2013",
+        "Paper17-C15"
+      ],
+      [
+        "Audit of Different Service Organisations",
+        "Paper17-C16"
+      ],
+      [
+        "Forensic Audit",
+        "Paper17-C17"
+      ],
+      [
+        "Anti-Money Laundering",
+        "Paper17-C18"
+      ]
+    ],
+    "Corporate Financial Reporting": [
+      [
+        "Specific Accounting Standards",
+        "Paper18-C01"
+      ],
+      [
+        "Valuation of Shares (Including Determination of Goodwill, Post-Valuation of Tangible and Intangible Assets)",
+        "Paper18-C02"
+      ],
+      [
+        "Accounting of Financial Instruments",
+        "Paper18-C03"
+      ],
+      [
+        "NBFCs — Provisioning Norms, Accounting and Reporting",
+        "Paper18-C04"
+      ],
+      [
+        "Accounting for Business Combinations and Restructuring",
+        "Paper18-C05"
+      ],
+      [
+        "Consolidated Financial Statements and Separate Financial Statements",
+        "Paper18-C06"
+      ],
+      [
+        "Recent Developments in Financial Reporting",
+        "Paper18-C07"
+      ],
+      [
+        "Government Accounting in India",
+        "Paper18-C08"
+      ]
+    ],
+    "Indirect Tax Laws and Practice": [
+      [
+        "Supply under GST - A Refresh",
+        "Paper19-C01"
+      ],
+      [
+        "Time of Supply (Advanced)",
+        "Paper19-C02"
+      ],
+      [
+        "Place of Supply",
+        "Paper19-C03"
+      ],
+      [
+        "Valuation (Advanced)",
+        "Paper19-C04"
+      ],
+      [
+        "Input Tax Credit (Advanced)",
+        "Paper19-C05"
+      ],
+      [
+        "Zero Rated Supplies and Deemed Exports",
+        "Paper19-C06"
+      ],
+      [
+        "TDS & TCS under GST",
+        "Paper19-C07"
+      ],
+      [
+        "E-way Bill",
+        "Paper19-C08"
+      ],
+      [
+        "GST Refunds- Inverted Duty Structure and Zero-rated Supplies",
+        "Paper19-C09"
+      ],
+      [
+        "GST Returns",
+        "Paper19-C10"
+      ],
+      [
+        "Accounts and Records",
+        "Paper19-C11"
+      ],
+      [
+        "GST Annual Return and GST Audit Return",
+        "Paper19-C12"
+      ],
+      [
+        "Transition to GST (Transitional Provisions)",
+        "Paper19-C13"
+      ],
+      [
+        "Dispute Resolution Mechanism under GST",
+        "Paper19-C14"
+      ],
+      [
+        "Inspection, Search, Seizure, Arrest and Prosecution",
+        "Paper19-C15"
+      ],
+      [
+        "Anti-profiteering",
+        "Paper19-C16"
+      ],
+      [
+        "Walkthrough of GSTN Portal",
+        "Paper19-C17"
+      ],
+      [
+        "Valuation and Related Party Transactions",
+        "Paper19-C18"
+      ],
+      [
+        "Customs Procedures - Baggage & Courier / Post",
+        "Paper19-C19"
+      ],
+      [
+        "Manufacture in Bond",
+        "Paper19-C20"
+      ],
+      [
+        "Duty Drawback",
+        "Paper19-C21"
+      ],
+      [
+        "Customs (Import of Goods at Concessional Rate of Duty) Rules, 2017",
+        "Paper19-C22"
+      ],
+      [
+        "Remission of Duties",
+        "Paper19-C23"
+      ],
+      [
+        "Refund",
+        "Paper19-C24"
+      ],
+      [
+        "Trade Facilitation Measures",
+        "Paper19-C25"
+      ],
+      [
+        "Export Promotion Schemes under Foreign Trade Policy",
+        "Paper19-C26"
+      ],
+      [
+        "Special Economic Zone Scheme (With Amended SEZ Rules)",
+        "Paper19-C27"
+      ]
+    ],
+    "Strategic Performance Management & Business Valuation": [
+      [
+        "Introduction to Performance Management",
+        "Paper20A-C01"
+      ],
+      [
+        "Performance Measurement, Evaluation and Improvement Tools",
+        "Paper20A-C02"
+      ],
+      [
+        "Economic Efficiency of the Firm — Performance Analysis",
+        "Paper20A-C03"
+      ],
+      [
+        "Enterprise Risk Management",
+        "Paper20A-C04"
+      ],
+      [
+        "Fundamentals of Business Valuation",
+        "Paper20A-C05"
+      ],
+      [
+        "Laws and Compliance in Business Valuation",
+        "Paper20A-C06"
+      ],
+      [
+        "Business Valuation Methods and Approaches",
+        "Paper20A-C07"
+      ],
+      [
+        "Valuation of Assets and Liabilities",
+        "Paper20A-C08"
+      ],
+      [
+        "Valuation in Mergers and Acquisitions",
+        "Paper20A-C09"
+      ]
+    ],
+    "Risk Management in Banking and Insurance": [
+      [
+        "Introduction to Risk Management",
+        "Paper20B-C01"
+      ],
+      [
+        "Interest Rate Risk and Market Risk",
+        "Paper20B-C02"
+      ],
+      [
+        "Credit Risk and Liquidity Risk",
+        "Paper20B-C03"
+      ],
+      [
+        "Sovereign Risk and Insolvency Risk",
+        "Paper20B-C04"
+      ],
+      [
+        "Operational Risk and Off-Balance Sheet Risk",
+        "Paper20B-C05"
+      ],
+      [
+        "Introduction to Insurance Business",
+        "Paper20B-C06"
+      ],
+      [
+        "Insurance Intermediaries, General Insurance, Health Insurance and Life Insurance",
+        "Paper20B-C07"
+      ],
+      [
+        "Managing Risk in Insurance Business",
+        "Paper20B-C08"
+      ]
+    ],
+    "Entrepreneurship and Start-Up": [
+      [
+        "Entrepreneurial Skill Sets",
+        "Paper20C-C01"
+      ],
+      [
+        "The Entrepreneurial Eco-system",
+        "Paper20C-C02"
+      ],
+      [
+        "Idea to Action",
+        "Paper20C-C03"
+      ],
+      [
+        "Value Addition",
+        "Paper20C-C04"
+      ],
+      [
+        "Scalability, Scaling up and Stabilisation of Sustainable Business",
+        "Paper20C-C05"
+      ],
+      [
+        "Risk Management Strategies",
+        "Paper20C-C06"
+      ],
+      [
+        "Leadership",
+        "Paper20C-C07"
+      ],
+      [
+        "Types of New Age Business",
+        "Paper20C-C08"
+      ]
+    ]
+  }
+};
+window.BLE_CHAPTERS=(window.CMA_MASTER_CHAPTERS.inter1["Business Laws and Ethics"]||[]).map(x=>x[0]);
 window.BLE_SUBJECTIVE_PYQ=[];
 window.SCM_CHAPTERS=["COST OF QUALITY","PARETO ANALYSIS","DECISION MAKING CVP ANALYSIS","DECISION MAKING LIMITING FACTOR","DECISION MAKING MAKE OR BUY","DECISION MAKING SUBCONTRACTING","DECISION MAKING SERVICE COSTING","TRANSFER PRICING","RELEVANT COSTING","TARGET COSTING","PRODUCT LIFE CYCLE COSTING","DECISION MAKING PROBABILITY","ACTIVITY BASED COSTING","JUST-IN-TIME JIT","THROUGHPUT ACCOUNTING","BACK-FLUSH ACCOUNTING","STANDARD COSTING AND VARIANCE ANALYSIS","LINEAR PROGRAMMING","TRANSPORTATION","ASSIGNMENT","GAME THEORY","SIMULATION","PROJECT MANAGEMENT","LEARNING CURVE","BUSINESS APPLICATION OF MAXIMA AND MINIMA","BUSINESS FORECASTING MODELS"];
 window.SCM_SUBJECTIVE_PYQ=[];
@@ -65,7 +947,7 @@ window.DIT_QUESTION_CHAPTERS={
 </script>
 <script>
 (function(){
-const groups={"inter1":[["Business Laws and Ethics","inter-group-1-business-laws-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operations Management and Strategic Management","inter-group-2-operations-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Corporate and Economic Laws","final-group-3-corporate-and-economic-laws"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax Laws and International Taxation","final-group-3-direct-tax-laws-international-taxation"],["Strategic Cost Management","final-group-3-strategic-cost-management"]],"final4":[["Cost and Management Audit","final-group-4-cost-management-audit"],["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Indirect Tax Laws and Practice","final-group-4-indirect-tax-laws-practice"],["Entrepreneurship and Startup","final-group-4-entrepreneurship-startup"],["Risk Management, Banking and Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance Management and Business Valuation","final-group-4-strategic-performance-business-valuation"]]}
+const groups={"inter1":[["Business Laws and Ethics","inter-group-1-business-laws-and-ethics"],["Financial Accounting","inter-group-1-financial-accounting"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation"],["Cost Accounting","inter-group-1-cost-accounting"]],"inter2":[["Operations Management and Strategic Management","inter-group-2-operations-management-strategic-management"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics"],["Management Accounting","inter-group-2-management-accounting"]],"final3":[["Corporate and Economic Laws","final-group-3-corporate-and-economic-laws"],["Strategic Financial Management","final-group-3-strategic-financial-management"],["Direct Tax Laws and International Taxation","final-group-3-direct-tax-laws-international-taxation"],["Strategic Cost Management","final-group-3-strategic-cost-management"]],"final4":[["Cost and Management Audit","final-group-4-cost-management-audit"],["Corporate Financial Reporting","final-group-4-corporate-financial-reporting"],["Indirect Tax Laws and Practice","final-group-4-indirect-tax-laws-practice"],["Entrepreneurship and Startup","final-group-4-entrepreneurship-startup"],["Risk Management in Banking and Insurance","final-group-4-risk-management-banking-insurance"],["Strategic Performance Management and Business Valuation","final-group-4-strategic-performance-business-valuation"]]}
 const FA_CHAPTERS=["Accounting Fundamentals","Bills of Exchange","Consignment","Joint Venture","Preparation of Final Accounts of Commercial Organisations","Preparation of Final Accounts of Not-for-Profit Organisations","Preparation of Final Accounts from Incomplete Records","Partnership Accounting","Lease Accounting","Branch (including Foreign Branch) and Departmental Accounts","Insurance Claim for Loss of Stock and Loss of Profit","Hire Purchase and Installment Sale Transactions","Accounting Standards"];
 const COST_ACCOUNTING_CHAPTERS=["Introduction to Cost Accounting","Cost Ascertainment – Elements of Cost","Cost Accounting Standards (CAS 1 to CAS 24)","Cost Book Keeping","Methods of Costing","Cost Accounting Techniques"];
 window.CAA_SECTIONED_CHAPTERS=[
@@ -125,35 +1007,12 @@ s.addEventListener("change",function(){
   results.innerHTML="";status.textContent="";note.textContent="";t.disabled=true;t.innerHTML="";at.value="";
   if(!s.value)return;
   const subject=s.options[s.selectedIndex].textContent;
-  if(subject==="Strategic Financial Management"){
-    fill(t,[["All Chapters","all"],...window.SFM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+  const groupKey=g.value;
+  const masterRows=(window.CMA_MASTER_CHAPTERS[groupKey]&&window.CMA_MASTER_CHAPTERS[groupKey][subject])||[];
+  if(masterRows.length){
+    fill(t,[["All Chapters","all"],...masterRows.map(x=>[x[0],x[0]])],"Select Chapter");
     t.value="all";
-    note.textContent="Select All Chapters to view every uploaded SFM subjective PYQ. Individual chapters can be selected for focused practice.";
-  }else if(subject==="Strategic Cost Management"){
-    fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
-    t.value="all";
-    note.textContent="SCM follows the 26 chapter names supplied for this portal. Uploaded SCM PYQs are loaded automatically from Firebase.";
-  }else if(subject==="Corporate Accounting and Auditing"){
-    fillCAA();
-    t.value="all";
-    note.textContent="Paper 10: Section A — Corporate Accounting 50% and Section B — Auditing 50%, with 8 modules in total.";
-  }else if(subject==="Financial Accounting"){
-    fill(t,[["All Chapters","all"],...FA_CHAPTERS.map(x=>[x,x])],"Select Chapter");
-    t.value="all"; note.textContent="Financial Accounting follows the Paper 6 structure. Bills of Exchange, Consignment and Joint Venture are separate chapters.";
-  }else if(subject==="Business Laws and Ethics"){
-    fill(t,[["All Chapters","all"],...window.BLE_CHAPTERS.map(x=>[x,x])],"Select Chapter");
-    t.value="all"; note.textContent="Business Laws and Ethics follows the 13 chapter structure configured in the uploader. Uploaded BLE subjective PYQs are loaded automatically from Firebase.";
-  }else if(subject==="Corporate and Economic Laws"){
-    fill(t,[["All Chapters","all"],...window.CEL_CHAPTERS.map(x=>[x,x])],"Select Chapter");
-    t.value="all"; note.textContent="Corporate and Economic Laws follows the official 11-module Paper 13 structure. Uploaded P13 subjective PYQs are loaded automatically from Firebase.";
-  }else if(subject==="Direct and Indirect Taxation"){
-    fill(t,[["All Chapters","all"],...window.DIT_INTER1_CHAPTERS.map(x=>[x,x])],"Select Chapter");
-    t.value="all";
-    note.textContent="Direct and Indirect Taxation follows the six Paper 7 modules shown in the CMA syllabus structure."; 
-  }else if(subject==="Direct Tax Laws and International Taxation"){
-    fill(t,[["All Chapters","all"],...window.DIT_CHAPTERS.map(x=>[x,x])],"Select Chapter");
-    t.value="all";
-    note.textContent="Direct Tax Laws and International Taxation follows the official 14-module structure. Select a module to filter its PYQs.";
+    note.textContent="Chapter list is shown from the CMA Zone Chapter Master, even when no questions have been uploaded yet.";
   }else{
     const rows=(window.ALL_SUBJECTIVE_REMOTE||[]).filter(x=>normalize(x.subject)===normalize(subject));
     const chapters=[...new Set(rows.map(x=>String(x.t||"").trim()).filter(Boolean))];
