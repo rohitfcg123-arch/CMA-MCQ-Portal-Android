@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Full Length CMA Exam | CMA Zone</title>
+<style>
+:root{--cream:#faf6ee;--paper:#fffdf8;--paper2:#f2ecdf;--teal:#0d3b3e;--dark:#082627;--gold:#c8a24a;--gold2:#ead39b;--text:#22302f;--muted:#65716f;--border:#e3dbc9;--green:#2f7042;--red:#a43c32;--blue:#315f8a;--shadow:0 12px 35px rgba(8,38,39,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--text);font-family:Inter,'Segoe UI',Arial,sans-serif}button,select,textarea{font:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}
+.top{position:sticky;top:0;z-index:50;background:var(--teal);color:#fff;box-shadow:0 5px 20px rgba(8,38,39,.16)}.topin{max-width:1180px;margin:auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:19px;font-weight:900}.brand span{color:var(--gold)}.back{padding:8px 11px;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:rgba(255,255,255,.08);font-size:12px;font-weight:800}
+.wrap{max-width:1180px;margin:auto;padding:20px 16px 55px}.hero{background:linear-gradient(135deg,var(--teal),var(--dark));color:#fff;border-radius:22px;padding:29px 27px;position:relative;overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px}.hero:after{content:"";position:absolute;width:270px;height:270px;border:1px solid rgba(234,211,155,.2);border-radius:50%;right:-100px;top:-110px}.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);font-weight:900}.hero h1{margin:7px 0 7px;font-size:31px}.hero p{margin:0;color:#d7e3e1;line-height:1.55;font-size:13px;max-width:760px}.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}.chip{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);font-size:11px;font-weight:800}
+.card{background:var(--paper);border:1px solid var(--border);border-radius:17px;padding:18px;box-shadow:0 5px 18px rgba(8,38,39,.04);margin-bottom:14px}.card h2{margin:0 0 6px;color:var(--dark);font-size:18px}.sub{color:var(--muted);font-size:12px;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field label{display:block;font-size:11px;font-weight:900;color:var(--teal);margin-bottom:6px}.field select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);font-weight:750}
+.btn{border:1px solid var(--border);border-radius:10px;padding:11px 15px;font-weight:850;background:#fff;color:var(--teal)}.primary{background:var(--teal);border-color:var(--teal);color:#fff}.gold{background:var(--gold);border-color:var(--gold);color:var(--dark)}.danger{background:#fff0ee;border-color:#e5bbb5;color:var(--red)}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.instructions{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}.ins{background:var(--paper2);border:1px solid var(--border);border-radius:11px;padding:11px}.ins b{display:block;color:var(--teal);font-size:13px}.ins span{display:block;color:var(--muted);font-size:10.5px;margin-top:3px;line-height:1.35}
+.hidden{display:none!important}.msg{padding:11px 12px;border-radius:10px;margin-top:12px;font-size:12px;line-height:1.45;background:var(--paper2);border:1px solid var(--border)}.msg.ok{color:var(--green);background:#eef7f1;border-color:#cde0d2}.msg.err{color:var(--red);background:#fff0ee;border-color:#e5bbb5}
+#examScreen{display:none}.exam-head{position:sticky;top:57px;z-index:40;background:rgba(250,246,238,.97);border:1px solid var(--border);border-radius:15px;padding:10px 12px;margin-bottom:12px;box-shadow:0 5px 18px rgba(8,38,39,.08)}.exam-head-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.exam-title{font-weight:900;color:var(--teal);font-size:13px}.timer{font-family:ui-monospace,monospace;font-size:21px;font-weight:900;color:var(--teal);letter-spacing:.04em}.timer.warning{color:var(--red)}.timer-note{text-align:right;font-size:9px;color:var(--muted);margin-top:2px}
+.exam-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:13px}.question-card{background:var(--paper);border:1px solid var(--border);border-radius:17px;padding:19px;min-height:530px}.section-label{display:inline-flex;padding:6px 9px;border-radius:999px;background:var(--paper2);color:#8a6a1f;font-size:10px;font-weight:900;letter-spacing:.05em}.qmeta{display:flex;justify-content:space-between;gap:10px;margin:12px 0 8px;color:var(--muted);font-size:11px}.qtext{font-size:16px;line-height:1.62;color:var(--dark);font-weight:650;margin-bottom:15px}.qhtml{font-size:13px;line-height:1.65}.qhtml p{margin:8px 0}.qhtml table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}.qhtml th,.qhtml td{border:1px solid #cfc7b7;padding:6px;text-align:left;vertical-align:top}.qhtml th{background:var(--paper2);color:var(--teal)}.options{display:grid;gap:9px;margin-top:14px}.option{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border);border-radius:11px;background:#fff;cursor:pointer}.option:hover{border-color:#cdbb88}.option.selected{border-color:var(--teal);background:#eaf2f0}.tag{width:25px;height:25px;flex:0 0 25px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--muted);font-size:11px;font-weight:900;color:var(--muted)}.option.selected .tag{background:var(--teal);border-color:var(--teal);color:#fff}.subjective-answer{width:100%;min-height:270px;margin-top:15px;padding:13px;border:1px solid var(--border);border-radius:11px;background:#fff;resize:vertical;line-height:1.55}.nav{display:flex;justify-content:space-between;gap:9px;margin-top:15px}.palette{background:var(--paper);border:1px solid var(--border);border-radius:17px;padding:15px;height:max-content;position:sticky;top:142px}.palette h3{margin:0 0 8px;color:var(--teal);font-size:14px}.palette-section{font-size:10px;font-weight:900;color:var(--muted);margin:10px 0 6px}.palette-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.pbtn{border:1px solid var(--border);background:#fff;border-radius:7px;padding:7px 2px;font-size:10px;font-weight:900;color:var(--text)}.pbtn.current{outline:2px solid var(--teal);outline-offset:0}.pbtn.answered{background:#e3f0e7;border-color:#b9d3c0;color:var(--green)}.pbtn.review{background:#fff0d5;border-color:#dec48c;color:#8a6a1f}.pbtn.answered.review{background:#e6ead8}.palette-legend{font-size:9px;color:var(--muted);line-height:1.5;margin-top:9px}.review-toggle{margin-top:12px;width:100%}
+#resultScreen{display:none}.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:15px 0}.result-box{background:var(--paper2);border:1px solid var(--border);border-radius:12px;padding:13px;text-align:center}.result-box b{display:block;font-size:22px;color:var(--teal)}.result-box span{font-size:10px;color:var(--muted)}.pending-note{padding:13px;border:1px solid #dfcc98;background:#fff8e7;border-radius:11px;color:#73591d;font-size:12px;line-height:1.5}
+.modal{position:fixed;inset:0;background:rgba(8,38,39,.68);z-index:100;display:none;align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.modalbox{width:min(430px,100%);background:var(--paper);border-radius:17px;padding:21px;box-shadow:0 25px 70px rgba(0,0,0,.25)}.modalbox h3{margin:0;color:var(--dark)}.modalbox p{font-size:12px;color:var(--muted);line-height:1.5}.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.instructions{grid-template-columns:repeat(2,1fr)}.exam-layout{grid-template-columns:1fr}.palette{position:static;order:-1}.palette-grid{grid-template-columns:repeat(10,1fr)}.exam-head{top:54px}}
+@media(max-width:520px){.wrap{padding:14px 11px 45px}.hero{padding:24px 19px;border-radius:18px}.hero h1{font-size:27px}.instructions{grid-template-columns:1fr 1fr}.question-card{padding:14px;min-height:500px}.timer{font-size:18px}.palette-grid{grid-template-columns:repeat(7,1fr)}.qtext{font-size:15px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand">CMA <span>ZONE</span></div><a class="back" href="index.html">← Back to CMA Zone</a></div></header>
+<main class="wrap">
+<section id="setupScreen">
+<section class="hero"><span class="eyebrow">FULL LENGTH EXAM CENTRE</span><h1>3-Hour CMA Mock Examination</h1><p>15 MCQs + 7 Subjective Questions. Choose your group and subject, then start a timed examination with school-style bell alerts, question palette, mark-for-review and automatic submission.</p><div class="chips"><span class="chip">⏱ 3:00:00</span><span class="chip">🔔 Bell alerts</span><span class="chip">📝 15 MCQ + 7 Subjective</span><span class="chip">🎲 Previous-attempt pool mix</span></div></section>
+<div class="card"><h2>Exam Setup</h2><div class="grid">
+<div class="field"><label>CMA GROUP</label><select id="group"><option value="">Select CMA Group</option><option value="foundation">CMA Foundation</option><option value="inter1">CMA Intermediate Group 1</option><option value="inter2">CMA Intermediate Group 2</option><option value="final3">CMA Final Group 3</option><option value="final4">CMA Final Group 4</option></select></div>
+<div class="field"><label>SUBJECT</label><select id="subject" disabled><option value="">Select group first</option></select></div></div>
+<div class="instructions">
+<div class="ins"><b>15 MCQ</b><span>MCQ pool se randomized selection.</span></div>
+<div class="ins"><b>7 Subjective</b><span>Uploaded PYQ/subjective pool se selection.</span></div>
+<div class="ins"><b>3 Hours</b><span>Timer real clock se chalega.</span></div>
+<div class="ins"><b>Auto Submit</b><span>Time complete hote hi paper submit.</span></div>
+</div>
+<div class="msg">🔔 <b>Bell schedule:</b> 15 minutes elapsed → first bell; every hour → bell; 15 minutes remaining → warning bell; 3 hours → automatic submission. Bell audio starts after you press Start Exam.</div>
+<div class="toolbar"><button class="btn primary" id="startBtn" disabled>▶ Start Full Exam</button><button class="btn" id="backBtn">Back</button></div><div id="setupMsg" class="msg"></div></div>
+<div class="card"><h2>How the random paper is prepared</h2><div class="sub">Random mode does not create new questions. It selects from the existing MCQ bank and existing subjective/PYQ pool for the selected subject. Subjective selection is spread across the available previous attempts when possible, so repeated attempts can produce a different paper. The exact ICMAI paper pattern is not being claimed; this is a CMA Zone full-length practice exam.</div></div>
+</section>
+
+<section id="examScreen">
+<div class="exam-head"><div class="exam-head-row"><div><div class="exam-title" id="examTitle">CMA Zone Full Exam</div><div class="timer-note" id="examClockNote">Time remaining</div></div><div><div class="timer" id="timer">03:00:00</div><div class="timer-note" id="bellStatus">Bell system active</div></div></div></div>
+<div class="exam-layout"><div>
+<div class="question-card"><span class="section-label" id="sectionLabel">SECTION A — MCQ</span><div class="qmeta"><span id="questionCounter">Question 1 of 22</span><span id="marksLabel">2 Marks</span></div><div id="questionContent"></div><div class="nav"><button class="btn" id="prevBtn">← Previous</button><button class="btn gold" id="reviewBtn">☆ Mark for Review</button><button class="btn primary" id="nextBtn">Next →</button></div></div>
+</div><aside class="palette"><h3>Question Palette</h3><div class="palette-section">MCQ — 15</div><div class="palette-grid" id="mcqPalette"></div><div class="palette-section">SUBJECTIVE — 7</div><div class="palette-grid" id="subPalette"></div><button class="btn danger review-toggle" id="submitBtn">Submit Examination</button><div class="palette-legend">■ Green = answered &nbsp; ■ Yellow = review &nbsp; ■ Outline = current</div></aside></div>
+</section>
+
+<section id="resultScreen">
+<section class="hero"><span class="eyebrow">EXAM SUBMITTED</span><h1>Paper Submitted</h1><p id="resultIntro">Your attempt has been recorded.</p></section>
+<div class="card"><h2>Result Summary</h2><div class="result-grid"><div class="result-box"><b id="rMcq">0/15</b><span>MCQ Correct</span></div><div class="result-box"><b id="rMcqMarks">0/30</b><span>MCQ Marks</span></div><div class="result-box"><b id="rAnswered">0/7</b><span>Subjective Answered</span></div><div class="result-box"><b>—</b><span>Subjective Marks</span></div></div><div class="pending-note">✍️ Subjective answers are saved for evaluation. MCQ marks are available immediately; subjective marks can be evaluated later from the submitted response.</div><div class="toolbar"><button class="btn primary" id="newExamBtn">Start Another Exam</button><a class="btn" href="index.html">Back Home</a></div><div id="saveMsg" class="msg"></div></div>
+</section>
+</main>
+<div class="modal" id="submitModal"><div class="modalbox"><h3>Submit Examination?</h3><p id="submitText">Once submitted, you cannot change your answers.</p><div class="modal-actions"><button class="btn" id="cancelSubmit">Continue Exam</button><button class="btn danger" id="confirmSubmit">Submit Now</button></div></div></div>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(),db=firebase.firestore(),provider=new firebase.auth.GoogleAuthProvider();
+provider.setCustomParameters({prompt:"select_account"});
+const GROUPS={
+foundation:[["Fundamentals of Law and Business Communication","foundation-fundamentals-law-business-communication.html"],["Fundamentals of Financial and Cost Accounting","foundation-fundamentals-financial-cost-accounting.html"],["Fundamentals of Business Mathematics and Statistics","foundation-fundamentals-business-mathematics-statistics.html"],["Fundamentals of Business Economics and Management","foundation-fundamentals-business-economics-management.html"]],
+inter1:[["Business Law and Ethics","inter-group-1-business-law-and-ethics.html"],["Financial Accounting","inter-group-1-financial-accounting.html"],["Direct and Indirect Taxation","inter-group-1-direct-and-indirect-taxation.html"],["Cost Accounting","inter-group-1-cost-accounting.html"]],
+inter2:[["Operations Management and Strategic Management","inter-group-2-operation-management-strategic-management.html"],["Corporate Accounting and Auditing","inter-group-2-corporate-accounting-auditing.html"],["Financial Management and Business Data Analytics","inter-group-2-financial-management-business-data-analytics.html"],["Management Accounting","inter-group-2-management-accounting.html"]],
+final3:[["Corporate and Economic Laws","final-group-3-corporate-economic-laws.html"],["Strategic Financial Management","final-group-3-strategic-financial-management.html"],["Direct Tax Laws and International Taxation","final-group-3-direct-tax-international-laws.html"],["Strategic Cost Management","final-group-3-strategic-cost-management.html"]],
+final4:[["Cost and Management Audit","final-group-4-cost-management-audit.html"],["Corporate Financial Reporting","final-group-4-corporate-financial-reporting.html"],["Indirect Tax Laws and Practice","final-group-4-indirect-tax-law-practice.html"],["Strategic Performance Management and Business Valuation","final-group-4-strategic-performance-management-business-valuation.html"],["Risk Management in Banking and Insurance","final-group-4-risk-management-banking-insurance.html"],["Entrepreneurship and Startup","final-group-4-entrepreneurship-startup.html"]]
+};
+const $=id=>document.getElementById(id),TOTAL=180*60,MCQ_COUNT=15,SUB_COUNT=7;
+let paper=[],current=0,startedAt=0,endAt=0,timerId=null,audioCtx=null,bellFired=new Set(),selectedGroup="",selectedSubject="",currentUser=null;
+
+auth.onAuthStateChanged(u=>{currentUser=u;});
+function esc(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function unique(a,key){const s=new Set();return a.filter(x=>{const k=key(x);if(s.has(k))return false;s.add(k);return true})}
+function extractQuestions(html){
+  const marker="const QUESTIONS = "; const i=html.indexOf(marker); if(i<0)throw Error("MCQ bank not found on the selected subject page.");
+  let start=i+marker.length,end=start,depth=0,inStr=false,escp=false;
+  for(;end<html.length;end++){const ch=html[end];if(inStr){if(escp)escp=false;else if(ch==="\\")escp=true;else if(ch==='"')inStr=false;continue}if(ch==='"'){inStr=true;continue}if(ch==="[")depth++;else if(ch==="]"){depth--;if(depth===0){end++;break}}}
+  return JSON.parse(html.slice(start,end));
+}
+async function loadMcqs(url){const res=await fetch(url+"?v=exam20260930");if(!res.ok)throw Error("Could not load MCQ bank ("+res.status+").");return extractQuestions(await res.text());}
+async function loadSubjective(group,subject){
+  const snap=await db.collection("subjectiveQuestions").where("group","==",group).where("subject","==",subject).get();
+  return snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>String(x.html||"").trim());
+}
+function selectSubjective(rows){
+  const byAttempt={};rows.forEach(x=>{const a=String(x.attempt||"Unknown");(byAttempt[a]??=[]).push(x)});
+  const attempts=Object.keys(byAttempt).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  let picked=[];
+  attempts.forEach(a=>{if(picked.length<SUB_COUNT)picked.push(shuffle(byAttempt[a])[0])});
+  const rest=shuffle(rows.filter(x=>!picked.includes(x)));picked=[...picked,...rest];
+  return unique(picked,x=>x.id||[x.attempt,x.q,x.html].join("|")).slice(0,SUB_COUNT);
+}
+function makePaper(mcqs,subs){
+  if(mcqs.length<MCQ_COUNT)throw Error("Selected subject has only "+mcqs.length+" MCQs; at least 15 are required.");
+  if(subs.length<SUB_COUNT)throw Error("Selected subject has only "+subs.length+" uploaded subjective questions; at least 7 are required.");
+  const m=shuffle(mcqs).slice(0,MCQ_COUNT).map((q,i)=>({type:"mcq",id:"m"+i,q:q.q||q.question||"",opts:q.opts||q.options||[],ans:Number(q.ans??q.correctAnswer??-1),chosen:null,review:false,marks:2,sourceSl:q.sl??null}));
+  const s=selectSubjective(subs).map((q,i)=>({type:"subjective",id:"s"+i,q:q.q||"",html:q.html||"",attempt:q.attempt||"",chapter:q.chapter||"",answer:"",review:false,marks:10,sourceId:q.id}));
+  return [...m,...s];
+}
+function show(id){["setupScreen","examScreen","resultScreen"].forEach(x=>$(x).style.display=x===id?"block":"none");window.scrollTo(0,0);}
+function populateSubjects(){
+  const g=$("group").value,el=$("subject");el.innerHTML='<option value="">Select Subject</option>';el.disabled=!g;
+  (GROUPS[g]||[]).forEach((x,i)=>{const o=document.createElement("option");o.value=x[1];o.textContent=x[0];o.dataset.subject=x[0];el.appendChild(o)});
+}
+$("group").onchange=populateSubjects;
+$("subject").onchange=()=>{$("startBtn").disabled=!($("group").value&&$("subject").value)};
+$("backBtn").onclick=()=>location.href="index.html";
+function ring(kind){
+  try{
+    if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const now=audioCtx.currentTime;
+    const notes=kind==="warning"?[660,520,660,520,660]:[740,740,880,740];
+    notes.forEach((f,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(.0001,now+i*.18);g.gain.exponentialRampToValueAtTime(.18,now+i*.18+.02);g.gain.exponentialRampToValueAtTime(.0001,now+i*.18+.15);o.connect(g).connect(audioCtx.destination);o.start(now+i*.18);o.stop(now+i*.18+.17)});
+  }catch(e){}
+}
+function bellCheck(elapsed){
+  const schedule=[[900,"15-minute bell","normal"],[3600,"1-hour bell","normal"],[7200,"2-hour bell","normal"],[9900,"15-minute warning bell","warning"]];
+  schedule.forEach(([sec,label,kind])=>{if(elapsed>=sec&&!bellFired.has(sec)){bellFired.add(sec);ring(kind);$("bellStatus").textContent="🔔 "+label;}});
+}
+function updateTimer(){
+  const remain=Math.max(0,endAt-Date.now()),sec=Math.ceil(remain/1000),h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
+  $("timer").textContent=[h,m,s].map((x,i)=>String(x).padStart(i===0?2:2,"0")).join(":");
+  const elapsed=Math.floor((Date.now()-startedAt)/1000);bellCheck(elapsed);
+  $("timer").classList.toggle("warning",remain<=900000);
+  if(remain<=0){clearInterval(timerId);timerId=null;autoSubmit();}
+}
+function renderPalette(){
+  const render=(id,start,end)=>{$(id).innerHTML="";for(let i=start;i<end;i++){const q=paper[i],b=document.createElement("button");b.className="pbtn"+(i===current?" current ":"")+(isAnswered(q)?" answered ":"")+(q.review?" review":"");b.textContent=(i+1-start);b.onclick=()=>{current=i;renderQuestion();};$(id).appendChild(b)}};
+  render("mcqPalette",0,MCQ_COUNT);render("subPalette",MCQ_COUNT,paper.length);
+}
+function isAnswered(q){return q.type==="mcq"?q.chosen!==null:String(q.answer||"").trim().length>0}
+function renderQuestion(){
+  const q=paper[current];$("sectionLabel").textContent=q.type==="mcq"?"SECTION A — MCQ":"SECTION B — SUBJECTIVE";
+  $("questionCounter").textContent="Question "+(current+1)+" of "+paper.length;
+  $("marksLabel").textContent=q.marks+" Marks";
+  let html="";
+  if(q.type==="mcq"){
+    html='<div class="qtext">'+esc(q.q)+'</div><div class="options">'+q.opts.map((o,i)=>'<div class="option '+(q.chosen===i?"selected":"")+'" data-i="'+i+'"><span class="tag">'+String.fromCharCode(65+i)+'</span><span>'+esc(o)+'</span></div>').join("")+'</div>';
+  }else{
+    html='<div class="qmeta"><span>Attempt: '+esc(q.attempt)+'</span><span>Chapter: '+esc(q.chapter)+'</span></div><div class="qhtml">'+q.html+'</div><textarea class="subjective-answer" id="answerBox" placeholder="Write your answer here. You can format it with paragraphs, points, workings and tables in your final written practice."></textarea>';
+  }
+  $("questionContent").innerHTML=html;
+  if(q.type==="mcq")document.querySelectorAll(".option").forEach(o=>o.onclick=()=>{q.chosen=Number(o.dataset.i);renderQuestion();});
+  else{$("answerBox").value=q.answer||"";$("answerBox").oninput=e=>{q.answer=e.target.value;renderPalette();};}
+  $("prevBtn").disabled=current===0;$("nextBtn").textContent=current===paper.length-1?"Finish":"Next →";$("reviewBtn").textContent=q.review?"★ Remove Review":"☆ Mark for Review";renderPalette();
+}
+$("prevBtn").onclick=()=>{if(current>0){current--;renderQuestion()}};
+$("nextBtn").onclick=()=>{if(current<paper.length-1){current++;renderQuestion()}else openSubmit("You have reached the end of the paper. Submit now?")};
+$("reviewBtn").onclick=()=>{paper[current].review=!paper[current].review;renderQuestion()};
+function openSubmit(text){$("submitText").textContent=text;$("submitModal").classList.add("show")};
+$("submitBtn").onclick=()=>openSubmit("You have "+paper.filter(q=>!isAnswered(q)).length+" unanswered question(s). Submit the examination anyway?");
+$("cancelSubmit").onclick=()=>$("submitModal").classList.remove("show");
+$("confirmSubmit").onclick=()=>{ $("submitModal").classList.remove("show");submitExam(false); };
+function autoSubmit(){ring("warning");$("bellStatus").textContent="⏰ Time over — submitting automatically";submitExam(true)}
+function saveLocal(){
+  try{localStorage.setItem("cma_full_exam_draft",JSON.stringify({group:selectedGroup,subject:selectedSubject,paper,startedAt,endAt}))}catch(e){}
+}
+function clearLocal(){try{localStorage.removeItem("cma_full_exam_draft")}catch(e){}}
+async function submitExam(auto){
+  if(!paper.length)return;
+  clearInterval(timerId);timerId=null;
+  const mcqs=paper.filter(q=>q.type==="mcq"),subs=paper.filter(q=>q.type==="subjective"),correct=mcqs.filter(q=>q.chosen===q.ans).length;
+  const record={uid:currentUser?.uid||"",email:currentUser?.email||"",group:selectedGroup,subject:selectedSubject,startedAt:new Date(startedAt).toISOString(),submittedAt:new Date().toISOString(),autoSubmitted:!!auto,mcq:mcqs.map(q=>({question:q.q,options:q.opts,chosen:q.chosen,correct:q.ans,sourceSl:q.sourceSl})),subjective:subs.map(q=>({question:q.q,html:q.html,answer:q.answer,attempt:q.attempt,chapter:q.chapter,sourceId:q.sourceId})),mcqCorrect:correct,mcqMarks:correct*2};
+  localStorage.setItem("cma_last_exam_result",JSON.stringify(record));
+  try{if(currentUser)await db.collection("fullExamAttempts").add({...record,createdAt:firebase.firestore.FieldValue.serverTimestamp()});$("saveMsg").textContent=currentUser?"Exam response saved to your account.":"Exam saved locally; login was not available.";$("saveMsg").className="msg ok"}catch(e){$("saveMsg").textContent="Exam completed. Cloud save was not available; the result is saved on this device.";$("saveMsg").className="msg"}
+  $("rMcq").textContent=correct+"/"+MCQ_COUNT;$("rMcqMarks").textContent=(correct*2)+"/30";$("rAnswered").textContent=subs.filter(isAnswered).length+"/"+SUB_COUNT;$("resultIntro").textContent=auto?"Time limit reached. The paper was automatically submitted.":"Your examination has been submitted.";
+  show("resultScreen");
+}
+$("newExamBtn").onclick=()=>{paper=[];current=0;show("setupScreen");$("setupMsg").textContent="Select the subject and start a new paper.";};
+$("startBtn").onclick=async()=>{
+  const btn=$("startBtn");selectedGroup=$("group").value;const opt=$("subject").selectedOptions[0];selectedSubject=opt?.dataset.subject||opt?.textContent||"";
+  try{
+    btn.disabled=true;btn.textContent="Loading Exam…";$("setupMsg").className="msg";$("setupMsg").textContent="Building your randomized paper from the selected subject's MCQ and subjective pools…";
+    const [mcqs,subs]=await Promise.all([loadMcqs($("subject").value),loadSubjective(selectedGroup,selectedSubject)]);
+    paper=makePaper(mcqs,subs);current=0;startedAt=Date.now();endAt=startedAt+TOTAL;bellFired=new Set();audioCtx=null;
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")await audioCtx.resume();ring("normal");
+    $("examTitle").textContent=selectedSubject+" — Full Length Exam";$("bellStatus").textContent="🔔 Exam started — 15 min bell scheduled";
+    show("examScreen");renderQuestion();updateTimer();timerId=setInterval(updateTimer,500);saveLocal();
+  }catch(e){$("setupMsg").textContent=e.message||String(e);$("setupMsg").className="msg err"}finally{btn.disabled=false;btn.textContent="▶ Start Full Exam";}
+};
+document.addEventListener("visibilitychange",()=>{if(paper.length&&timerId&&document.visibilityState==="visible")updateTimer();});
+window.addEventListener("beforeunload",e=>{if(timerId){saveLocal();e.preventDefault();e.returnValue="Exam is in progress. Leaving may interrupt your examination.";}}); 
+</script>
+</body></html>
