@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #188</b> — Duplicate question detection now asks Replace/Overwrite or Skip before changing an existing question.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #189</b> — Existing question marks now use a pending → approval workflow before going live.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn">Continue with Google</button>
@@ -110,13 +110,14 @@
         <div class="field"><label>Chapter / Topic</label><select id="editChapter"></select></div>
         <div class="field"><label>Attempt</label><select id="editAttempt"><option>December 2023</option><option>June 2024</option><option>December 2024</option><option>June 2025</option><option>December 2025</option><option>June 2026</option></select></div>
         <div class="field"><label>Question Number</label><input id="editQno" placeholder="4(b)"></div>
-        <div class="field"><label>Marks</label><input id="editMarks" type="number" min="0" step="1" placeholder="14"></div>
+        <div class="field"><label>Marks</label><input id="editMarks" type="number" min="0" step="1" placeholder="14"><div id="editMarksStatus" class="count" style="margin-top:6px"></div></div>
       </div>
       <div class="field" style="margin-top:12px"><label>Question Content — View Only</label><div id="editQuestion" class="edit-question"></div></div>
       <div class="field" style="margin-top:12px"><label>Institute Suggested Answer / Explanation</label><textarea id="editSolution" style="min-height:220px" placeholder="Paste the primary suggested answer in HTML."></textarea><div class="count" style="margin-top:6px">Primary answer. Leave blank to remove all answers unless alternative answers are supplied below.</div></div>
       <div class="field" style="margin-top:12px"><label>Alternative Answers (JSON array)</label><textarea id="editAlternativeSolutions" style="min-height:140px" placeholder='["<p>Alternative answer 1...</p>","<p>Alternative answer 2...</p>"]'></textarea><div class="count" style="margin-top:6px">Optional. Store one or more alternative suggested answers. HTML is preserved exactly.</div></div>
       <div class="edit-actions">
         <button class="btn gray" id="cancelEdit">Cancel</button>
+        <button class="btn" id="approveMarks" type="button" disabled>Approve Marks</button>
         <button class="btn gold" id="saveMetadata">Save Question / Answer</button>
       </div>
       <div id="editMsg" class="msg"></div>
@@ -535,6 +536,52 @@ function populateEditChapters(subject,selected){
   $("editChapter").innerHTML='<option value="">Select Chapter</option>'+list.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
   if(selected&&list.includes(selected))$("editChapter").value=selected;
 }
+
+function pendingMarksValue(x){
+  if(!x || x.pendingMarks==null || x.pendingMarks==="") return null;
+  const n=Number(x.pendingMarks);
+  return Number.isFinite(n)&&n>=0?n:null;
+}
+function refreshEditMarksStatus(x){
+  const pending=pendingMarksValue(x);
+  const approved=x && x.marks!=null && x.marks!=="" ? Number(x.marks) : null;
+  $("editMarksStatus").innerHTML=pending==null
+    ? "Approved marks: <b>"+(approved==null?"—":esc(approved))+"</b> · No pending change"
+    : "Approved marks: <b>"+(approved==null?"—":esc(approved))+"</b> · <span style='color:var(--gold);font-weight:800'>Pending: "+esc(pending)+"</span>";
+  $("approveMarks").disabled=pending==null;
+}
+window.approveMarks=async function(id){
+  const x=DATA.find(q=>q.id===id);
+  if(!x) return;
+  const pending=pendingMarksValue(x);
+  if(pending==null) return;
+  const btn=$("approveMarks");
+  try{
+    setBusy(btn,true,"Approving…");
+    await db.collection("subjectiveQuestions").doc(id).update({
+      marks:pending,
+      pendingMarks:firebase.firestore.FieldValue.delete(),
+      marksApprovalStatus:"approved",
+      marksApprovedBy:ADMIN_EMAIL,
+      marksApprovedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy:ADMIN_EMAIL
+    });
+    const idx=DATA.findIndex(q=>q.id===id);
+    if(idx>=0){
+      DATA[idx]={...DATA[idx],marks:pending,pendingMarks:undefined,marksApprovalStatus:"approved"};
+      if(editingQuestionId===id) refreshEditMarksStatus(DATA[idx]);
+    }
+    renderRows();
+    $("editMsg").className="msg ok";
+    $("editMsg").textContent="Marks approved. The approved marks are now live on the PYQ Portal.";
+  }catch(e){
+    $("editMsg").className="msg err";
+    $("editMsg").textContent="Could not approve marks: "+(e.message||e);
+  }finally{
+    setBusy(btn,false,"Approve Marks");
+  }
+};
 window.openMetadataEditor=function(id){
   const x=DATA.find(q=>q.id===id);
   if(!x)return;
@@ -544,7 +591,8 @@ window.openMetadataEditor=function(id){
   populateEditChapters($("editSubject").value,x.chapter||"");
   $("editAttempt").value=x.attempt||"";
   $("editQno").value=x.q||"";
-  $("editMarks").value=x.marks==null?"":x.marks;
+  $("editMarks").value=pendingMarksValue(x)!=null?pendingMarksValue(x):(x.marks==null?"":x.marks);
+  refreshEditMarksStatus(x);
   $("editQuestion").innerHTML=x.html||"<i>No question HTML stored.</i>";
   $("editSolution").value=x.solutionHtml||"";
   $("editAlternativeSolutions").value=Array.isArray(x.solutionHtmls)?JSON.stringify(x.solutionHtmls.slice(1),null,2):"";
@@ -597,14 +645,38 @@ $("saveMetadata").onclick=async()=>{
   }
   try{
     setBusy(btn,true,"Saving…");
+    const current=DATA.find(q=>q.id===editingQuestionId)||{};
+    const currentApproved=current.marks==null||current.marks===""?null:Number(current.marks);
     const updates={group,subject,chapter,attempt,q:qno,solutionHtml:solutionHtmls[0]||"",solutionHtmls,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
-    if(marksRaw==="") updates.marks= firebase.firestore.FieldValue.delete();
-    else updates.marks=Number(marksRaw);
+    if(marksRaw===""){
+      if(currentApproved!==null){
+        $("editMsg").className="msg err";
+        $("editMsg").textContent="Approved marks cannot be cleared. Enter the corrected marks and submit them for approval.";
+        return;
+      }
+      updates.pendingMarks=firebase.firestore.FieldValue.delete();
+    }else{
+      const newMarks=Number(marksRaw);
+      if(currentApproved!==newMarks){
+        updates.pendingMarks=newMarks;
+        updates.marksApprovalStatus="pending";
+        updates.marksRequestedBy=ADMIN_EMAIL;
+        updates.marksRequestedAt=firebase.firestore.FieldValue.serverTimestamp();
+      }
+    }
     await db.collection("subjectiveQuestions").doc(editingQuestionId).update(updates);
     const idx=DATA.findIndex(q=>q.id===editingQuestionId);
-    if(idx>=0)DATA[idx]={...DATA[idx],group,subject,chapter,attempt,q:qno,solutionHtml:solutionHtmls[0]||"",solutionHtmls,marks:marksRaw===""?undefined:Number(marksRaw)};
+    if(idx>=0){
+      const prev=DATA[idx];
+      const next={...prev,group,subject,chapter,attempt,q:qno,solutionHtml:solutionHtmls[0]||"",solutionHtmls};
+      if(marksRaw!=="" && Number(marksRaw)!==(prev.marks==null||prev.marks===""?null:Number(prev.marks))){
+        next.pendingMarks=Number(marksRaw);
+        next.marksApprovalStatus="pending";
+      }
+      DATA[idx]=next;
+    }
     $("editMsg").className="msg ok";
-    $("editMsg").textContent="Metadata updated successfully. Question content was not changed.";
+    $("editMsg").textContent=(marksRaw!=="" && Number(marksRaw)!==(currentApproved===null?null:currentApproved))?"Metadata updated. Marks are pending approval and are not live yet.":"Metadata updated successfully. Question content was not changed.";
     renderRows();
     setTimeout(closeMetadataEditor,500);
   }catch(e){
