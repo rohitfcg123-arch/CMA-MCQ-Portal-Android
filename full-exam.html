@@ -111,9 +111,27 @@ $("backBtn").onclick=()=>location.href="index.html";$("testBellBtn").onclick=asy
 function ring(kind){
   try{
     if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==="suspended")audioCtx.resume();
+    const base=kind==="warning"?620:560;
+    const strikes=kind==="warning"?5:3;
+    const gap=kind==="warning"?.42:.62;
     const now=audioCtx.currentTime;
-    const notes=kind==="warning"?[660,520,660,520,660]:[740,740,880,740];
-    notes.forEach((f,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(.0001,now+i*.18);g.gain.exponentialRampToValueAtTime(.18,now+i*.18+.02);g.gain.exponentialRampToValueAtTime(.0001,now+i*.18+.15);o.connect(g).connect(audioCtx.destination);o.start(now+i*.18);o.stop(now+i*.18+.17)});
+    for(let i=0;i<strikes;i++){
+      const t=now+i*gap;
+      [1,2.01,3.02,4.15].forEach((mult,j)=>{
+        const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+        o.type=j===0?"sine":"triangle";
+        o.frequency.setValueAtTime(base*mult,t);
+        o.detune.value=j%2?3:-2;
+        const peak=j===0?.22:j===1?.11:j===2?.055:.025;
+        g.gain.setValueAtTime(.0001,t);
+        g.gain.exponentialRampToValueAtTime(peak,t+.012);
+        g.gain.exponentialRampToValueAtTime(.0001,t+.62);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(t);
+        o.stop(t+.65);
+      });
+    }
   }catch(e){}
 }
 function bellCheck(elapsed){
