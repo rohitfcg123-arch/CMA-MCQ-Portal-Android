@@ -973,6 +973,28 @@ const at=document.getElementById("attempt");
 window.SFM_ATTEMPTS.forEach(x=>{const o=document.createElement("option");o.value=x;o.textContent=x+" Attempt";at.appendChild(o);});
 const update=()=>render();
 function normalize(v){return String(v||"").trim().replace(/\\s+/g," ").toUpperCase();}
+// Paper-order sorting: when viewing all chapters, an attempt, or a filtered
+// chapter, questions remain in exam sequence: 2(a), 2(b), 2(c), 2(d)...
+// Attempts are chronological when more than one attempt is displayed.
+function cmaAttemptSortKey(v){
+  const s=String(v||"").trim().toLowerCase();
+  const m=s.match(/(\\d{4})/); const year=m?Number(m[1]):9999;
+  const month=/june|jun/.test(s)?6:/december|dec/.test(s)?12:/march|mar/.test(s)?3:/september|sep/.test(s)?9:99;
+  return year*100+month;
+}
+function cmaQuestionSortKey(v){
+  const s=String(v||"").trim().toLowerCase().replace(/question/g,"").replace(/[^0-9a-z]+/g," ");
+  const m=s.match(/(\\d+)\\s*([a-z])?/);
+  if(!m)return [999999,""];
+  return [Number(m[1]),String(m[2]||"")];
+}
+function cmaQuestionCompare(a,b){
+  const ak=cmaAttemptSortKey(a?.a||a?.attempt),bk=cmaAttemptSortKey(b?.a||b?.attempt);
+  if(ak!==bk)return ak-bk;
+  const aq=cmaQuestionSortKey(a?.q),bq=cmaQuestionSortKey(b?.q);
+  if(aq[0]!==bq[0])return aq[0]-bq[0];
+  return aq[1].localeCompare(bq[1],undefined,{numeric:true,sensitivity:"base"});
+}
 function setChaptersFor(subject){
   if(subject==="Operations Management and Strategic Management"){
     fill(t,[["All Chapters","all"],...OSM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
@@ -1084,6 +1106,9 @@ function render(){
     return;
   }
   let rows=getRowsForSubject(subject).filter(x=>(!topic||topic==="all"||normalize(x.t)===normalize(topic))&&(!attempt||normalize(x.a)===normalize(attempt)));
+  // Never rely on Firestore/static-file insertion order. Enforce the paper
+  // sequence after every filter operation.
+  rows.sort(cmaQuestionCompare);
   status.textContent=rows.length+" subjective PYQ"+(rows.length===1?"":"s")+" found"+(topic&&topic!=="all"?" for "+topic:"")+(attempt?" · "+attempt:"");
   if(!rows.length){results.innerHTML='<div class="empty">No questions match the selected chapter and attempt.</div>';return;}
   rows.forEach(x=>{
