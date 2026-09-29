@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CMA Zone — Uploaded JSON Preview</title>
+<style>
+:root{--teal:#0d3b3e;--dark:#082627;--gold:#c8a24a;--cream:#faf6ee;--paper:#fffdf8;--line:#e3dbc9;--muted:#65716f;--green:#2f7042}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:#22302f;font-family:Inter,Segoe UI,Arial,sans-serif}
+.top{position:sticky;top:0;z-index:10;background:var(--teal);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{font-size:19px;font-weight:850}.brand span{color:#ead39b}.wrap{max-width:1000px;margin:auto;padding:16px}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0 16px}button{border:0;border-radius:10px;padding:11px 15px;font:inherit;font-weight:850;cursor:pointer}
+.gold{background:var(--gold);color:var(--dark)}.note{background:#f4eee2;border:1px solid var(--line);padding:13px;border-radius:12px;color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:14px}
+.status{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:14px;font-size:13px;font-weight:800}
+.portal-preview-label{margin:0 0 12px;padding:10px 12px;border:1px solid #d5e2df;border-radius:10px;background:#f2ecdf;color:var(--teal);font-size:11px;font-weight:900;letter-spacing:.04em}
+.question{background:#fffdf8;border:1px solid var(--line);border-radius:17px;padding:18px;margin:0 0 13px;box-shadow:0 5px 18px rgba(8,38,39,.04);line-height:1.65}
+.qhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:11px;margin-bottom:12px}
+.qtitle{margin:0;color:var(--dark);font-size:17px}.meta{margin-top:5px;color:#8a6d2f;font-size:11px}.attempt{background:#e6efed;color:var(--teal);border:1px solid #d5e2df;padding:6px 9px;border-radius:999px;font-size:11px;font-weight:900}
+.qhtml{font-size:13px;line-height:1.65}.qhtml p{margin:9px 0}.qhtml ol,.qhtml ul{margin-top:7px;margin-bottom:12px;padding-left:25px}.qhtml table{width:100%;border-collapse:collapse;margin:12px 0;background:#fff;font-size:12px}.qhtml th,.qhtml td{border:1px solid #cfc7b7;padding:7px;text-align:left;vertical-align:top}.qhtml th{background:#f2ecdf;color:var(--teal)}
+.solution{margin-top:13px;padding:9px 12px;border:1px solid #cfe3d8;border-radius:10px;background:#eef7f3;color:var(--green);font-size:11px;font-weight:800}
+.err{color:#a43c32;font-weight:800;background:#fff1ef;border:1px solid #e5b9b3;padding:12px;border-radius:10px}
+@media(max-width:700px){.wrap{padding:10px}.question{padding:13px}.qhtml{overflow-x:auto}.qhtml table{min-width:620px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand">CMA <span>ZONE</span> — Uploaded JSON Preview</div><div id="count"></div></header>
+<main class="wrap">
+<div class="toolbar"><button class="gold" id="backBtn" type="button">← Back to Question Uploader</button></div>
+<div class="note"><b>STUDENT PORTAL PREVIEW</b><br>This page shows the staged Question JSON as it will appear in the question content area. Nothing on this page writes to Firebase. Review order, numbering, paragraphs, lists, tables, marks, chapter and attempt before returning to the uploader.</div>
+<div id="status" class="status">Loading staged questions…</div>
+<div id="preview"></div>
+</main>
+<script>
+const KEY="CMA_ZONE_PENDING_PREVIEW_V1",VERIFIED_KEY="CMA_ZONE_PREVIEW_VERIFIED_V1";
+const $=id=>document.getElementById(id);
+function esc(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function attemptKey(v){const s=String(v||"").toLowerCase(),m=s.match(/(\d{4})/),y=m?Number(m[1]):9999,mo=/june|jun/.test(s)?6:/december|dec/.test(s)?12:/march|mar/.test(s)?3:/september|sep/.test(s)?9:99;return y*100+mo;}
+function qKey(v){const s=String(v||"").toLowerCase().replace(/question/g,"").replace(/[^0-9a-z]+/g," "),m=s.match(/(\d+)\s*([a-z])?/);return m?[Number(m[1]),String(m[2]||"")]:[999999,""];}
+function compare(a,b){const aa=attemptKey(a.attempt),bb=attemptKey(b.attempt);if(aa!==bb)return aa-bb;const aq=qKey(a.q),bq=qKey(b.q);if(aq[0]!==bq[0])return aq[0]-bq[0];return aq[1].localeCompare(bq[1],undefined,{numeric:true,sensitivity:"base"});}
+function card(item){const x=item.data||item,solution=Array.isArray(x.solutionHtmls)?x.solutionHtmls.length>0:!!String(x.solutionHtml||"").trim();return '<article class="question"><div class="qhead"><div><h2 class="qtitle">Question '+esc(x.q||"—")+'</h2><div class="meta"><b>Subject:</b> '+esc(x.subject||"")+'</div><div class="meta"><b>Chapter:</b> '+esc(x.chapter||"Chapter not specified")+'</div>'+(x.marks!==null&&x.marks!==undefined&&x.marks!==""?'<div class="meta"><b>Marks:</b> '+esc(x.marks)+'</div>':"")+'</div><span class="attempt">'+esc(x.attempt||"Attempt not specified")+' Attempt</span></div><div class="qhtml">'+String(x.html||"")+'</div>'+(solution?'<div class="solution">✓ Suggested answer available — hidden here just like the student portal before View Solution.</div>':"")+'</article>';}
+function load(){try{const raw=sessionStorage.getItem(KEY);if(!raw)throw new Error("No staged Question JSON was found. Please return to the uploader and import the JSON again.");const state=JSON.parse(raw),items=Array.isArray(state.items)?state.items:[];if(!items.length)throw new Error("The staged Question JSON is empty.");items.sort((a,b)=>compare(a.data||a,b.data||b));$("count").textContent=items.length.toLocaleString("en-IN")+" question(s)";$("status").textContent="Preview loaded. "+items.length.toLocaleString("en-IN")+" question(s) are staged locally and are NOT in Firebase.";$("preview").innerHTML='<div class="portal-preview-label">STUDENT PORTAL PREVIEW — '+items.length.toLocaleString("en-IN")+' QUESTION(S)</div>'+items.map(card).join("");sessionStorage.setItem(VERIFIED_KEY,"1");}catch(e){$("status").className="status err";$("status").textContent=e.message||String(e);}}
+$("backBtn").onclick=()=>location.href="question-uploader.html";load();
+</script>
+</body></html>
