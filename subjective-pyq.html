@@ -131,7 +131,7 @@ s.addEventListener("change",function(){
 t.addEventListener("change",update);at.addEventListener("change",update);
 function getRowsForSubject(subject){
   if(subject==="Financial Accounting"){
-    return (window.FA_SUBJECTIVE_PYQ||[]).map(x=>({s:"Financial Accounting",a:String(x.a||"").trim(),q:String(x.q||"").trim(),t:String(x.t||"").trim(),html:String(x.html||""),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]}));
+    return (window.FA_SUBJECTIVE_PYQ||[]).map(x=>({s:"Financial Accounting",a:String(x.a||"").trim(),q:String(x.q||"").trim(),t:String(x.t||"").trim(),html:String(x.html||""),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],marks:x.marks}));
   }
   if(subject==="Strategic Financial Management"){
     return (window.SFM_SUBJECTIVE_PYQ||[]).map(x=>({a:x.a,q:x.q,t:x.t,html:x.html,solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]}));
@@ -157,7 +157,7 @@ function getRowsForSubject(subject){
       t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
       html:String(x.html||x.questionHtml||x.qHtml||""),
       solutionHtml:String(x.solutionHtml||"").trim(),
-      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
+      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],marks:x.marksApprovalStatus==="pending"?null:x.marks
     }));
   }
   if(subject==="Direct Tax Laws and International Taxation"){
@@ -193,7 +193,7 @@ function render(){
   if(!rows.length){results.innerHTML='<div class="empty">No questions match the selected chapter and attempt.</div>';return;}
   rows.forEach(x=>{
     const card=document.createElement("article");card.className="question";
-    card.innerHTML='<div class="qhead"><div><h2 class="qtitle">Question '+(x.q||"—")+'</h2><div class="topic-note"><b>Subject:</b> '+subject+'</div><div class="topic-note"><b>Chapter:</b> '+(x.t||"Chapter not specified")+'</div></div><span class="attempt">'+(x.a||"Attempt not specified")+' Attempt</span></div><div class="pyq-question">'+x.html+'</div>';
+    card.innerHTML='<div class="qhead"><div><h2 class="qtitle">Question '+(x.q||"—")+'</h2><div class="topic-note"><b>Subject:</b> '+subject+'</div><div class="topic-note"><b>Chapter:</b> '+(x.t||"Chapter not specified")+'</div>'+(x.marks!==null&&x.marks!==undefined&&x.marks!==""?'<div class="topic-note"><b>Marks:</b> '+x.marks+'</div>':'')+'</div><span class="attempt">'+(x.a||"Attempt not specified")+' Attempt</span></div><div class="pyq-question">'+x.html+'</div>';
     const answerVersions=[...(Array.isArray(x.solutionHtmls)?x.solutionHtmls:[]),String(x.solutionHtml||"")].map(v=>String(v||"").trim()).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i);
     if(answerVersions.length){
       answerVersions.forEach((answer,index)=>{
@@ -274,7 +274,8 @@ const ditRemote=remote.filter(x=>{
         q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),
         t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
         html:String(x.html||x.questionHtml||x.qHtml||""),
-        solutionHtml:String(x.solutionHtml||"").trim()
+        solutionHtml:String(x.solutionHtml||"").trim(),
+        marks:x.marksApprovalStatus==="pending"?null:x.marks
       };
       const k=sfmQuestionKey(row);
       const staticIndex=staticRows.findIndex((s,i)=>!replacedStatic.has(i)&&sfmQuestionKey(s)===k);
@@ -287,6 +288,7 @@ const ditRemote=remote.filter(x=>{
           t:row.t||base.t,
           html:row.html||base.html,
           solutionHtml:row.solutionHtml||String(base.solutionHtml||"").trim(),
+          marks:row.marks==null?base.marks:row.marks,
           solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):(Array.isArray(base.solutionHtmls)?base.solutionHtmls:[])
         };
         replacedStatic.add(staticIndex);
@@ -298,7 +300,7 @@ const ditRemote=remote.filter(x=>{
     window.SFM_SUBJECTIVE_PYQ=staticRows.concat(remoteSfmRows);
     const faUnique=new Map();
     const faCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-    faRemote.forEach(x=>{const row={id:x.id,a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],updatedAt:x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0)};const k=["inter1","financialaccounting",row.a,row.q].map(faCanon).join("|");const prev=faUnique.get(k);if(!prev||row.updatedAt>prev.updatedAt)faUnique.set(k,row);});
+    faRemote.forEach(x=>{const row={id:x.id,a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],marks:x.marksApprovalStatus==="pending"?null:x.marks,updatedAt:x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0)};const k=["inter1","financialaccounting",row.a,row.q].map(faCanon).join("|");const prev=faUnique.get(k);if(!prev||row.updatedAt>prev.updatedAt)faUnique.set(k,row);});
     window.FA_SUBJECTIVE_PYQ=[...faUnique.values()];
     
 const ditUnique=new Map();
@@ -326,7 +328,7 @@ const ditUnique=new Map();
     window.CEL_SUBJECTIVE_PYQ=[...celUnique.values()];
     const bleUnique=new Map();
     const bleCanon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-    bleRemote.forEach(x=>{const row={id:x.id,a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],updatedAt:x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0)};const k=["inter1","businesslawsandethics",row.a,row.q].map(bleCanon).join("|");const prev=bleUnique.get(k);if(!prev||row.updatedAt>prev.updatedAt)bleUnique.set(k,row);});
+    bleRemote.forEach(x=>{const row={id:x.id,a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],marks:x.marksApprovalStatus==="pending"?null:x.marks,updatedAt:x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0)};const k=["inter1","businesslawsandethics",row.a,row.q].map(bleCanon).join("|");const prev=bleUnique.get(k);if(!prev||row.updatedAt>prev.updatedAt)bleUnique.set(k,row);});
     window.BLE_SUBJECTIVE_PYQ=[...bleUnique.values()];
 
     const scmUnique=new Map();
@@ -340,7 +342,7 @@ const ditUnique=new Map();
       const prevTime=prev&&prev.updatedAt?new Date(prev.updatedAt):null;
       const curTime=x.updatedAt&&x.updatedAt.toDate?x.updatedAt.toDate():new Date(x.updatedAt||0);
       if(!prev || (curTime>prevTime)){
-        scmUnique.set(k,{id:x.id,a:String(x.attempt||x.a||x.pyqTerm||x.term||x.exam||x.examTerm||x.year||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||""),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],updatedAt:curTime});
+        scmUnique.set(k,{id:x.id,a:String(x.attempt||x.a||x.pyqTerm||x.term||x.exam||x.examTerm||x.year||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||""),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],marks:x.marksApprovalStatus==="pending"?null:x.marks,updatedAt:curTime});
       }
     });
     window.SCM_SUBJECTIVE_PYQ=[...scmUnique.values()];
