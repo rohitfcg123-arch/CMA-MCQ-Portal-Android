@@ -12,75 +12,40 @@
 <section id="result" class="hidden"><div class="hero result"><span class="eyebrow">🏆 BUSINESS YEAR COMPLETE</span><h1 id="resultTitle"></h1><div class="big" id="score"></div><p id="resultText"></p></div><div class="card"><div class="grid" id="finalMetrics"></div><div class="explain" id="history"></div></div><button class="primary" id="restart">🔄 Start New Business</button></section>
 </div>
 <script>
-const initial={cash:1000000,debt:0,profit:0,valuation:1000000,workingCapital:250000,costEfficiency:50,risk:50,score:0};
-let s={...initial};
-let round=0;
-let history=[];
-const money=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+(function(){
+const intro=document.getElementById("intro"), game=document.getElementById("game"), result=document.getElementById("result");
+const start=document.getElementById("start"), restart=document.getElementById("restart");
+const dashboard=document.getElementById("dashboard"), roundEl=document.getElementById("round"), concept=document.getElementById("concept");
+const title=document.getElementById("title"), question=document.getElementById("question"), choices=document.getElementById("choices"), progress=document.getElementById("progress");
+const score=document.getElementById("score"), resultTitle=document.getElementById("resultTitle"), resultText=document.getElementById("resultText"), finalMetrics=document.getElementById("finalMetrics"), history=document.getElementById("history");
 const rounds=[
-{c:'SFM · Investment Decision',t:'Choose your first major investment.',q:'A new machine costs ₹4,00,000 and is expected to generate strong annual cash savings. How will you proceed?',opts:[
-['Buy the machine','Invest ₹4,00,000. Expected cash benefit ₹1,20,000/year.',{cash:-400000,profit:70000,valuation:140000,score:10}],
-['Keep cash reserve','Do not invest. Preserve liquidity for future opportunities.',{cash:0,profit:0,valuation:20000,score:6}],
-['Invest aggressively','Buy the machine using ₹4,00,000 of debt.',{cash:0,debt:400000,profit:20000,valuation:90000,risk:12,score:7}]}]},
-{c:'FM · Financing',t:'Finance expansion of ₹3,00,000.',q:'Choose the financing mix for expansion.',opts:[
-['Equity funding','Raise ₹3,00,000 from owners.',{cash:300000,valuation:50000,score:8}],
-['Bank loan','Borrow ₹3,00,000 at an assumed 10% annual interest.',{cash:300000,debt:300000,profit:-30000,valuation:25000,risk:10,score:7}],
-['50:50 mix','Raise ₹1,50,000 equity and borrow ₹1,50,000.',{cash:300000,debt:150000,profit:-15000,valuation:45000,risk:5,score:10}]}]},
-{c:'Cost Accounting · Cost Control',t:'Production cost has increased.',q:'Material costs have risen. What is your response?',opts:[
-['Negotiate supplier','Reduce material cost through a supplier negotiation.',{profit:60000,cash:40000,costEfficiency:10,score:10}],
-['Cut quality','Use a cheaper low-quality material.',{profit:90000,cash:70000,costEfficiency:8,risk:15,valuation:-30000,score:5}],
-['Accept the increase','Protect quality and absorb the cost.',{profit:-30000,cash:-20000,costEfficiency:-3,score:6}]}]},
-{c:'FM · Working Capital',t:'Receivables are rising.',q:'A major customer will pay ₹1,50,000 after 60 days. What do you do?',opts:[
-['Take supplier credit','Negotiate longer payment terms with suppliers.',{cash:80000,workingCapital:30000,score:10}],
-['Use bank overdraft','Bridge the cash gap with short-term borrowing.',{cash:120000,debt:120000,profit:-12000,risk:8,score:7}],
-['Offer customer discount','Offer a small discount for immediate payment.',{cash:140000,profit:-15000,workingCapital:50000,score:8}]}]},
-{c:'SFM · Risk',t:'A new project looks profitable but uncertain.',q:'The expected return is high, but cash flows are volatile.',opts:[
-['Accept project','Take the higher return and higher risk.',{profit:120000,valuation:150000,risk:15,score:8}],
-['Reject project','Protect the company from uncertainty.',{profit:20000,risk:-5,score:7}],
-['Stage investment','Invest partially and review performance.',{profit:70000,valuation:80000,risk:3,score:10}]}]},
-{c:'Accounts · Cash Flow',t:'Profit is high but cash is falling.',q:'Your receivables and inventory have increased. What should you prioritize?',opts:[
-['Release working capital','Collect receivables and reduce excess inventory.',{cash:120000,workingCapital:60000,score:10}],
-['Take more debt','Use borrowing to maintain operations.',{cash:150000,debt:150000,risk:8,score:6}],
-['Ignore it','Continue focusing only on accounting profit.',{cash:-80000,score:2,risk:5}]}]},
-{c:'Tax · Profit Planning',t:'Year-end tax bill is due.',q:'The business has ₹2,00,000 taxable profit. How do you handle the tax obligation?',opts:[
-['Pay on time','Pay the liability and preserve compliance.',{cash:-50000,profit:-50000,score:10}],
-['Delay payment','Keep cash temporarily but create compliance risk.',{cash:0,risk:15,score:3}],
-['Plan next year early','Pay current liability and improve future tax planning.',{cash:-50000,profit:-50000,valuation:40000,score:10}]}]},
-{c:'Cost Accounting · Decision Making',t:'You can make a component or buy it.',q:'Relevant cost analysis shows buying is cheaper by ₹35,000, but supplier dependency increases.',opts:[
-['Buy outside','Save ₹35,000 and accept supplier dependency.',{cash:35000,profit:35000,risk:5,score:9}],
-['Make internally','Keep production control but incur the higher relevant cost.',{profit:-20000,score:6}],
-['Negotiate first','Try to reduce supplier price before deciding.',{profit:15000,cash:10000,score:10}]}]},
-{c:'FM · Capital Structure',t:'Debt is now high.',q:'Interest payments are reducing profit. What is your response?',opts:[
-['Repay some debt','Use ₹1,50,000 cash to reduce debt.',{cash:-150000,debt:-150000,profit:15000,risk:-12,valuation:60000,score:10}],
-['Keep leverage','Retain cash and accept higher financial risk.',{risk:10,valuation:-20000,score:5}],
-['Raise equity','Add ₹1,50,000 equity and repay part of debt.',{cash:0,debt:-75000,risk:-7,valuation:45000,score:9}]}]},
-{c:'SFM · Valuation',t:'The year is ending.',q:'Your business has stronger cash flows but also some debt. Which strategy best protects long-term value?',opts:[
-['Balanced growth','Maintain liquidity, control debt and reinvest selectively.',{valuation:180000,score:12,risk:-8}],
-['Maximum expansion','Use available borrowing to expand rapidly.',{debt:180000,valuation:220000,risk:18,score:8}],
-['Hold cash only','Avoid investment and minimize risk.',{cash:80000,valuation:50000,risk:-8,score:7}]}]}
+["SFM · Investment Decision","Choose your first major investment.","A new machine costs ₹4,00,000. What do you do?",["Buy the machine","Keep cash reserve","Invest using debt"]],
+["FM · Financing","Finance expansion of ₹3,00,000.","Choose the financing mix.",["Equity funding","Bank loan","50:50 mix"]],
+["Cost Accounting · Cost Control","Production cost has increased.","Material costs have risen. What is your response?",["Negotiate supplier","Cut quality","Accept the increase"]],
+["FM · Working Capital","Receivables are rising.","A customer will pay after 60 days. What do you do?",["Take supplier credit","Use bank overdraft","Offer customer discount"]],
+["SFM · Risk","A new project looks profitable but uncertain.","Cash flows are volatile. What is your response?",["Accept project","Reject project","Stage investment"]],
+["Accounts · Cash Flow","Profit is high but cash is falling.","Receivables and inventory have increased. What should you prioritize?",["Release working capital","Take more debt","Ignore it"]],
+["Tax · Profit Planning","Year-end tax bill is due.","How do you handle the tax obligation?",["Pay on time","Delay payment","Plan next year early"]],
+["Cost Accounting · Decision Making","Make or buy decision.","Buying is cheaper by ₹35,000 but creates supplier dependency.",["Buy outside","Make internally","Negotiate first"]],
+["FM · Capital Structure","Debt is now high.","Interest payments are reducing profit. What is your response?",["Repay some debt","Keep leverage","Raise equity"]],
+["SFM · Valuation","The year is ending.","Which strategy best protects long-term value?",["Balanced growth","Maximum expansion","Hold cash only"]]
 ];
-const dashboard=document.getElementById('dashboard');
-const roundEl=document.getElementById('round');
-const concept=document.getElementById('concept');
-const title=document.getElementById('title');
-const question=document.getElementById('question');
-const choices=document.getElementById('choices');
-const progress=document.getElementById('progress');
-const game=document.getElementById('game');
-const intro=document.getElementById('intro');
-const result=document.getElementById('result');
-const score=document.getElementById('score');
-const resultTitle=document.getElementById('resultTitle');
-const resultText=document.getElementById('resultText');
-const finalMetrics=document.getElementById('finalMetrics');
-const historyDiv=document.getElementById('history');
-const startEl=document.getElementById('start');
-const restartEl=document.getElementById('restart');
-function apply(d){Object.keys(d).forEach(k=>{s[k]=(s[k]||0)+d[k]});s.cash=Math.max(0,s.cash);s.debt=Math.max(0,s.debt);s.workingCapital=Math.max(0,s.workingCapital);s.valuation=Math.max(0,s.valuation);}
-function dash(){dashboard.innerHTML=[['Cash',money(s.cash)],['Profit',money(s.profit)],['Debt',money(s.debt)],['Valuation',money(s.valuation)]].map(x=>'<div class="metric"><span class="mini">'+x[0]+'</span><b>'+x[1]+'</b></div>').join('');}
-function render(){const r=rounds[round];roundEl.textContent='ROUND '+(round+1)+' / '+rounds.length;concept.textContent=r.c;title.textContent=r.t;question.textContent=r.q;progress.style.width=((round+1)/rounds.length*100)+'%';dash();choices.innerHTML=r.opts.map((o,i)=>'<button type="button" class="choice" data-i="'+i+'"><b>'+o[0]+'</b><small>'+o[1]+'</small></button>').join('');choices.querySelectorAll('.choice').forEach(b=>b.addEventListener('click',()=>choose(Number(b.dataset.i))));}
-function choose(i){const r=rounds[round],o=r.opts[i];apply(o[2]);history.push('<b>Round '+(round+1)+':</b> '+o[0]+' — '+o[1]);round++;if(round<rounds.length){render()}else{finish()}}
-function finish(){game.classList.add('hidden');result.classList.remove('hidden');score.textContent=Math.min(100,Math.max(0,s.score))+' / 100';resultTitle.textContent=s.valuation>=1300000?'🏆 Business Builder':'📊 Business Year Complete';resultText.textContent='Your decisions changed the company. Review the financial impact below.';finalMetrics.innerHTML=[['Cash',money(s.cash)],['Profit',money(s.profit)],['Debt',money(s.debt)],['Valuation',money(s.valuation)],['Working Capital',money(s.workingCapital)],['Cost Efficiency',s.costEfficiency+'%']].map(x=>'<div class="metric"><span class="mini">'+x[0]+'</span><b>'+x[1]+'</b></div>').join('');historyDiv.innerHTML='<b>Decision log & learning trail</b><br><br>'+history.join('<br><br>');}
-startEl.addEventListener('click',function(){intro.classList.add('hidden');game.classList.remove('hidden');render();});
-restartEl.addEventListener('click',function(){location.reload();});
+let state={cash:1000000,profit:0,debt:0,valuation:1000000,score:0},pos=0,log=[];
+function money(n){return "₹"+Math.round(n).toLocaleString("en-IN")}
+function draw(){
+ const r=rounds[pos]; roundEl.textContent="ROUND "+(pos+1)+" / 10"; concept.textContent=r[0]; title.textContent=r[1]; question.textContent=r[2]; progress.style.width=((pos+1)*10)+"%";
+ dashboard.innerHTML=[["Cash",money(state.cash)],["Profit",money(state.profit)],["Debt",money(state.debt)],["Valuation",money(state.valuation)]].map(x=>'<div class="metric"><span class="mini">'+x[0]+'</span><b>'+x[1]+'</b></div>').join("");
+ choices.innerHTML="";
+ r[3].forEach((label,i)=>{const btn=document.createElement("button");btn.type="button";btn.className="choice";btn.innerHTML="<b>"+label+"</b><small>Choose this strategy for the business.</small>";btn.addEventListener("click",()=>pick(i));choices.appendChild(btn)});
+}
+function pick(i){
+ const effects=[[-40000,20000,0,60000,10],[30000,10000,30000,30000,7],[20000,15000,15000,45000,9]][i];
+ state.cash=Math.max(0,state.cash+effects[0]); state.profit+=effects[1]; state.debt=Math.max(0,state.debt+effects[2]); state.valuation=Math.max(0,state.valuation+effects[3]); state.score+=effects[4];
+ log.push("Round "+(pos+1)+": "+rounds[pos][3][i]);
+ pos++; if(pos<10) draw(); else finish();
+}
+function finish(){game.classList.add("hidden");result.classList.remove("hidden");score.textContent=Math.min(100,state.score)+" / 100";resultTitle.textContent="📊 Business Year Complete";resultText.textContent="Your 10 business decisions are complete.";finalMetrics.innerHTML=[["Cash",money(state.cash)],["Profit",money(state.profit)],["Debt",money(state.debt)],["Valuation",money(state.valuation)]].map(x=>'<div class="metric"><span class="mini">'+x[0]+'</span><b>'+x[1]+'</b></div>').join("");history.innerHTML="<b>Decision log</b><br><br>"+log.join("<br>")}
+start.addEventListener("click",function(){intro.classList.add("hidden");game.classList.remove("hidden");draw()});
+restart.addEventListener("click",function(){location.reload()});
+})();
 </script></body></html>
