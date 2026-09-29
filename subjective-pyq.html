@@ -102,9 +102,9 @@ function setChaptersFor(subject){
     fill(t,[["All Chapters","all"],...window.SCM_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
   }else if(subject==="Corporate Accounting and Auditing"){
-    fill(t,[["All Chapters","all"],...window.CAA_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    fillCAA();
     t.value="all";
-    note.textContent="Paper 10 follows the syllabus structure shown in the CMA study material: Section A — Corporate Accounting (5 modules) and Section B — Auditing (3 modules).";
+    note.textContent="Paper 10: Corporate Accounting and Auditing — Section A: Corporate Accounting 50% (5 modules) · Section B: Auditing 50% (3 modules).";
   }else if(subject==="Cost Accounting"){
     fill(t,[["All Chapters","all"],...COST_ACCOUNTING_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all";
@@ -114,6 +114,10 @@ function setChaptersFor(subject){
     fill(t,[["All Chapters","all"],...chapters.map(x=>[x,x])],"All Topics / Chapters");
     t.value="all";
   }
+}
+function fillCAA(){
+  t.innerHTML='<option value="">Select Chapter</option>'+window.CAA_SECTIONED_CHAPTERS.map(g=>'<optgroup label="'+g.section+'">'+g.chapters.map(x=>'<option value="'+x.replace(/"/g,'&quot;')+'">'+x+'</option>').join("")+'</optgroup>').join("");
+  t.disabled=false;
 }
 function fill(el,items,placeholder){el.innerHTML='<option value="">'+placeholder+'</option>';items.forEach(x=>{const o=document.createElement("option");o.value=x[1]||x;o.textContent=x[0]||x;el.appendChild(o);});el.disabled=false;}
 g.addEventListener("change",function(){results.innerHTML="";status.textContent="";note.textContent="";s.disabled=true;t.disabled=true;s.innerHTML="";t.innerHTML="";at.value="";fill(s,groups[g.value]||[],"Select Subject");if(s.options.length>0){s.value=s.options[0].value;s.dispatchEvent(new Event("change"));}});
@@ -130,9 +134,9 @@ s.addEventListener("change",function(){
     t.value="all";
     note.textContent="SCM follows the 26 chapter names supplied for this portal. Uploaded SCM PYQs are loaded automatically from Firebase.";
   }else if(subject==="Corporate Accounting and Auditing"){
-    fill(t,[["All Chapters","all"],...window.CAA_CHAPTERS.map(x=>[x,x])],"Select Chapter");
+    fillCAA();
     t.value="all";
-    note.textContent="Paper 10 follows Section A — Corporate Accounting and Section B — Auditing, with 8 modules in total."; 
+    note.textContent="Paper 10: Section A — Corporate Accounting 50% and Section B — Auditing 50%, with 8 modules in total.";
   }else if(subject==="Financial Accounting"){
     fill(t,[["All Chapters","all"],...FA_CHAPTERS.map(x=>[x,x])],"Select Chapter");
     t.value="all"; note.textContent="Financial Accounting follows the Paper 6 structure. Bills of Exchange, Consignment and Joint Venture are separate chapters.";
