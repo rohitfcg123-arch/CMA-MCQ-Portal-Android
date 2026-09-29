@@ -1,51 +1,72 @@
-<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CMA Business Tycoon — CMA Zone</title>
-<style>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMA Business Tycoon — Risk Lab</title><style>
 :root{--teal:#0e5052;--dark:#08383a;--gold:#9a741e;--cream:#f7f5ef;--paper:#eee9dc;--border:#d5cdbb;--muted:#667276;--good:#2f7042;--bad:#a13d31}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:#17272a;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.app{max-width:900px;margin:auto;padding:0 15px 45px}.top{position:sticky;top:0;z-index:10;background:rgba(247,245,239,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:13px 0}.topline{display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-weight:900;color:var(--dark);font-size:17px}.mini,.eyebrow{color:var(--gold);font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}.home{border:1px solid var(--border);background:var(--cream);color:var(--teal);border-radius:10px;padding:9px 13px;font-weight:800;text-decoration:none}.hero{padding:28px 3px 18px}.hero h1{margin:4px 0;color:var(--dark);font-size:30px}.hero p{color:var(--muted);line-height:1.55}.card{background:var(--paper);border:1px solid var(--border);border-radius:15px;padding:18px;margin:12px 0;box-shadow:0 4px 14px rgba(8,56,58,.035)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.metric{background:var(--cream);border:1px solid var(--border);border-radius:11px;padding:11px}.metric b{display:block;font-size:18px;color:var(--dark);margin-top:3px}.choice{display:block;width:100%;text-align:left;border:1px solid var(--border);background:var(--cream);border-radius:12px;padding:14px;margin:9px 0;cursor:pointer;font:inherit;color:#17272a}.choice:hover{border-color:var(--teal);transform:translateY(-1px)}.choice b{display:block;color:var(--dark);margin-bottom:4px}.choice small{color:var(--muted);line-height:1.45}.primary{width:100%;border:0;background:var(--teal);color:#fff;border-radius:12px;padding:14px;font-weight:850;font-size:15px;cursor:pointer}.secondary{border:1px solid var(--border);background:var(--cream);color:var(--teal);border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer}.bar{height:9px;background:#d8d2c5;border-radius:20px;overflow:hidden}.fill{height:100%;background:var(--teal);width:0;transition:.35s}.event{border-left:4px solid var(--gold);padding:10px 12px;background:#f8f2df;border-radius:8px;color:#4d493d}.result{text-align:center}.big{font-size:42px;font-weight:950;color:var(--dark)}.explain{margin-top:12px;background:#f7f5ef;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:left;color:#4c585b;line-height:1.5}.hidden{display:none!important}.pill{display:inline-block;background:#dfeceb;color:var(--teal);border-radius:20px;padding:5px 9px;font-size:11px;font-weight:850}@media(max-width:620px){.grid{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:25px}}
+</style><style>
+.riskgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}.formula{background:#f8f2df;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.55;overflow:auto}.calc{background:var(--cream);border:1px solid var(--border);border-radius:12px;padding:14px;margin:12px 0}.answer{font-weight:850}.correct{border-color:var(--good)!important}.wrong{border-color:var(--bad)!important}.feedback{margin-top:10px;font-weight:750;line-height:1.5}.tag{display:inline-block;padding:5px 8px;border-radius:20px;background:#dfeceb;color:var(--teal);font-size:11px;font-weight:850;margin-right:5px}.metric b{font-size:16px}@media(max-width:620px){.riskgrid{grid-template-columns:repeat(2,1fr)}}
 </style></head><body>
-<div class="app"><header class="top"><div class="topline"><div><div class="brand">CMA ZONE</div><div class="mini">Business Simulation</div></div><a class="home" href="index.html">⌂ Home</a></div></header>
-<section id="intro"><div class="hero"><span class="eyebrow">🎮 CMA BUSINESS TYCOON</span><h1>Build. Decide. Grow.</h1><p>You are the CFO of a new business. Start with <b>₹10,00,000 virtual capital</b> and make financial decisions. Your choices will change cash, profit, debt and business valuation.</p></div><div class="card"><h2>How the game works</h2><p>Each round presents a real-world business decision. Choose an option, see its financial impact, and learn the CMA concept behind it.</p><div class="grid"><div class="metric"><span class="mini">Capital</span><b>₹10.0L</b></div><div class="metric"><span class="mini">Rounds</span><b>10</b></div><div class="metric"><span class="mini">Mode</span><b>Virtual</b></div><div class="metric"><span class="mini">Risk</span><b>Dynamic</b></div></div></div><button class="primary" id="start">🚀 Start Business</button></section>
-<section id="game" class="hidden"><div class="grid" id="dashboard"></div><div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><span class="pill" id="round"></span><span class="pill" id="concept"></span></div><div class="bar" style="margin:13px 0"><div class="fill" id="progress"></div></div><div id="event" class="event hidden"></div><h2 id="title"></h2><p id="question" style="line-height:1.55"></p><div id="choices"></div></div></section>
-<section id="result" class="hidden"><div class="hero result"><span class="eyebrow">🏆 BUSINESS YEAR COMPLETE</span><h1 id="resultTitle"></h1><div class="big" id="score"></div><p id="resultText"></p></div><div class="card"><div class="grid" id="finalMetrics"></div><div class="explain" id="history"></div></div><button class="primary" id="restart">🔄 Start New Business</button></section>
+<div class="app">
+<header class="top"><div class="topline"><div><div class="brand">CMA ZONE</div><div class="mini">Business Simulation · Risk Lab</div></div><a class="home" href="index.html">⌂ Home</a></div></header>
+<section id="intro"><div class="hero"><span class="eyebrow">🎮 CMA BUSINESS TYCOON · RISK LAB</span><h1>Build the business. Measure the risk.</h1><p>You are the CFO. You will make business decisions <b>and calculate financial risk</b> using expected return, variance, standard deviation, covariance, correlation, beta, CAPM, portfolio risk, VaR and WACC.</p></div>
+<div class="card"><h2>What you will calculate</h2><div class="riskgrid"><div class="metric"><span class="mini">Risk</span><b>σ / Variance</b></div><div class="metric"><span class="mini">Market Risk</span><b>Beta (β)</b></div><div class="metric"><span class="mini">Pricing</span><b>CAPM</b></div><div class="metric"><span class="mini">Portfolio</span><b>σp / ρ</b></div><div class="metric"><span class="mini">Downside</span><b>VaR</b></div><div class="metric"><span class="mini">Funding</span><b>WACC</b></div></div></div>
+<button type="button" class="primary" id="start">🚀 Start Business & Risk Lab</button></section>
+<section id="game" class="hidden"><div class="grid" id="dashboard"></div><div class="card"><div><span class="tag" id="round"></span><span class="tag" id="topic"></span></div><div class="bar" style="margin:13px 0"><div class="fill" id="progress"></div></div><h2 id="title"></h2><p id="question" style="line-height:1.55"></p><div class="formula" id="formula"></div><div class="calc"><b>Calculate and choose the correct result:</b><div id="choices"></div><div class="feedback" id="feedback"></div></div></div></section>
+<section id="result" class="hidden"><div class="hero result"><span class="eyebrow">🏆 BUSINESS + RISK YEAR COMPLETE</span><h1 id="resultTitle"></h1><div class="big" id="score"></div><p id="resultText"></p></div><div class="card"><div class="grid" id="finalMetrics"></div><div class="explain" id="history"></div></div><button type="button" class="primary" id="restart">🔄 Start New Business</button></section>
 </div>
 <script>
 (function(){
-const intro=document.getElementById("intro"), game=document.getElementById("game"), result=document.getElementById("result");
-const start=document.getElementById("start"), restart=document.getElementById("restart");
-const dashboard=document.getElementById("dashboard"), roundEl=document.getElementById("round"), concept=document.getElementById("concept");
-const title=document.getElementById("title"), question=document.getElementById("question"), choices=document.getElementById("choices"), progress=document.getElementById("progress");
-const score=document.getElementById("score"), resultTitle=document.getElementById("resultTitle"), resultText=document.getElementById("resultText"), finalMetrics=document.getElementById("finalMetrics"), history=document.getElementById("history");
-const rounds=[
-["SFM · Investment Decision","Choose your first major investment.","A new machine costs ₹4,00,000. What do you do?",["Buy the machine","Keep cash reserve","Invest using debt"]],
-["FM · Financing","Finance expansion of ₹3,00,000.","Choose the financing mix.",["Equity funding","Bank loan","50:50 mix"]],
-["Cost Accounting · Cost Control","Production cost has increased.","Material costs have risen. What is your response?",["Negotiate supplier","Cut quality","Accept the increase"]],
-["FM · Working Capital","Receivables are rising.","A customer will pay after 60 days. What do you do?",["Take supplier credit","Use bank overdraft","Offer customer discount"]],
-["SFM · Risk","A new project looks profitable but uncertain.","Cash flows are volatile. What is your response?",["Accept project","Reject project","Stage investment"]],
-["Accounts · Cash Flow","Profit is high but cash is falling.","Receivables and inventory have increased. What should you prioritize?",["Release working capital","Take more debt","Ignore it"]],
-["Tax · Profit Planning","Year-end tax bill is due.","How do you handle the tax obligation?",["Pay on time","Delay payment","Plan next year early"]],
-["Cost Accounting · Decision Making","Make or buy decision.","Buying is cheaper by ₹35,000 but creates supplier dependency.",["Buy outside","Make internally","Negotiate first"]],
-["FM · Capital Structure","Debt is now high.","Interest payments are reducing profit. What is your response?",["Repay some debt","Keep leverage","Raise equity"]],
-["SFM · Valuation","The year is ending.","Which strategy best protects long-term value?",["Balanced growth","Maximum expansion","Hold cash only"]]
-];
-let state={cash:1000000,profit:0,debt:0,valuation:1000000,score:0},pos=0,log=[];
-function money(n){return "₹"+Math.round(n).toLocaleString("en-IN")}
-function draw(){
- const r=rounds[pos]; roundEl.textContent="ROUND "+(pos+1)+" / 10"; concept.textContent=r[0]; title.textContent=r[1]; question.textContent=r[2]; progress.style.width=((pos+1)*10)+"%";
- dashboard.innerHTML=[["Cash",money(state.cash)],["Profit",money(state.profit)],["Debt",money(state.debt)],["Valuation",money(state.valuation)]].map(x=>'<div class="metric"><span class="mini">'+x[0]+'</span><b>'+x[1]+'</b></div>').join("");
- choices.innerHTML="";
- r[3].forEach((label,i)=>{const btn=document.createElement("button");btn.type="button";btn.className="choice";btn.innerHTML="<b>"+label+"</b><small>Choose this strategy for the business.</small>";btn.addEventListener("click",()=>pick(i));choices.appendChild(btn)});
+"use strict";
+const $=id=>document.getElementById(id);
+const intro=$("intro"),game=$("game"),result=$("result"),start=$("start"),restart=$("restart");
+const dashboard=$("dashboard"),roundEl=$("round"),topic=$("topic"),title=$("title"),question=$("question"),formula=$("formula"),choices=$("choices"),feedback=$("feedback"),progress=$("progress"),score=$("score"),resultTitle=$("resultTitle"),resultText=$("resultText"),finalMetrics=$("finalMetrics"),history=$("history");
+let state={cash:1000000,profit:0,debt:0,valuation:1000000,score:0,beta:1,portfolioRisk:0};
+let pos=0,locked=false,log=[];
+const money=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+function avg(a){return a.reduce((x,y)=>x+y,0)/a.length}
+function sd(a){const m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)))}
+function cov(a,b){const ma=avg(a),mb=avg(b);return avg(a.map((x,i)=>(x-ma)*(b[i]-mb)))}
+function corr(a,b){return cov(a,b)/(sd(a)*sd(b))}
+function pct(n){return (n*100).toFixed(2)+"%"}
+function metrics(){dashboard.innerHTML=[["Cash",money(state.cash)],["Profit",money(state.profit)],["Debt",money(state.debt)],["Valuation",money(state.valuation)]].map(x=>'<div class="metric"><span class="mini">'+x[0]+'</span><b>'+x[1]+'</b></div>').join("")}
+function questionSet(){
+return [
+{topic:"Standard Deviation",title:"Measure project volatility",q:"A project produced annual returns of 8%, 12%, 10%, 6% and 14%. Calculate the population standard deviation.",f:"Mean = ΣR / n\nσ = √[Σ(R − R̄)² / n]",ans:sd([.08,.12,.10,.06,.14])*100,unit:"%",ex:"Using the population formula, first find the mean return, then square each deviation and take the square root of the average squared deviation.",effect:{profit:40000,valuation:50000}},
+{topic:"Variance",title:"Quantify uncertainty",q:"Returns are 5%, 10%, 15% and 20%. Calculate the variance using the population formula.",f:"Variance = Σ(R − R̄)² / n",ans:(sd([.05,.10,.15,.20])**2)*10000,unit:"%²",ex:"Variance is the square of standard deviation. Keep the units as percentage-squared when returns are entered as percentage points.",effect:{profit:30000,valuation:40000}},
+{topic:"Covariance",title:"Check co-movement",q:"Asset A returns: 10%, 20%, 15%, 5%. Market returns: 8%, 18%, 12%, 6%. Calculate population covariance.",f:"Cov(A,M) = Σ[(RA − R̄A)(RM − R̄M)] / n",ans:cov([.10,.20,.15,.05],[.08,.18,.12,.06])*10000,unit:"%²",ex:"Positive covariance means the asset and market tend to move together.",effect:{valuation:50000,profit:35000}},
+{topic:"Correlation",title:"Measure relationship",q:"Using A = 10%, 20%, 15%, 5% and M = 8%, 18%, 12%, 6%, calculate correlation.",f:"ρ = Cov(A,M) / (σA × σM)",ans:corr([.10,.20,.15,.05],[.08,.18,.12,.06]),unit:"",ex:"Correlation lies between −1 and +1. A value near +1 means strong positive co-movement.",effect:{valuation:60000,risk:-5}},
+{topic:"Beta",title:"Measure systematic risk",q:"If Cov(A,M) = 0.0060 and market variance = 0.0040, calculate beta.",f:"β = Cov(A,M) / Var(M)",ans:.006/.004,unit:"",ex:"Beta of 1 means market-level systematic risk; above 1 means more sensitivity than the market.",effect:{beta:0,valuation:70000}},
+{topic:"CAPM",title:"Price the risk",q:"Risk-free rate = 6%, beta = 1.25 and market return = 14%. Calculate required return using CAPM.",f:"Ke = Rf + β(Rm − Rf)",ans:.06+1.25*(.14-.06),unit:"%",ex:"CAPM adds the risk-free rate to beta multiplied by the market risk premium.",effect:{profit:50000,valuation:60000}},
+{topic:"Portfolio Risk",title:"Diversify the business",q:"Two assets have σA = 10%, σB = 15%, weights 60%/40% and correlation 0.25. Calculate portfolio standard deviation.",f:"σp = √(wA²σA² + wB²σB² + 2wAwBσAσBρ)",ans:Math.sqrt(.6**2*.10**2+.4**2*.15**2+2*.6*.4*.10*.15*.25)*100,unit:"%",ex:"The correlation term determines how diversification changes total portfolio risk.",effect:{valuation:80000,cash:40000}},
+{topic:"Value at Risk",title:"Protect liquidity",q:"Daily portfolio value is ₹10,00,000. At 95% confidence, z = 1.645 and daily σ = 2%. Calculate one-day parametric VaR.",f:"VaR = Portfolio Value × z × σ",ans:1000000*1.645*.02,unit:"₹",ex:"VaR estimates the loss threshold that should not be exceeded at the selected confidence level under the model assumptions.",effect:{cash:-10000,valuation:50000}},
+{topic:"WACC",title:"Choose funding",q:"Debt = ₹4L, Equity = ₹6L, Kd = 8%, tax rate = 25%, Ke = 14%. Calculate WACC.",f:"WACC = E/V×Ke + D/V×Kd×(1−T)",ans:.6*.14+.4*.08*(1-.25),unit:"%",ex:"Debt cost is tax-adjusted because interest is generally considered after-tax in the WACC formula.",effect:{debt:0,valuation:90000}},
+{topic:"Risk-adjusted decision",title:"Make the final CFO decision",q:"Project A has expected return 16% and σ 8%. Project B has expected return 18% and σ 18%. Which has the lower coefficient of variation?",f:"CV = σ / Expected Return",ans:.08/.16,unit:"",ex:"CV compares risk per unit of expected return. Lower CV indicates lower relative volatility.",effect:{profit:70000,valuation:100000}}
+]}
+const qs=questionSet();
+function distractors(q){
+const a=q.ans;
+let vals;
+if(q.unit==="₹") vals=[a*.82,a,a*1.18];
+else if(q.unit==="%") vals=[a*100*.8,a*100,a*100*1.2];
+else if(q.unit==="%²") vals=[a*.7,a,a*1.3];
+else vals=[a*.75,a,a*1.25];
+return vals.map((v,i)=>({v,correct:i===1}));
 }
-function pick(i){
- const effects=[[-40000,20000,0,60000,10],[30000,10000,30000,30000,7],[20000,15000,15000,45000,9]][i];
- state.cash=Math.max(0,state.cash+effects[0]); state.profit+=effects[1]; state.debt=Math.max(0,state.debt+effects[2]); state.valuation=Math.max(0,state.valuation+effects[3]); state.score+=effects[4];
- log.push("Round "+(pos+1)+": "+rounds[pos][3][i]);
- pos++; if(pos<10) draw(); else finish();
+function fmt(q,v){if(q.unit==="₹")return money(v);if(q.unit==="%")return v.toFixed(2)+"%";if(q.unit==="%²")return v.toFixed(4)+" %²";return v.toFixed(3)}
+function render(){
+locked=false;feedback.textContent="";
+const q=qs[pos];roundEl.textContent="ROUND "+(pos+1)+" / "+qs.length;topic.textContent=q.topic;title.textContent=q.title;question.textContent=q.q;formula.textContent=q.f;progress.style.width=((pos+1)/qs.length*100)+"%";metrics();
+choices.innerHTML="";
+distractors(q).sort(()=>Math.random()-.5).forEach(o=>{const b=document.createElement("button");b.type="button";b.className="choice";b.innerHTML='<span class="answer">'+fmt(q,o.v)+'</span><small>Submit calculation</small>';b.addEventListener("click",()=>answer(o,q,b));choices.appendChild(b)})
 }
-function finish(){game.classList.add("hidden");result.classList.remove("hidden");score.textContent=Math.min(100,state.score)+" / 100";resultTitle.textContent="📊 Business Year Complete";resultText.textContent="Your 10 business decisions are complete.";finalMetrics.innerHTML=[["Cash",money(state.cash)],["Profit",money(state.profit)],["Debt",money(state.debt)],["Valuation",money(state.valuation)]].map(x=>'<div class="metric"><span class="mini">'+x[0]+'</span><b>'+x[1]+'</b></div>').join("");history.innerHTML="<b>Decision log</b><br><br>"+log.join("<br>")}
-start.addEventListener("click",function(){intro.classList.add("hidden");game.classList.remove("hidden");draw()});
-restart.addEventListener("click",function(){location.reload()});
+function answer(o,q,b){
+if(locked)return;locked=true;
+if(o.correct){state.score+=10;state.profit+=(q.effect.profit||0);state.cash+=(q.effect.cash||0);state.debt+=(q.effect.debt||0);state.valuation+=(q.effect.valuation||0);state.beta=q.topic==="Beta"?q.ans:state.beta;state.portfolioRisk=q.topic==="Portfolio Risk"?q.ans:state.portfolioRisk;b.classList.add("correct");feedback.textContent="✅ Correct. "+q.ex+" +10 points."}
+else{state.score=Math.max(0,state.score-3);b.classList.add("wrong");feedback.textContent="❌ Incorrect. Correct result: "+fmt(q,q.ans)+". "+q.ex+" −3 points."}
+log.push((o.correct?"✓ ":"✗ ")+q.topic+" — "+fmt(q,q.ans));
+metrics();setTimeout(()=>{pos++;if(pos<qs.length)render();else finish()},900)
+}
+function finish(){
+game.classList.add("hidden");result.classList.remove("hidden");score.textContent=Math.min(100,state.score)+" / 100";resultTitle.textContent=state.score>=85?"🏆 Risk-Smart CFO":state.score>=60?"📈 Growing CFO":"📚 CFO in Training";resultText.textContent="You completed the Business + Risk Lab. Your score reflects calculation accuracy and business impact.";finalMetrics.innerHTML=[["Cash",money(state.cash)],["Profit",money(state.profit)],["Debt",money(state.debt)],["Valuation",money(state.valuation)],["Beta",""+state.beta.toFixed(2)],["Portfolio σ",""+state.portfolioRisk.toFixed(2)+"%"]].map(x=>'<div class="metric"><span class="mini">'+x[0]+'</span><b>'+x[1]+'</b></div>').join("");history.innerHTML="<b>Calculation trail</b><br><br>"+log.join("<br>")}
+start.addEventListener("click",()=>{intro.classList.add("hidden");game.classList.remove("hidden");render()});
+restart.addEventListener("click",()=>location.reload());
 })();
 </script></body></html>
