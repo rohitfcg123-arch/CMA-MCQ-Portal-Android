@@ -148,7 +148,7 @@ function getRowsForSubject(subject){
     }));
   }
   if(subject==="Business Laws and Ethics"){
-    return (window.BLE_SUBJECTIVE_PYQ||[]).map(x=>({s:"Business Laws and Ethics",a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]}));
+    return (window.BLE_SUBJECTIVE_PYQ||[]).map(x=>({s:"Business Laws and Ethics",a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),html:String(x.html||x.questionHtml||x.qHtml||"").trim(),solutionHtml:String(x.solutionHtml||"").trim(),solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],marks:x.marksApprovalStatus==="pending"?null:x.marks}));
   }
   if(subject==="Corporate and Economic Laws"){
     return (window.CEL_SUBJECTIVE_PYQ||[]).map(x=>({
@@ -232,7 +232,8 @@ async function loadUploadedQuestions(){
       t:String(x.chapter||x.chapterName||x.topic||x.subjectChapter||x.t||"").trim(),
       html:String(x.html||x.questionHtml||x.qHtml||"").trim(),
       solutionHtml:String(x.solutionHtml||"").trim(),
-      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[]
+      solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):[],
+      marks:x.marksApprovalStatus==="pending"?null:x.marks
     }));
     const sfmRemote=remote.filter(x=>String(x.group||"").toLowerCase()==="final3"&&String(x.subject||"").trim().toLowerCase()==="strategic financial management");
     const bleRemote=remote.filter(x=>{const g=String(x.group||"").trim().toLowerCase();const s=String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");return g==="inter1"&&(s==="businesslawsandethics"||s==="businesslawandethics"||s==="p5ble");});
