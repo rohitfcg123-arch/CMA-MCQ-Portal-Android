@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #212</b> — Fixed Correction JSON matching for duplicated SFM question records and HTML hash differences. No question content is changed. Correction import still changes only Chapter/Chapter ID/Topic. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #213</b> — Added the complete Financial Management and Business Data Analytics chapter list to the Question Uploader, independent of whether questions have been uploaded. Correction import still changes only Chapter/Chapter ID/Topic. Uploads now use the central CMA chapter registry and reject any chapter or chapter-ID that is not valid for the selected Group + Subject.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -360,6 +360,19 @@ const CHAPTERS_BY_SUBJECT={
     "Auditing of Different Types of Undertakings"
   ],
   "Financial Management and Business Data Analytics":["Financial Management","Business Data Analytics"],
+  "Financial Management and Business Data Analytics":[
+    "Fundamentals of Financial Management",
+    "Institutions and Instruments in Financial Markets",
+    "Tools for Financial Analyses",
+    "Sources of Finance and Cost of Capital",
+    "Capital Budgeting",
+    "Working Capital Management",
+    "Financing Decision of a Firm",
+    "Introduction to Data Science for Business Decision-making",
+    "Data Processing, Organisation, Cleaning and Validation",
+    "Data Presentation: Visualisation and Graphical Presentation",
+    "Data Analysis and Modelling"
+  ],
   "Management Accounting":["Management Accounting"],
   "Direct and Indirect Taxation":["Basics of Income Tax Act","Heads of Income","Total Income and Tax Liability of Individuals & HUF","Concept of Indirect Taxes","Goods and Services Tax (GST) Laws","Customs Act & Rules"],
   "Cost Accounting":["Cost Accounting"],
