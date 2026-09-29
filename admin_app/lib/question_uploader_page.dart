@@ -199,6 +199,8 @@ class _QuestionUploaderPageState extends State<QuestionUploaderPage> {
       appBar:AppBar(title:const Text('Question Uploader'),actions:[IconButton(onPressed:load,icon:const Icon(Icons.refresh))]),
       floatingActionButton:FloatingActionButton.extended(onPressed:()=>edit(),icon:const Icon(Icons.add),label:const Text('New Question')),
       body:loading?const Center(child:CircularProgressIndicator()):RefreshIndicator(onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(12,12,12,100),children:[
+        Card(child:Padding(padding:const EdgeInsets.all(12),child:const Text('UPDATE #196 — Question Uploader is now a native page inside the Admin app. It uses the same Firestore subjectiveQuestions data; no browser redirect is used.',style:TextStyle(fontWeight:FontWeight.w700))),),
+        const SizedBox(height:8),
         if(message.isNotEmpty)Padding(padding:const EdgeInsets.only(bottom:8),child:Text(message)),
         Card(child:Padding(padding:const EdgeInsets.all(12),child:Column(children:[
           const Align(alignment:Alignment.centerLeft,child:Text('Find / Manage Questions',style:TextStyle(fontSize:17,fontWeight:FontWeight.w800))),
