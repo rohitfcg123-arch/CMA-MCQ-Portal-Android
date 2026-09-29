@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #201</b> — Restored the complete working uploader initialization/auth flow. Google Login is unchanged from the known-working version; only the broken/missing initialization block was restored.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #203</b> — Restored the complete working uploader initialization/auth flow. Google Login is unchanged from the known-working version; only the broken/missing initialization block was restored.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -424,7 +424,7 @@ function populateUploadChapters(subject,selected){
   $("chapter").innerHTML='<option value="">Select Chapter</option>'+list.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
   if(selected&&list.includes(selected))$("chapter").value=selected;
 }
-$("group").onchange=()=>populateSubjects($("group").value);
+$("group").onchange=()=>{populateSubjects($("group").value); populateUploadChapters($("subject").value);};
 $("subject").onchange=()=>populateUploadChapters($("subject").value);
 populateUploadChapters($("subject").value);
 setupPortalSections();
