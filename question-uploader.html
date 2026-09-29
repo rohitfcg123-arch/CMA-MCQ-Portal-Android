@@ -14,7 +14,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #190</b> — Google login and logout flow fixed for Android/mobile browsers with Firebase redirect authentication.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #191</b> — Google login changed to Firebase popup authentication for GitHub Pages; redirect/storage failure removed and exact auth errors are shown.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn">Continue with Google</button>
@@ -373,20 +373,17 @@ async function login(){
   $("loginMsg").className="msg";
   $("loginMsg").textContent="Opening Google sign-in…";
   try{
-    // Use Firebase redirect as the primary flow. This is more reliable on
-    // Android Chrome/GitHub Pages than opening a popup from a button click.
-    await auth.signInWithRedirect(provider);
-  }catch(e){
-    // If redirect is unavailable in the current browser, try a popup as a
-    // fallback so the administrator still has another sign-in path.
-    try{
-      $("loginMsg").textContent="Redirect unavailable. Trying Google popup…";
-      await auth.signInWithPopup(provider);
-      return;
-    }catch(pe){
-      showLoginError(pe&&pe.code?pe: e);
-      setBusy(btn,false,"Continue with Google");
+    // GitHub Pages is not Firebase Hosting. Use popup authentication here;
+    // Firebase documents popup as the workaround for redirect/storage issues
+    // on non-Firebase-hosted sites.
+    const result=await auth.signInWithPopup(provider);
+    if(result&&result.user){
+      $("loginMsg").className="msg ok";
+      $("loginMsg").textContent="Google sign-in successful. Loading uploader…";
     }
+  }catch(e){
+    showLoginError(e);
+    setBusy(btn,false,"Continue with Google");
   }
 }
 async function logout(){
@@ -407,20 +404,7 @@ async function logout(){
 }
 $("loginBtn").onclick=login;
 $("logout").onclick=logout;
-auth.getRedirectResult().then(r=>{
-  if(r&&r.user){
-    $("loginMsg").className="msg ok";
-    $("loginMsg").textContent="Google sign-in successful. Loading uploader…";
-  }
-}).catch(e=>{
-  showLoginError(e);
-  setBusy($("loginBtn"),false,"Continue with Google");
-});
 
-$("group").onchange=()=>{populateSubjects($("group").value);populateChapters($("subject").value)};
-$("subject").onchange=()=>populateChapters($("subject").value);
-populateSubjects($("group").value,"Strategic Financial Management");
-populateChapters($("subject").value);
 auth.onAuthStateChanged(async u=>{
   if(!u){
     $("login").classList.remove("hidden");
