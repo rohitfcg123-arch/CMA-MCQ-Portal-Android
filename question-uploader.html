@@ -32,7 +32,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #221</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #222</b> — Fixed the PDF verification gate error and restored the missing Pending Verification panel. Question JSON is validated and staged locally first; it is NOT written to Firestore or shown in the user portal until the verification PDF is downloaded and the administrator explicitly approves it. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -1592,10 +1592,9 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
   // Staging must finish before PDF rendering starts. PDF generation can be
   // expensive on mobile browsers, so never await it inside the import handler.
   // The verification panel becomes usable immediately while the PDF renders.
-  $("pendingVerificationPdfStatus").textContent="PDF: Generating…";
-  $("pendingVerificationMsg").textContent="Questions are staged. PDF generation is running separately — Firebase is still unchanged.";
-  $("pendingVerificationMsg").className="msg";
-  setTimeout(()=>generatePendingVerificationPdf().catch(()=>{}),0);
+  $("pendingVerificationPdfStatus").textContent="PDF: Ready to generate";
+  $("pendingVerificationMsg").textContent="Questions are staged. Tap “Generate / Download Verification PDF” above to create the verification PDF. Firebase is still unchanged.";
+  $("pendingVerificationMsg").className="msg ok";
 }catch(e){
   $("jsonMsg").textContent="Import failed: "+(e&&e.message?e.message:e);
   $("jsonMsg").className="msg err";
@@ -1834,9 +1833,12 @@ function renderPendingVerification(){
   $("pendingVerificationStatus").textContent="These questions are staged locally only. They are NOT in Firestore and are NOT visible in the user portal.";
   preview.innerHTML=items.map(pendingQuestionCard).join("");
   preview.classList.remove("hidden");
-  // Download remains locked until a real PDF blob exists.
-  $("downloadPendingPdfBtn").disabled=true;
-  $("downloadPendingPdfTopBtn").disabled=true;
+  // PDF is generated on demand when the administrator taps Download.
+  // This avoids a long/fragile background jsPDF render on mobile browsers.
+  $("downloadPendingPdfBtn").disabled=false;
+  $("downloadPendingPdfTopBtn").disabled=false;
+  $("downloadPendingPdfBtn").textContent="📄 Generate / Download Verification PDF";
+  $("downloadPendingPdfTopBtn").textContent="📄 Generate / Download Verification PDF";
   $("approvePendingBtn").disabled=true;
   $("approvePendingTopBtn").disabled=true;
   $("discardPendingBtn").disabled=false;
@@ -1880,6 +1882,8 @@ async function generatePendingVerificationPdf(){
     $("pendingVerificationMsg").className="msg ok";
     $("downloadPendingPdfBtn").disabled=false;
     $("downloadPendingPdfTopBtn").disabled=false;
+    $("downloadPendingPdfBtn").textContent="📄 Download Verification PDF";
+    $("downloadPendingPdfTopBtn").textContent="📄 Download Verification PDF";
     $("approvePendingBtn").disabled=true;
   }catch(e){
     PENDING_PDF_READY=false;
@@ -1896,19 +1900,37 @@ async function generatePendingVerificationPdf(){
 }
 
 $("downloadPendingPdfBtn").onclick=async()=>{
-  if(!PENDING_JSON_IMPORT||!PENDING_PDF_READY)return;
+  if(!PENDING_JSON_IMPORT||!PENDING_JSON_IMPORT.items.length)return;
+  const buttons=[$("downloadPendingPdfBtn"),$("downloadPendingPdfTopBtn")].filter(Boolean);
   try{
-    if(!PENDING_JSON_IMPORT.pdfBlob)await generatePendingVerificationPdf();
+    buttons.forEach(b=>{b.disabled=true;b.textContent="⏳ Preparing Verification PDF…";});
+    $("pendingVerificationPdfStatus").textContent="PDF: Generating…";
+    $("pendingVerificationMsg").textContent="Generating the verification PDF now. Firebase is still unchanged.";
+    $("pendingVerificationMsg").className="msg";
+    if(!PENDING_JSON_IMPORT.pdfBlob) await generatePendingVerificationPdf();
     const url=URL.createObjectURL(PENDING_JSON_IMPORT.pdfBlob);
-    const a=document.createElement("a");a.href=url;a.download=PENDING_JSON_IMPORT.pdfName||"CMA_Zone_Verification.pdf";
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=PENDING_JSON_IMPORT.pdfName||"CMA_Zone_Verification.pdf";
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
     PENDING_PDF_DOWNLOADED=true;
     $("approvePendingBtn").disabled=false;
     $("approvePendingTopBtn").disabled=false;
+    buttons.forEach(b=>{b.disabled=false;b.textContent="📄 Download Verification PDF";});
     $("pendingVerificationPdfStatus").textContent="PDF: Downloaded ✓";
-    $("pendingVerificationMsg").textContent="PDF downloaded. Now compare it with the original question paper. Approve only after your verification.";
+    $("pendingVerificationMsg").textContent="PDF downloaded. Compare it with the original paper, then click Approve & Publish.";
     $("pendingVerificationMsg").className="msg ok";
-  }catch(e){}
+  }catch(e){
+    PENDING_PDF_READY=false;
+    PENDING_PDF_DOWNLOADED=false;
+    buttons.forEach(b=>{b.disabled=false;b.textContent="📄 Retry Verification PDF";});
+    $("approvePendingBtn").disabled=true;
+    $("approvePendingTopBtn").disabled=true;
+    $("pendingVerificationPdfStatus").textContent="PDF: Failed";
+    $("pendingVerificationMsg").textContent="PDF generation failed: "+(e&&e.message?e.message:e)+". Tap Retry Verification PDF.";
+    $("pendingVerificationMsg").className="msg err";
+  }
 };
 
 $("discardPendingBtn").onclick=()=>{
