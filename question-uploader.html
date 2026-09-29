@@ -597,7 +597,7 @@ function isThreePartQuestion(x, rows){
   const base=m[1];
   const siblings=rows.filter(y=>{
     const z=String(y.q||"").trim().match(/^(\d+)\s*[\(\[]?\s*([A-Za-z])\s*[\)\]]?$/);
-    return z&&z[1]===base&&String(y.group||"")===String(x.group||"")&&String(y.subject||"")===String(x.subject||"")&&String(y.attempt||"")===String(x.attempt||") && String(y.chapter||"")===String(x.chapter||"");
+    return z&&z[1]===base&&String(y.group||"")===String(x.group||"")&&String(y.subject||"")===String(x.subject||"")&&String(y.attempt||"")===String(x.attempt||"") && String(y.chapter||"")===String(x.chapter||"");
   }).map(y=>String(y.q||"").trim().match(/^(\d+)\s*[\(\[]?\s*([A-Za-z])\s*[\)\]]?$/)[2].toUpperCase());
   return ["A","B","C"].every(p=>siblings.includes(p));
 }
