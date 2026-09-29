@@ -400,10 +400,83 @@ const CHAPTERS_BY_SUBJECT={
   ]
 };
 function populateSubjects(group,selected){
-  const list=SUBJECTS[group]||[];
+  const list=CMA_UPLOAD_MASTER ? masterSubjectsForGroup(group) : (SUBJECTS[group]||[]);
   $("subject").innerHTML=list.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join("");
   if(selected&&list.includes(selected))$("subject").value=selected;
 }
+
+
+/* STRICT CMA CHAPTER MASTER VALIDATION — UPDATE #208 */
+const CMA_MASTER_URL="config/CMA_Chapter_Topic_Master_v1.json?v=20260929u1";
+let CMA_UPLOAD_MASTER=null;
+
+function strictMasterNorm(v){
+  return String(v??"").trim().toLowerCase()
+    .replace(/[–—−]/g,"-")
+    .replace(/&/g,"and")
+    .replace(/[^a-z0-9]+/g,"");
+}
+function strictGroupKey(v){
+  const n=strictMasterNorm(v);
+  if(n==="foundation"||n==="cmafoundation")return "foundation";
+  if(n==="inter1"||n==="intergroup1"||n==="cmaintermediategroup1")return "intergroup1";
+  if(n==="inter2"||n==="intergroup2"||n==="cmaintermediategroup2")return "intergroup2";
+  if(n==="final3"||n==="finalgroup3"||n==="cmafinalgroup3")return "finalgroup3";
+  if(n==="final4"||n==="finalgroup4"||n==="cmafinalgroup4")return "finalgroup4";
+  return n;
+}
+function strictMasterSubjects(){
+  return Array.isArray(CMA_UPLOAD_MASTER?.subjects)?CMA_UPLOAD_MASTER.subjects:[];
+}
+function strictFindMasterSubject(group,subject){
+  const g=strictGroupKey(group), s=strictMasterNorm(subject);
+  return strictMasterSubjects().find(x=>strictGroupKey(x.group)===g&&strictMasterNorm(x.subject)===s)||null;
+}
+function strictFindMasterChapter(ms,chapter,chapterId){
+  const rows=Array.isArray(ms?.chapterMaster)?ms.chapterMaster:[];
+  const cid=String(chapterId||"").trim();
+  const ch=strictMasterNorm(chapter);
+  if(cid){
+    const byId=rows.find(x=>String(x.chapterId||"").trim()===cid);
+    if(!byId) return {error:"Chapter ID \""+cid+"\" does not exist in the master for "+ms.subject+"."};
+    if(ch && strictMasterNorm(byId.chapter)!==ch) return {error:"Chapter ID \""+cid+"\" does not match uploaded chapter \""+chapter+"\". Master chapter is \""+byId.chapter+"\"."};
+    return {row:byId};
+  }
+  const byName=rows.find(x=>strictMasterNorm(x.chapter)===ch);
+  return byName?{row:byName}:{error:"Chapter \""+chapter+"\" is not allowed for "+ms.subject+"."};
+}
+async function loadStrictChapterMaster(){
+  const res=await fetch(CMA_MASTER_URL,{cache:"no-store"});
+  if(!res.ok) throw new Error("Strict Chapter Master could not be loaded ("+res.status+"). Uploads are disabled until the master is available.");
+  const master=await res.json();
+  if(!Array.isArray(master.subjects)||!master.subjects.length) throw new Error("Strict Chapter Master is invalid or empty. Uploads are disabled.");
+  const total=master.subjects.reduce((n,s)=>n+(Array.isArray(s.chapterMaster)?s.chapterMaster.length:0),0);
+  if(total<1) throw new Error("Strict Chapter Master contains no chapters. Uploads are disabled.");
+  CMA_UPLOAD_MASTER=master;
+  return master;
+}
+function canonicalizeAgainstStrictMaster(raw,indexLabel){
+  if(!CMA_UPLOAD_MASTER) throw new Error("Strict Chapter Master is not loaded. Please refresh the uploader.");
+  const x={...raw};
+  const ms=strictFindMasterSubject(x.group,x.subject);
+  if(!ms) throw new Error((indexLabel||"Question")+" has an invalid Group + Subject combination. Use the exact subject from the master chapter registry.");
+  const mapped=strictFindMasterChapter(ms,x.chapter,x.chapterId);
+  if(mapped.error) throw new Error((indexLabel||"Question")+" rejected: "+mapped.error);
+  x.group=normalizeGroupValue(x.group)||x.group;
+  x.subject=ms.subject;
+  x.chapter=mapped.row.chapter;
+  x.chapterId=mapped.row.chapterId;
+  return x;
+}
+function validateAllQuestionsAgainstStrictMaster(items){
+  if(!Array.isArray(items)||!items.length) return items;
+  return items.map((item,i)=>canonicalizeAgainstStrictMaster(item,"Item "+(i+1)));
+}
+function masterSubjectsForGroup(group){
+  const g=strictGroupKey(group);
+  return strictMasterSubjects().filter(x=>strictGroupKey(x.group)===g).map(x=>x.subject);
+}
+/* END STRICT CMA CHAPTER MASTER VALIDATION */
 
 function setBusy(btn,busy,label){if(!btn)return;if(busy){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>'+label}else{btn.disabled=false;btn.textContent=label}}
 let DATA=[];
@@ -467,6 +540,13 @@ function chapterOptions(subject){
   return '<option value="">Select Chapter</option>'+list.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
 }
 function populateUploadChapters(subject,selected){
+  if(CMA_UPLOAD_MASTER){
+    const ms=strictFindMasterSubject($("group").value,subject);
+    const list=Array.isArray(ms?.chapterMaster)?ms.chapterMaster.map(x=>x.chapter):[];
+    $("chapter").innerHTML='<option value="">Select Chapter</option>'+list.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+    if(selected&&list.includes(selected))$("chapter").value=selected;
+    return;
+  }
   const list=CHAPTERS_BY_SUBJECT[subject]||[];
   $("chapter").innerHTML=chapterOptions(subject);
   if(selected&&list.includes(selected))$("chapter").value=selected;
@@ -497,7 +577,12 @@ auth.onAuthStateChanged(async u=>{
   $("app").classList.remove("hidden");
   $("who").textContent=u.email;
   $("loginMsg").textContent="";
-  try{await loadQuestions()}catch(e){
+  try{
+    await loadStrictChapterMaster();
+    populateSubjects($("group").value,"Strategic Financial Management");
+    populateUploadChapters($("subject").value);
+    await loadQuestions();
+  }catch(e){
     $("msg").className="msg err";
     $("msg").textContent="Could not load questions: "+(e.message||e);
   }
@@ -1096,7 +1181,7 @@ function payload(){
 }
 $("previewBtn").onclick=()=>{try{$("preview").innerHTML="<h3 style=\"margin:0 0 8px;color:var(--teal)\">Question Preview</h3>"+$("html").value+($("solution").value.trim()?"<div class=\"solution-preview\"><b>Institute Solution Preview</b>"+$("solution").value+"</div>":"");$("preview").classList.remove("hidden")}catch(e){}};
 $("clearBtn").onclick=()=>{["qno","marks","sort","html","solution"].forEach(id=>$(id).value="");$("preview").classList.add("hidden");$("msg").textContent=""};
-$("saveBtn").onclick=async()=>{const btn=$("saveBtn");try{setBusy(btn,true,"Checking duplicate…");const d=payload();const snap=await db.collection("subjectiveQuestions").get();const key=questionIdentityKey(d);const hit=snap.docs.find(doc=>questionIdentityKey(doc.data())===key);if(hit){const decision=await askDuplicateDecisions([{key,x:d,existing:{id:hit.id,data:hit.data()}}]);if(decision===null){$("msg").textContent="Upload cancelled. Existing question was not changed.";$("msg").className="msg";return}if(decision.get(key)!=="replace"){$("msg").textContent="Skipped. Existing question was kept unchanged.";$("msg").className="msg";return}await db.collection("subjectiveQuestions").doc(hit.id).set(d,{merge:true});$("msg").textContent="Existing question replaced/overwritten successfully.";}else{await db.collection("subjectiveQuestions").add(d);$("msg").textContent="Question uploaded successfully. It will appear in the user portal automatically.";}$("msg").className="msg ok";$("clearBtn").click();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{setBusy(btn,false,"Upload Question")}};
+$("saveBtn").onclick=async()=>{const btn=$("saveBtn");try{setBusy(btn,true,"Validating chapter…");let d=payload();d=canonicalizeAgainstStrictMaster(d,"Question");const snap=await db.collection("subjectiveQuestions").get();const key=questionIdentityKey(d);const hit=snap.docs.find(doc=>questionIdentityKey(doc.data())===key);if(hit){const decision=await askDuplicateDecisions([{key,x:d,existing:{id:hit.id,data:hit.data()}}]);if(decision===null){$("msg").textContent="Upload cancelled. Existing question was not changed.";$("msg").className="msg";return}if(decision.get(key)!=="replace"){$("msg").textContent="Skipped. Existing question was kept unchanged.";$("msg").className="msg";return}await db.collection("subjectiveQuestions").doc(hit.id).set(d,{merge:true});$("msg").textContent="Existing question replaced/overwritten successfully.";}else{await db.collection("subjectiveQuestions").add(d);$("msg").textContent="Question uploaded successfully. It will appear in the user portal automatically.";}$("msg").className="msg ok";$("clearBtn").click();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{setBusy(btn,false,"Upload Question")}};
 
 let duplicateDecisionResolver=null;
 function duplicatePreviewText(v){
@@ -1303,6 +1388,12 @@ if(arr.length&&arr[0]&&Array.isArray(arr[0].questions)){
     section.questions.forEach(q=>importItems.push({...q,chapter:q.chapter||section.chapter}));
   });
 }else importItems=arr;
+
+/* HARD STOP: every question must belong to the exact Group + Subject + Chapter
+   combination in CMA_Chapter_Topic_Master_v1.json. No write happens before
+   the entire file passes this validation. */
+importItems=validateAllQuestionsAgainstStrictMaster(importItems);
+
 const existingSnap=await db.collection("subjectiveQuestions").get();
 const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
 const normalizeGroupValue=v=>{
