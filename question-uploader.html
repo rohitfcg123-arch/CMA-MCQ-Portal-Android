@@ -90,7 +90,7 @@
 <button class="btn gold" id="saveBulkMarks">Save as Pending</button>
 <button class="btn" id="approveBulkMarks">Approve Pending</button>
 <button class="btn gray" id="clearBulkMarks">Clear</button>
-<span class="count" id="bulkMarksStatus"></span>
+<span class="count" id="bulkMarksStatus"></span><span class="count" id="bulkMarksThreePartCount" style="margin-left:12px"></span><span class="count" id="bulkMarksPendingCount" style="margin-left:12px"></span>
 </div>
 <div class="tablewrap" style="margin-top:12px"><table style="min-width:1000px"><thead><tr><th><input id="bulkMarksSelectAll" type="checkbox"></th><th>Attempt</th><th>Question</th><th>Current Marks</th><th>Pending Marks</th><th>Subject</th><th>Chapter</th></tr></thead><tbody id="bulkMarksRows"></tbody></table></div>
 <div id="bulkMarksMsg" class="msg"></div>
@@ -755,7 +755,19 @@ function renderBulkMarks(){
     const p=pendingBulkMark(x);
     return '<tr><td><input class="bulkMarksCheck" type="checkbox" value="'+esc(x.id)+'"></td><td>'+esc(x.attempt||"")+'</td><td><b>'+esc(x.q||"")+'</b></td><td>'+esc(x.marks==null||x.marks===""?"—":x.marks)+'</td><td>'+(p==null?"—":"<b style='color:var(--gold)'>"+esc(p)+"</b>")+'</td><td>'+esc(x.subject||"")+'</td><td>'+esc(x.chapter||"")+'</td></tr>';
   }).join("")||'<tr><td colspan="7">No questions match these filters.</td></tr>';
+  const pendingCount=rows.filter(x=>pendingBulkMark(x)!=null).length;
+  const threePartSets=new Map();
+  rows.forEach(x=>{
+    const m=String(x.q||"").trim().match(/^(\\d+)\\s*[\\(\\[]?\\s*([A-Za-z])\\s*[\\)\\]]?$/);
+    if(!m)return;
+    const k=[x.group,x.subject,x.attempt,x.chapter,m[1]].map(v=>String(v||"").trim().toLowerCase()).join("|");
+    if(!threePartSets.has(k))threePartSets.set(k,new Set());
+    threePartSets.get(k).add(m[2].toUpperCase());
+  });
+  const threePartCount=[...threePartSets.values()].filter(parts=>parts.has("A")&&parts.has("B")&&parts.has("C")).length;
   $("bulkMarksStatus").textContent=rows.length+" question(s) shown";
+  $("bulkMarksThreePartCount").textContent="3-Part Questions (A+B+C): "+threePartCount;
+  $("bulkMarksPendingCount").textContent="Pending Questions: "+pendingCount;
 }
 $("previewBulkMarks").onclick=()=>{renderBulkMarks();$("bulkMarksMsg").className="msg ok";$("bulkMarksMsg").textContent="Questions loaded. Select the rows you want to update.";};
 $("bulkMarksSelectAll").onchange=()=>document.querySelectorAll(".bulkMarksCheck").forEach(x=>x.checked=$("bulkMarksSelectAll").checked);
