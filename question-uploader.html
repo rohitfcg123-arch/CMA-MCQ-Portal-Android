@@ -32,7 +32,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #230</b> — Fixed the JSON import crash caused by the removed PDF status element. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #231</b> — Fixed the JSON import crash caused by the removed PDF status element. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
@@ -70,7 +70,7 @@
 <input id="jsonFile" type="file" accept=".json,application/json" multiple style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <div class="count" style="margin-top:6px">Select <b>one or multiple Question JSON files</b> at the same time, or paste JSON below. You can select all 6 attempts together.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
-<div class="toolbar"><button type="button" class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL JSONs</button><button type="button" class="btn gold" id="downloadPendingPdfTopBtn" disabled>👁️ Preview Uploaded JSON</button><button type="button" class="btn" id="approvePendingTopBtn" disabled>✅ Approve &amp; Publish</button></div>
+<div class="toolbar"><button type="button" class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL JSONs</button><button type="button" class="btn gold" id="downloadPendingPdfTopBtn" disabled>👁️ Open Preview Page</button><button type="button" class="btn" id="approvePendingTopBtn" disabled>✅ Approve &amp; Publish</button></div>
 <div class="count" id="portalQuestionExportCount" style="margin-top:8px"></div>
 <div style="height:1px;background:var(--line);margin:18px 0"></div>
 <div class="note"><b>🔧 Chapter + Topic Correction JSON:</b> Upload the correction JSON generated from the exported portal questions. It uses Group + Subject + Attempt + Question No. + HTML hash to identify the exact existing Firestore question. It updates <b>only</b> Chapter/Chapter ID where correction is required and Topic; question HTML, marks, attempt, q, subject and solution remain untouched. The complete file is validated before any Firestore write, so an ambiguous/missing match blocks the whole operation.</div>
@@ -96,7 +96,7 @@
 <span class="verification-badge" id="pendingVerificationStatus">No questions are waiting for approval.</span>
 </div>
 <div class="toolbar">
-<button class="btn gold" id="downloadPendingPdfBtn" type="button" disabled>👁️ Preview Uploaded JSON</button>
+<button class="btn gold" id="downloadPendingPdfBtn" type="button" disabled>👁️ Open Preview Page</button>
 <button class="btn" id="approvePendingBtn" type="button" disabled>✅ Approve &amp; Publish</button>
 <button class="btn gray" id="discardPendingBtn" type="button" disabled>Discard Pending</button>
 </div>
@@ -639,6 +639,7 @@ auth.onAuthStateChanged(async u=>{
     populateSubjects($("group").value,"Strategic Financial Management");
     populateUploadChapters($("subject").value);
     await loadQuestions();
+    restorePendingPreviewState();
   }catch(e){
     $("msg").className="msg err";
     $("msg").textContent="Could not load questions: "+(e.message||e);
@@ -1822,6 +1823,39 @@ let PENDING_JSON_IMPORT=null;
 let PENDING_PDF_READY=false;
 let PENDING_PDF_DOWNLOADED=false;
 let PENDING_PREVIEW_OPENED=false;
+const PENDING_PREVIEW_STORAGE_KEY="CMA_ZONE_PENDING_PREVIEW_V1";
+const PENDING_PREVIEW_VERIFIED_KEY="CMA_ZONE_PREVIEW_VERIFIED_V1";
+function persistPendingPreviewState(){
+  try{
+    if(PENDING_JSON_IMPORT&&Array.isArray(PENDING_JSON_IMPORT.items)&&PENDING_JSON_IMPORT.items.length){
+      sessionStorage.setItem(PENDING_PREVIEW_STORAGE_KEY,JSON.stringify(PENDING_JSON_IMPORT));
+    }else{
+      sessionStorage.removeItem(PENDING_PREVIEW_STORAGE_KEY);
+      sessionStorage.removeItem(PENDING_PREVIEW_VERIFIED_KEY);
+    }
+  }catch(e){
+    console.warn("Could not persist staged preview:",e);
+  }
+}
+function restorePendingPreviewState(){
+  try{
+    const raw=sessionStorage.getItem(PENDING_PREVIEW_STORAGE_KEY);
+    if(!raw)return false;
+    const state=JSON.parse(raw);
+    if(!state||!Array.isArray(state.items)||!state.items.length)return false;
+    PENDING_JSON_IMPORT=state;
+    PENDING_PREVIEW_OPENED=sessionStorage.getItem(PENDING_PREVIEW_VERIFIED_KEY)==="1";
+    renderPendingVerification();
+    if(PENDING_PREVIEW_OPENED){
+      $("pendingVerificationMsg").textContent="Preview was already opened on the separate preview page. You can approve after reviewing it.";
+      $("pendingVerificationMsg").className="msg ok";
+    }
+    return true;
+  }catch(e){
+    console.warn("Could not restore staged preview:",e);
+    return false;
+  }
+}
 
 function pendingQuestionCard(item,index){
   const x=item.data||item;
@@ -1861,8 +1895,8 @@ function renderPendingVerification(){
   preview.classList.add("hidden");
   $("downloadPendingPdfBtn").disabled=false;
   $("downloadPendingPdfTopBtn").disabled=false;
-  $("downloadPendingPdfBtn").textContent="👁️ Preview Uploaded JSON";
-  $("downloadPendingPdfTopBtn").textContent="👁️ Preview Uploaded JSON";
+  $("downloadPendingPdfBtn").textContent="👁️ Open Preview Page";
+  $("downloadPendingPdfTopBtn").textContent="👁️ Open Preview Page";
   $("approvePendingBtn").disabled=false;
   $("approvePendingTopBtn").disabled=false;
   $("discardPendingBtn").disabled=false;
@@ -1921,42 +1955,23 @@ async function generatePendingVerificationPdf(){
 }
 
 $("downloadPendingPdfBtn").onclick=()=>{
-  try{
-    if(!PENDING_JSON_IMPORT||!Array.isArray(PENDING_JSON_IMPORT.items)||!PENDING_JSON_IMPORT.items.length){
-      $("pendingVerificationMsg").textContent="No questions are currently staged. Import the Question JSON first.";
-      $("pendingVerificationMsg").className="msg err";
-      return;
-    }
-    const preview=$("pendingVerificationPreview");
-    const panel=$("pendingVerificationPanel");
-    if(!preview||!panel)throw new Error("Preview container is missing from the page.");
-    
-    // Rebuild the preview at click-time so the button never depends on a
-    // previously rendered/hidden DOM state.
-    PENDING_JSON_IMPORT.items.sort((A,B)=>cmaQuestionCompare(A.data||A,B.data||B));
-    preview.innerHTML='<div class="portal-preview-label">STUDENT PORTAL PREVIEW — '+PENDING_JSON_IMPORT.items.length.toLocaleString("en-IN")+' QUESTION(S)</div>'+PENDING_JSON_IMPORT.items.map(pendingQuestionCard).join("");
-    preview.classList.remove("hidden");
-    preview.style.setProperty("display","block","important");
-    preview.style.visibility="visible";
-    PENDING_PREVIEW_OPENED=true;
-    
-    const buttons=[$("downloadPendingPdfBtn"),$("downloadPendingPdfTopBtn")].filter(Boolean);
-    buttons.forEach(b=>b.textContent="✕ Hide JSON Preview");
-    $("pendingVerificationMsg").textContent="Preview opened below. Verify question order, numbering, paragraphs, lists, tables, marks and attempt before publishing.";
-    $("pendingVerificationMsg").className="msg ok";
-    
-    setTimeout(()=>{
-      preview.scrollIntoView({behavior:"smooth",block:"start"});
-    },100);
-  }catch(e){
-    $("pendingVerificationMsg").textContent="Preview error: "+(e.message||e);
+  if(!PENDING_JSON_IMPORT||!Array.isArray(PENDING_JSON_IMPORT.items)||!PENDING_JSON_IMPORT.items.length){
+    $("pendingVerificationMsg").textContent="No questions are currently staged. Import the Question JSON first.";
     $("pendingVerificationMsg").className="msg err";
+    return;
   }
+  persistPendingPreviewState();
+  window.location.href="question-preview.html";
 };
 
 $("downloadPendingPdfTopBtn").onclick=()=>{
-  const b=$("downloadPendingPdfBtn");
-  if(b)b.click();
+  if(!PENDING_JSON_IMPORT||!Array.isArray(PENDING_JSON_IMPORT.items)||!PENDING_JSON_IMPORT.items.length){
+    $("jsonMsg").textContent="No questions are currently staged. Import the Question JSON first.";
+    $("jsonMsg").className="msg err";
+    return;
+  }
+  persistPendingPreviewState();
+  window.location.href="question-preview.html";
 };
 
 $("approvePendingBtn").onclick=async()=>{
@@ -1987,7 +2002,7 @@ $("approvePendingBtn").onclick=async()=>{
       await batch.commit();
     }
     const count=items.length;
-    PENDING_JSON_IMPORT=null;PENDING_PDF_READY=false;PENDING_PDF_DOWNLOADED=false;
+    PENDING_JSON_IMPORT=null;PENDING_PDF_READY=false;PENDING_PDF_DOWNLOADED=false;persistPendingPreviewState();
     renderPendingVerification();
     $("pendingVerificationMsg").textContent=count+" question(s) approved and published to the user portal. Only the verified staged data was written.";
     $("pendingVerificationMsg").className="msg ok";
