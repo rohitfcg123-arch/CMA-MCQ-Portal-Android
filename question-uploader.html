@@ -12,27 +12,27 @@
     if(btn){btn.disabled=true;btn.textContent="Opening Google…";}
     if(msg){msg.className="msg";msg.textContent="Opening Google sign-in…";}
     try{
-      var cfg={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
-      if(!firebase.apps.length) firebase.initializeApp(cfg);
       var a=firebase.auth(), p=new firebase.auth.GoogleAuthProvider();
       p.setCustomParameters({prompt:"select_account"});
       p.addScope("email");
       await a.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-      var isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if(isMobile){
-        if(msg){msg.textContent="Redirecting to Google sign-in…";}
-        await a.signInWithRedirect(p);
+      try{
+        await a.signInWithPopup(p);
         return;
+      }catch(e){
+        var code=e&&e.code?e.code:"";
+        var fallback=["auth/popup-blocked","auth/popup-closed-by-user","auth/cancelled-popup-request","auth/operation-not-supported-in-this-environment","auth/web-storage-unsupported"];
+        if(fallback.indexOf(code)===-1) throw e;
+        if(msg){msg.className="msg";msg.textContent="Popup unavailable. Redirecting to Google…";}
+        await a.signInWithRedirect(p);
       }
-      await a.signInWithPopup(p);
     }catch(e){
       var code=e&&e.code?e.code:"";
       var detail=code ? code+" — " : "";
       if(msg){msg.className="msg err";msg.textContent=detail+(e&&e.message?e.message:String(e));}
       if(btn){btn.disabled=false;btn.textContent="Continue with Google";}
     }
-  };
-})();
+  };})();
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -620,8 +620,15 @@ async function logout(){
 $("loginBtn").onclick=login;
 $("logout").onclick=logout;
 auth.getRedirectResult().then(r=>{
-  if(r&&r.user) return;
-}).catch(showLoginError);
+  if(r&&r.user){
+    $("loginMsg").className="msg ok";
+    $("loginMsg").textContent="Google sign-in successful. Loading Question Uploader…";
+  }
+}).catch(e=>{
+  showLoginError(e);
+  $("loginMsg").className="msg err";
+  $("loginMsg").textContent="Google sign-in failed: "+(e&&e.code?e.code+" — ":"")+(e&&e.message?e.message:String(e));
+});
 const CAA_SECTIONED_CHAPTERS=[
   {section:"Section A: Corporate Accounting",chapters:[
     "Accounting for Shares and Debentures",
