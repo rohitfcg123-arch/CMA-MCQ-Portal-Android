@@ -39,13 +39,16 @@
       const target=window.__CMA_QUESTIONS__;
       if(!Array.isArray(target))return;
       target.length=0;
-      rows.forEach(x=>target.push({
+      const pyqTarget=window.__CMA_PYQ_QUESTIONS__;
+      if(Array.isArray(pyqTarget))pyqTarget.length=0;
+      rows.forEach(x=>{
         ...x,
         source:x.source==="pyq"?"pyq":"bank",
         options:Array.isArray(x.options)?x.options:[],
         answer:Number.isInteger(x.answer)?x.answer:null,
         html:String(x.html||"")
       }));
+      rows.forEach(x=>{ if(Array.isArray(pyqTarget) && x.source==="pyq") pyqTarget.push({...x}); });
       if(typeof window.updateSourceUI==="function")window.updateSourceUI();
       if(typeof window.updateChapterCount==="function")window.updateChapterCount();
       if(typeof window.updateCounts==="function")window.updateCounts();
