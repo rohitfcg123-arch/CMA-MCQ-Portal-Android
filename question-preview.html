@@ -26,7 +26,7 @@
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Uploaded JSON Preview</div><div id="count"></div></header>
 <main class="wrap">
-<div class="toolbar"><button class="gold" id="backBtn" type="button">← Back to Question Uploader</button><button class="gold" id="approveBtn" type="button" onclick="window.cmaDirectApprovePublish()">✅ Approve &amp; Publish</button></div>
+<div class="toolbar"><button class="gold" id="backBtn" type="button">← Back to Question Uploader</button><button class="gold" id="approveBtn" type="button" style="pointer-events:auto!important;opacity:1!important;cursor:pointer!important;position:relative;z-index:9999" onclick="return window.cmaDirectApprovePublish ? window.cmaDirectApprovePublish() : false">✅ Approve &amp; Publish</button></div>
 <div class="note"><b>STUDENT PORTAL PREVIEW</b><br>This page shows the staged Question JSON as it will appear in the question content area. Nothing on this page writes to Firebase. Review order, numbering, paragraphs, lists, tables, marks, chapter and attempt before returning to the uploader.</div>
 <div id="status" class="status">Loading staged questions…</div>
 <div id="preview"></div>
@@ -184,6 +184,17 @@
   };
 
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",load);else load();
+})();
+</script>
+<script>
+(function(){
+  function unlock(){
+    var b=document.getElementById("approveBtn");
+    if(b){b.disabled=false;b.removeAttribute("disabled");b.style.pointerEvents="auto";b.style.opacity="1";b.style.cursor="pointer";b.style.position="relative";b.style.zIndex="9999";}
+  }
+  unlock();
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",unlock);
+  setInterval(unlock,500);
 })();
 </script>
 </body></html>
