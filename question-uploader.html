@@ -34,14 +34,15 @@
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div></header>
 <div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #234</b> — Google login has been removed from the Question Uploader. The uploader now opens directly without an administrator sign-in screen; Firebase is still used for Firestore data access.</div>
-<select id="portalSectionSelect" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f;font-weight:750">
+<div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b"><div style="font-size:12px;font-weight:850;color:var(--teal);margin-bottom:7px">Question Portal Options</div><select id="portalSectionSelect" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f;font-weight:750">
 <option value="upload">Upload New Subjective Question</option>
 <option value="json">JSON Upload / Backup</option>
 <option value="number">Bulk Update Questions</option>
 <option value="marks">Bulk Update Marks</option>
 <option value="uploaded">Uploaded Questions</option>
 </select>
-</div>\n<div id="app" class="wrap hidden">
+</div>\n</div>
+<div id="app" class="wrap hidden">
 <section class="panel"><h2>Upload New Subjective Question</h2><div class="body">
 <div class="note"><b>Permanent system:</b> questions uploaded here are saved in Firebase Firestore. The user portal reads the same collection automatically, so you do not need to edit JavaScript for every new question. Existing hard-coded questions remain untouched.</div>
 <div class="grid" style="margin-top:14px">
@@ -819,7 +820,7 @@ $("saveMetadata").onclick=async()=>{
       if(currentApproved!==newMarks){
         updates.pendingMarks=newMarks;
         updates.marksApprovalStatus="pending";
-        updates.marksRequestedBy=ADMIN_EMAIL;
+        updates.marksRequestedBy="CMA Zone Question Uploader";
         updates.marksRequestedAt=firebase.firestore.FieldValue.serverTimestamp();
       }
     }
@@ -941,7 +942,7 @@ $("saveBulkMarks").onclick=async()=>{
       ids.slice(i,i+450).forEach(id=>batch.update(db.collection("subjectiveQuestions").doc(id),{
         pendingMarks:n,marksApprovalStatus:"pending",marksRequestedBy:"CMA Zone Question Uploader",
         marksRequestedAt:firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"
       }));
       await batch.commit();
     }
@@ -964,8 +965,8 @@ $("approveBulkMarks").onclick=async()=>{
         const x=DATA.find(q=>q.id===id),p=pendingBulkMark(x);
         batch.update(db.collection("subjectiveQuestions").doc(id),{
           marks:p,pendingMarks:firebase.firestore.FieldValue.delete(),marksApprovalStatus:"approved",
-          marksApprovedBy:ADMIN_EMAIL,marksApprovedAt:firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL
+          marksApprovedBy:"CMA Zone Question Uploader",marksApprovedAt:firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"
         });
       });
       await batch.commit();
@@ -1078,7 +1079,7 @@ $("applyNumberFix").onclick=async()=>{
   const btn=$("applyNumberFix");setBusy(btn,true,"Applying…");
   try{
     for(let i=0;i<changes.length;i+=450){
-      const batch=db.batch();changes.slice(i,i+450).forEach(r=>batch.update(db.collection("subjectiveQuestions").doc(r.x.id),{q:r.nw,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL}));
+      const batch=db.batch();changes.slice(i,i+450).forEach(r=>batch.update(db.collection("subjectiveQuestions").doc(r.x.id),{q:r.nw,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"}));
       await batch.commit();
     }
     $("bulkNumMsg").className="msg ok";$("bulkNumMsg").textContent=changes.length+" question number(s) cleaned successfully. Answers and question content were not changed.";
@@ -1140,7 +1141,7 @@ window.bulkDeleteSelected=async()=>{
        const x=DATA.find(q=>q.id===id);
        if(!x)return;
        const remaining=answerVersionsFor(x).filter((_,i)=>!indexes.has(i));
-       const updates={updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
+       const updates={updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"};
        if(remaining.length){
          updates.solutionHtml=remaining[0];
          updates.solutionHtmls=remaining;
@@ -1168,7 +1169,7 @@ $("solutionJsonFile").onchange=async()=>{const files=Array.from($("solutionJsonF
 window.removeQ=async id=>{const x=DATA.find(q=>q.id===id);if(!x||!confirm("Delete "+x.attempt+" "+x.q+"?"))return;const buttons=document.querySelectorAll("#rows button");const btn=[...buttons].find(b=>b.getAttribute("onclick")&&b.getAttribute("onclick").includes(id));try{setBusy(btn,true,"Deleting…");await db.collection("subjectiveQuestions").doc(id).delete();await loadQuestions()}catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}finally{if(btn&&document.body.contains(btn))setBusy(btn,false,"Delete")}};
 function payload(){
  const marksRaw=$("marks").value.trim();
- const data={group:$("group").value,subject:$("subject").value,chapter:$("chapter").value,attempt:$("attempt").value,q:$("qno").value.trim(),marks:marksRaw===""?null:Number(marksRaw),html:$("html").value.trim(),solutionHtml:$("solution").value.trim(),sort:Number($("sort").value)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
+ const data={group:$("group").value,subject:$("subject").value,chapter:$("chapter").value,attempt:$("attempt").value,q:$("qno").value.trim(),marks:marksRaw===""?null:Number(marksRaw),html:$("html").value.trim(),solutionHtml:$("solution").value.trim(),sort:Number($("sort").value)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"};
  if(!data.subject||!data.chapter||!data.attempt||!data.q||!data.html)throw Error("Fill Group, Subject, Chapter, Attempt, Question No. and Question Text.");
  return data;
 }
@@ -1400,7 +1401,7 @@ async function applySolutionArray(arr){
        solutionHtml:all[0]||"",
        solutionHtmls:all,
        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-       updatedBy:ADMIN_EMAIL
+       updatedBy:"CMA Zone Question Uploader"
      });
      updated++;
      return;
@@ -1416,7 +1417,7 @@ async function applySolutionArray(arr){
        html:String(s.html||"").trim(),
        solutionHtml:all[0]||"",solutionHtmls:all,
        marks:s.marks===""||s.marks==null?null:Number(s.marks),
-       sort:Number(s.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL
+       sort:Number(s.sort)||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"
      });
      created++;
      return;
@@ -1741,7 +1742,7 @@ $("importCorrectionsBtn").onclick=async()=>{const btn=$("importCorrectionsBtn");
   }
   for(let i=0;i<planned.length;i+=450){
     const batch=db.batch();
-    planned.slice(i,i+450).forEach(x=>batch.set(x.ref,{...x.data,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL},{merge:true}));
+    planned.slice(i,i+450).forEach(x=>batch.set(x.ref,{...x.data,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"},{merge:true}));
     await batch.commit();
   }
   let msg=planned.length+" Firestore document(s) corrected safely. Only Chapter/Chapter ID where supplied and Topic were changed; all other question data was left untouched.";
@@ -1997,7 +1998,7 @@ $("approvePendingBtn").onclick=async()=>{
         batch.set(ref,{
           ...item.data,
           updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-          updatedBy:ADMIN_EMAIL
+          updatedBy:"CMA Zone Question Uploader"
         },{merge:item.update});
       });
       await batch.commit();
