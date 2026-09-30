@@ -33,7 +33,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #238</b> — Fixed the JSON import crash caused by the removed PDF status element. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #239</b> — Fixed the JSON import crash caused by the removed PDF status element. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
 <div style="font-size:12px;font-weight:850;color:var(--teal);margin-bottom:7px">Question Portal Options</div>
 <select id="portalSectionSelect" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f;font-weight:750">
 <option value="upload">Upload New Subjective Question</option>
@@ -63,6 +63,24 @@
 <section class="panel"><h2>JSON Upload / Backup</h2><div class="body">
 <div class="note"><b>Universal JSON Upload:</b> One JSON file can now contain both <b>MCQ and Subjective</b> questions. Use <b>type: "mcq"</b> with <b>options[] + answer</b> for objective questions, or <b>type: "subjective"</b> with <b>solutionHtml</b> for subjective questions. The uploader automatically routes MCQs to the MCQ Bank and subjective questions to the Subjective PYQ portal. Chapter/subject validation uses the central CMA Zone master. See <code>docs/CMA-Zone-Question-JSON-Schema-v1.json</code> for the exact format. You can upload 3, 10, 100, 500 or more questions in a single JSON file. All questions are validated first, duplicates are merged by Group + Subject + Attempt + Question Number, and large uploads are automatically split into safe Firestore batches.  For <b>Corporate Accounting and Auditing (Paper 10)</b> uses the exact 8 modules shown in the syllabus, grouped as Section A: Corporate Accounting and Section B: Auditing. <b>Direct Tax Laws and International Taxation</b> uses the exact 14 module names from the chapter dropdown. <b>Strategic Cost Management</b> uses the exact 26 chapter names from the chapter dropdown (including COST OF QUALITY, DECISION MAKING MAKE OR BUY, TRANSFER PRICING, STANDARD COSTING AND VARIANCE ANALYSIS, LINEAR PROGRAMMING, TRANSPORTATION, ASSIGNMENT, GAME THEORY, SIMULATION, PROJECT MANAGEMENT, LEARNING CURVE, BUSINESS APPLICATION OF MAXIMA AND MINIMA and BUSINESS FORECASTING MODELS). Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Optional: <b>marks, solutionHtml</b>.</div>
 <input id="jsonFile" type="file" accept=".json,application/json" multiple style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
+<script>
+window.cmaLoadJsonFiles=async function(input){
+  var box=document.getElementById("json");
+  var msg=document.getElementById("jsonMsg");
+  var files=Array.prototype.slice.call((input&&input.files)||[]);
+  if(!files.length)return;
+  try{
+    if(msg){msg.className="msg";msg.textContent="Reading "+files.length+" JSON file(s)…";}
+    var parts=[];
+    for(var i=0;i<files.length;i++) parts.push(await files[i].text());
+    var combined=parts.length===1?parts[0]:parts.join("\n\n");
+    if(box) box.value=combined;
+    if(msg){msg.className="msg ok";msg.textContent=files.length+" JSON file(s) loaded. JSON content is visible above — tap Import Questions JSON.";}
+  }catch(e){
+    if(msg){msg.className="msg err";msg.textContent="Could not read JSON: "+(e&&e.message?e.message:e);}
+  }
+};
+</script>
 <div class="count" style="margin-top:6px">Select <b>one or multiple Question JSON files</b> at the same time, or paste JSON below. You can select all 6 attempts together.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
 <div class="toolbar"><button type="button" class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL JSONs</button><button type="button" class="btn gold" id="downloadPendingPdfTopBtn" disabled>👁️ Open Preview Page</button><button type="button" class="btn" id="approvePendingTopBtn" disabled>✅ Approve &amp; Publish</button></div>
