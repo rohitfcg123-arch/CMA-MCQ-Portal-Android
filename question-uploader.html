@@ -2355,7 +2355,7 @@ window.cmaUploaderDirectApprove=async function(){
         var data=item&&item.data?item.data:item;
         var collection=item.collection||(String(data.type||"").toLowerCase()==="mcq"?"mcqQuestions":"subjectiveQuestions");
         var ref=item.update&&item.id?db.collection(collection).doc(item.id):db.collection(collection).doc();
-        if(item.previousCollection && item.previousCollection!==collectionName && item.id){ batch.delete(db.collection(item.previousCollection).doc(item.id)); }\n          batch.set(ref,Object.assign({},data,{updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"}),{merge:!!item.update});
+        if(item.previousCollection && item.previousCollection!==collection && item.id){ batch.delete(db.collection(item.previousCollection).doc(item.id)); }\n        batch.set(ref,Object.assign({},data,{updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"}),{merge:!!item.update});
       });
       await batch.commit();
     }
