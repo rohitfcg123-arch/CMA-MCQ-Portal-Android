@@ -7,11 +7,25 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script>
 (function(){
+  // This handler is loaded before the main uploader script, so it must
+  // initialise Firebase itself. Otherwise an early/inline click can call
+  // firebase.auth() before the DEFAULT app exists.
+  var cfg={
+    apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2G3kUTuBABHMbc",
+    authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",
+    projectId:"cma-mcq-portal-cf33f",
+    storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",
+    messagingSenderId:"208738737302",
+    appId:"1:208738737302:web:3754a55033f67a8ffef6b7",
+    measurementId:"G-TXD74QQE8F"
+  };
   window.cmaGoogleLogin=async function(){
     var btn=document.getElementById("loginBtn"), msg=document.getElementById("loginMsg");
     if(btn){btn.disabled=true;btn.textContent="Opening Google…";}
     if(msg){msg.className="msg";msg.textContent="Opening Google sign-in…";}
     try{
+      if(!window.firebase) throw new Error("Firebase SDK did not load.");
+      if(!firebase.apps.length) firebase.initializeApp(cfg);
       var a=firebase.auth(), p=new firebase.auth.GoogleAuthProvider();
       p.setCustomParameters({prompt:"select_account"});
       p.addScope("email");
@@ -32,7 +46,8 @@
       if(msg){msg.className="msg err";msg.textContent=detail+(e&&e.message?e.message:String(e));}
       if(btn){btn.disabled=false;btn.textContent="Continue with Google";}
     }
-  };})();
+  };
+})();
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -61,7 +76,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #231</b> — Fixed the JSON import crash caused by the removed PDF status element. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #232</b> — Fixed the Google-login bootstrap error: Firebase is now initialized before the uploader login handler runs. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
 <button class="btn gold" id="loginBtn" type="button" onclick="cmaGoogleLogin()">Continue with Google</button>
