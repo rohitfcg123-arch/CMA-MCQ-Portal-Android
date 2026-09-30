@@ -1504,7 +1504,7 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
   // Existing subjective JSON remains backward-compatible when type is omitted.
   importItems=importItems.map((rawItem,i)=>{
     const x={...rawItem};
-    x.type=String(x.type||"subjective").trim().toLowerCase();
+    x.type=String(x.type||(Array.isArray(x.options)&&x.options.length?"mcq":"subjective")).trim().toLowerCase();
     if(x.type==="objective")x.type="mcq";
     if(!["mcq","subjective"].includes(x.type))throw Error("Item "+(i+1)+" has invalid type. Use mcq or subjective.");
     x.source=String(x.source||(x.type==="mcq"?"pyq":"pyq")).trim().toLowerCase();
