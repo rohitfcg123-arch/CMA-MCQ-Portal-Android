@@ -29,11 +29,23 @@
 .pdf-stage .pdf-header h1{margin:0 0 5px;color:#0d3b3e;font-size:22px}
 .pdf-stage .pdf-header p{margin:3px 0;color:#65716f;font-size:12px}
 @media(max-width:700px){.verification-preview{padding:10px}.verification-question{padding:13px}} .question-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:12px;background:#f7f2e9;border:1px solid var(--line);border-radius:12px}.question-filters .field label{font-size:11px}.edit-modal{position:fixed;inset:0;background:#08262799;display:flex;align-items:center;justify-content:center;padding:18px;z-index:100}.edit-card{width:min(980px,100%);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #08262740}.edit-card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);color:var(--dark)}.edit-card .body{padding:18px}.edit-question{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;max-height:260px;overflow:auto;line-height:1.6}.edit-question table{min-width:0}.edit-question th,.edit-question td{border:0}.edit-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}.duplicate-modal{position:fixed;inset:0;background:#08262799;display:flex;align-items:center;justify-content:center;padding:18px;z-index:120}.duplicate-card{width:min(1050px,100%);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #08262740}.duplicate-card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);color:var(--dark)}.duplicate-card .body{padding:18px}.duplicate-row{border:1px solid var(--line);border-radius:12px;background:#fff;padding:12px;margin-bottom:10px}.duplicate-meta{font-size:12px;color:var(--muted);margin-bottom:8px}.duplicate-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.duplicate-side{border:1px solid #eee7da;border-radius:9px;padding:10px;background:#fafafa;font-size:12px;line-height:1.5}.duplicate-side b{display:block;color:var(--teal);margin-bottom:5px}.duplicate-choice{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.duplicate-choice button{padding:7px 10px;border:0;border-radius:8px;font-weight:800;cursor:pointer}.dup-replace{background:var(--gold);color:var(--dark)}.dup-skip{background:#687572;color:#fff}.duplicate-choice .selected{outline:3px solid #0d3b3e33}.duplicate-status{font-size:12px;font-weight:800;margin-top:7px}.duplicate-footer{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}@media(max-width:700px){.duplicate-columns{grid-template-columns:1fr}}
+
+#authGate{max-width:430px;margin:70px auto;padding:28px;background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px #08262712;text-align:center}
+#authGate h2{margin:0 0 8px;color:var(--dark)}
+#authGate p{color:var(--muted);font-size:13px;line-height:1.5}
+.google-login-btn{width:100%;border:1px solid var(--line);border-radius:10px;padding:13px 16px;background:#fff;color:#22302f;font-weight:850;cursor:pointer;box-shadow:0 2px 8px #08262710}
+#authGateMsg{min-height:20px;margin-top:12px;font-size:13px}
 </style>
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #242</b> — Rebuilt the Open Preview Page button as an independent direct launcher. It can reconstruct staged preview data from the JSON box if the normal uploader staging handler fails.<div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #242</b> — Rebuilt the Open Preview Page button as an independent direct launcher. It can reconstruct staged preview data from the JSON box if the normal uploader staging handler fails.<section id="authGate">
+  <h2>🔐 CMA Zone Question Uploader</h2>
+  <p>Sign in with the authorised Google account to access the Question Uploader.</p>
+  <button type="button" class="google-login-btn" id="googleLoginBtn">🔵 Continue with Google</button>
+  <div id="authGateMsg"></div>
+</section>
+<div id="portalSectionNav" style="display:none;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
 <div style="font-size:12px;font-weight:850;color:var(--teal);margin-bottom:7px">Question Portal Options</div>
 <select id="portalSectionSelect" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f;font-weight:750">
 <option value="upload">Upload New Subjective Question</option>
@@ -43,7 +55,7 @@
 <option value="uploaded">Uploaded Questions</option>
 </select>
 </div>
-<div id="app" class="wrap">
+<div id="app" class="wrap" style="display:none">
 <section class="panel"><h2>Upload New Subjective Question</h2><div class="body">
 <div class="note"><b>Permanent system:</b> questions uploaded here are saved in Firebase Firestore. The user portal reads the same collection automatically, so you do not need to edit JavaScript for every new question. Existing hard-coded questions remain untouched.</div>
 <div class="grid" style="margin-top:14px">
@@ -291,7 +303,46 @@ window.cmaLoadJsonFiles=async function(input){
 const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
+const auth=firebase.auth();
+const googleProvider=new firebase.auth.GoogleAuthProvider();
+googleProvider.setCustomParameters({prompt:"select_account"});
+const ADMIN_EMAIL="rohit.fcg123@gmail.com";
 const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();
+
+function cmaShowUploader(isAllowed,message){
+  const gate=$("authGate"),nav=$("portalSectionNav"),app=$("app"),msg=$("authGateMsg");
+  if(gate)gate.style.display=isAllowed?"none":"block";
+  if(nav)nav.style.display=isAllowed?"block":"none";
+  if(app)app.style.display=isAllowed?"block":"none";
+  if(msg){msg.className=isAllowed?"ok":"err";msg.textContent=message||"";}
+}
+$("googleLoginBtn").onclick=async function(){
+  const btn=$("googleLoginBtn"),msg=$("authGateMsg");
+  try{
+    btn.disabled=true;btn.textContent="Signing in…";
+    msg.className="msg";msg.textContent="Opening Google account selection…";
+    const result=await auth.signInWithPopup(googleProvider);
+    const email=String(result.user&&result.user.email||"").toLowerCase();
+    if(email!==ADMIN_EMAIL){
+      await auth.signOut();
+      throw new Error("This Google account is not authorised for the Question Uploader.");
+    }
+    cmaShowUploader(true,"Signed in as "+email);
+  }catch(e){
+    if(e&&e.code==="auth/popup-blocked")msg.textContent="Google popup was blocked. Please allow popups for this site and try again.";
+    else if(e&&e.code==="auth/unauthorized-domain")msg.textContent="Firebase Auth does not yet allow this website domain.";
+    else msg.textContent=e&&e.message?e.message:"Google sign-in failed.";
+    msg.className="err";
+  }finally{
+    btn.disabled=false;btn.textContent="🔵 Continue with Google";
+  }
+};
+
+auth.onAuthStateChanged(function(user){
+  const email=String(user&&user.email||"").toLowerCase();
+  if(user&&email===ADMIN_EMAIL)cmaShowUploader(true,"Signed in as "+email);
+  else cmaShowUploader(false,user?"Please sign in with the authorised Google account.":"");
+});
 function questionIdentityKey(x){
   const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
   return [canon(x&&x.type||"subjective"),canon(x&&x.group),canon(x&&x.subject),canon(x&&x.attempt),canon(x&&x.q)].join("|");
