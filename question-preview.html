@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <title>CMA Zone — Uploaded JSON Preview</title>
 <style>
@@ -37,7 +38,6 @@
   var VERIFIED_KEY="CMA_ZONE_PREVIEW_VERIFIED_V1";
   var firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
   if(window.firebase && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  var db=window.firebase?firebase.firestore():null;
 
 
   function el(id){return document.getElementById(id);}
@@ -150,38 +150,59 @@
   window.addEventListener("error",function(e){error(e&&e.message?e.message:"JavaScript error");});
   window.addEventListener("unhandledrejection",function(e){error(e&&e.reason?String(e.reason):"Unhandled script error");});
   el("backBtn").onclick=function(){location.href="question-uploader.html";};
-  el("approveBtn").onclick=async function(){
+  window.cmaDirectApprovePublish=async function(){
+    var btn=el("approveBtn");
     try{
       var raw=sessionStorage.getItem(KEY);
-      if(!raw)throw new Error("No staged questions found.");
+      if(!raw)throw new Error("No staged questions found. Go back to the uploader and import the JSON again.");
       var state=JSON.parse(raw);
       var items=Array.isArray(state.items)?state.items:[];
       if(!items.length)throw new Error("The staged question list is empty.");
-      if(!db)throw new Error("Firebase could not be initialized.");
-      if(!confirm("Have you checked all questions? Publish "+items.length+" question(s) to the user portal?"))return;
-      var btn=el("approveBtn");
+
+      var auth=firebase.auth();
+      var user=auth.currentUser;
+      if(!user){
+        var provider=new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({prompt:"select_account"});
+        user=(await auth.signInWithPopup(provider)).user;
+      }
+      if(!user || String(user.email||"").toLowerCase()!=="rohit.fcg123@gmail.com"){
+        if(user)await auth.signOut();
+        throw new Error("Only the Super Admin account rohit.fcg123@gmail.com can publish questions.");
+      }
+
+      if(!confirm("Have you checked all questions? Publish "+items.length+" question(s) to the user portal?"))return false;
       btn.disabled=true;btn.textContent="Publishing…";
+
+      var db=firebase.firestore();
       for(var i=0;i<items.length;i+=450){
         var batch=db.batch();
         items.slice(i,i+450).forEach(function(item){
-          var data=item.data||item;
+          var data=item&&item.data?item.data:item;
           var collectionName=item.collection||(String(data.type||"").toLowerCase()==="mcq"?"mcqQuestions":"subjectiveQuestions");
           var ref=item.update&&item.id?db.collection(collectionName).doc(item.id):db.collection(collectionName).doc();
-          batch.set(ref,Object.assign({},data,{updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"}),{merge:!!item.update});
+          batch.set(ref,Object.assign({},data,{
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+            updatedBy:"CMA Zone Question Uploader"
+          }),{merge:!!item.update});
         });
         await batch.commit();
       }
+
       sessionStorage.removeItem(KEY);
       sessionStorage.removeItem(VERIFIED_KEY);
       el("status").className="status";
       el("status").textContent=items.length.toLocaleString("en-IN")+" question(s) approved and published successfully.";
-      el("approveBtn").textContent="✅ Published";
+      btn.textContent="✅ Published";
       el("preview").innerHTML="";
+      return false;
     }catch(e){
-      var b=el("approveBtn");if(b){b.disabled=false;b.textContent="✅ Approve & Publish";}
+      btn.disabled=false;btn.textContent="✅ Approve & Publish";
       error(e&&e.message?e.message:String(e));
+      return false;
     }
   };
+  el("approveBtn").onclick=function(){return window.cmaDirectApprovePublish();};
 
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",load);else load();
 })();
