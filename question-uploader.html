@@ -1603,6 +1603,9 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
     updated,
     skipped
   };
+  // Persist the staged import BEFORE opening the separate preview page.
+  // Without this, question-preview.html has no data to read from sessionStorage.
+  persistPendingPreviewState();
   renderPendingVerification();
   $("json").value="";
   $("jsonFile").value="";
