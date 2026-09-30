@@ -42,7 +42,7 @@
 <div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #242</b> — Rebuilt the Open Preview Page button as an independent direct launcher. It can reconstruct staged preview data from the JSON box if the normal uploader staging handler fails.<section id="authGate">
   <h2>🔐 CMA Zone Question Uploader</h2>
   <p>Sign in with the authorised Google account to access the Question Uploader.</p>
-  <button type="button" class="google-login-btn" id="googleLoginBtn">🔵 Continue with Google</button>
+  <button type="button" class="google-login-btn" id="googleLoginBtn" onclick="return window.cmaGoogleLogin()">🔵 Continue with Google</button>
   <div id="authGateMsg"></div>
 </section>
 <div id="portalSectionNav" style="display:none;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
@@ -316,11 +316,12 @@ function cmaShowUploader(isAllowed,message){
   if(app)app.style.display=isAllowed?"block":"none";
   if(msg){msg.className=isAllowed?"ok":"err";msg.textContent=message||"";}
 }
-$("googleLoginBtn").onclick=async function(){
+window.cmaGoogleLogin=async function(){
   const btn=$("googleLoginBtn"),msg=$("authGateMsg");
+  if(!btn||btn.disabled)return false;
   try{
     btn.disabled=true;btn.textContent="Signing in…";
-    msg.className="msg";msg.textContent="Opening Google account selection…";
+    if(msg){msg.className="msg";msg.textContent="Opening Google account selection…";}
     const result=await auth.signInWithPopup(googleProvider);
     const email=String(result.user&&result.user.email||"").toLowerCase();
     if(email!==ADMIN_EMAIL){
@@ -329,14 +330,36 @@ $("googleLoginBtn").onclick=async function(){
     }
     cmaShowUploader(true,"Signed in as "+email);
   }catch(e){
-    if(e&&e.code==="auth/popup-blocked")msg.textContent="Google popup was blocked. Please allow popups for this site and try again.";
-    else if(e&&e.code==="auth/unauthorized-domain")msg.textContent="Firebase Auth does not yet allow this website domain.";
-    else msg.textContent=e&&e.message?e.message:"Google sign-in failed.";
-    msg.className="err";
+    if(e&&e.code==="auth/popup-blocked"){
+      if(msg){msg.className="msg";msg.textContent="Popup blocked. Opening Google sign-in page…";}
+      try{
+        await auth.signInWithRedirect(googleProvider);
+      }catch(re){
+        if(msg){msg.className="err";msg.textContent=re&&re.message?re.message:"Google redirect sign-in failed.";}
+      }
+    }else if(e&&e.code==="auth/unauthorized-domain"){
+      if(msg){msg.className="err";msg.textContent="Firebase Auth has not authorised this website domain yet.";}
+    }else if(msg){
+      msg.className="err";msg.textContent=e&&e.message?e.message:"Google sign-in failed.";
+    }
   }finally{
-    btn.disabled=false;btn.textContent="🔵 Continue with Google";
+    if(btn.disabled && document.visibilityState!=="hidden"){
+      btn.disabled=false;btn.textContent="🔵 Continue with Google";
+    }
   }
+  return false;
 };
+
+auth.getRedirectResult().then(function(result){
+  if(result&&result.user){
+    const email=String(result.user.email||"").toLowerCase();
+    if(email===ADMIN_EMAIL)cmaShowUploader(true,"Signed in as "+email);
+    else auth.signOut().then(function(){cmaShowUploader(false,"This Google account is not authorised for the Question Uploader.");});
+  }
+}).catch(function(e){
+  const msg=$("authGateMsg");
+  if(msg){msg.className="err";msg.textContent=e&&e.message?e.message:"Google redirect sign-in failed.";}
+});
 
 auth.onAuthStateChanged(function(user){
   const email=String(user&&user.email||"").toLowerCase();
