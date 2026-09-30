@@ -30,37 +30,125 @@
 <div id="preview"></div>
 </main>
 <script>
-window.addEventListener("error",function(e){
-  const s=document.getElementById("status");
-  if(s){s.className="status err";s.textContent="Preview error: "+(e.message||"JavaScript error. Please go back and re-import the JSON.");}
-});
-const KEY="CMA_ZONE_PENDING_PREVIEW_V1",VERIFIED_KEY="CMA_ZONE_PREVIEW_VERIFIED_V1";
-const $=id=>document.getElementById(id);
-function esc(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
-function attemptKey(v){const s=String(v||"").toLowerCase(),m=s.match(/(\d{4})/),y=m?Number(m[1]):9999,mo=/june|jun/.test(s)?6:/december|dec/.test(s)?12:/march|mar/.test(s)?3:/september|sep/.test(s)?9:99;return y*100+mo;}
-function qKey(v){const s=String(v||"").toLowerCase().replace(/question/g,"").replace(/[^0-9a-z]+/g," "),m=s.match(/(\d+)\s*([a-z])?/);return m?[Number(m[1]),String(m[2]||"")]:[999999,""];}
-function compare(a,b){const aa=attemptKey(a.attempt),bb=attemptKey(b.attempt);if(aa!==bb)return aa-bb;const aq=qKey(a.q),bq=qKey(b.q);if(aq[0]!==bq[0])return aq[0]-bq[0];return aq[1].localeCompare(bq[1],undefined,{numeric:true,sensitivity:"base"});}
-function previewOptions(x){
-  if(Array.isArray(x.options)&&x.options.length){
-    return x.options.map(o=>typeof o==="object"?String(o.text??o.label??o.value??""):String(o)).filter(Boolean);
-  }
-  const html=String(x.html||"");
-  const m=html.match(/<ol[^>]*>([\\s\\S]*?)<\\/ol>/i);
-  if(!m)return [];
-  const out=[];
-  const re=/<li[^>]*>([\\s\\S]*?)<\\/li>/gi;
-  let hit;
-  while((hit=re.exec(m[1]))!==null){
-    const t=String(hit[1]).replace(/<[^>]+>/g," ").replace(/&nbsp;/gi," ").replace(/\\s+/g," ").trim();
-    if(t)out.push(t);
-  }
-  return out;
-}
-function card(item){const x=item.data||item,solution=Array.isArray(x.solutionHtmls)?x.solutionHtmls.length>0:!!String(x.solutionHtml||"").trim(),opts=previewOptions(x),isMcq=String(x.type||"").toLowerCase()==="mcq"||opts.length>=2;const optionHtml=opts.length?'<ol type="A">'+opts.map((o,i)=>'<li>'+esc(o)+(Number(x.answer)===i?' <b>✓ Correct</b>':'')+'</li>').join("")+'</ol>':"";return '<article class="question"><div class="qhead"><div><h2 class="qtitle">'+(isMcq?"MCQ ":"Question ")+esc(x.q||"—")+'</h2><div class="meta"><b>Type:</b> '+esc(isMcq?"mcq":(x.type||"subjective"))+'</div><div class="meta"><b>Subject:</b> '+esc(x.subject||"")+'</div><div class="meta"><b>Chapter:</b> '+esc(x.chapter||"Chapter not specified")+'</div>'+(x.marks!==null&&x.marks!==undefined&&x.marks!==""?'<div class="meta"><b>Marks:</b> '+esc(x.marks)+'</div>':"")+'</div><span class="attempt">'+esc(x.attempt||"Attempt not specified")+' Attempt</span></div><div class="qhtml">'+String(x.html||"")+'</div>'+optionHtml+(x.explanationHtml?'<div class="solution">✓ MCQ explanation available.</div>':"")+(solution?'<div class="solution">✓ Suggested answer available — hidden here just like the student portal before View Solution.</div>':"")+'</article>';}
+(function(){
+  var KEY="CMA_ZONE_PENDING_PREVIEW_V1";
+  var VERIFIED_KEY="CMA_ZONE_PREVIEW_VERIFIED_V1";
 
-function load(){try{const raw=sessionStorage.getItem(KEY);if(!raw)throw new Error("No staged Question JSON was found. Please return to the uploader and import the JSON again.");const state=JSON.parse(raw),items=Array.isArray(state.items)?state.items:[];if(!items.length)throw new Error("The staged Question JSON is empty.");items.sort((a,b)=>compare(a.data||a,b.data||b));$("count").textContent=items.length.toLocaleString("en-IN")+" question(s)";$("status").textContent="Preview loaded. "+items.length.toLocaleString("en-IN")+" question(s) are staged locally and are NOT in Firebase.";$("preview").innerHTML='<div class="portal-preview-label">STUDENT PORTAL PREVIEW — '+items.length.toLocaleString("en-IN")+' QUESTION(S)</div>'+items.map(card).join("");sessionStorage.setItem(VERIFIED_KEY,"1");}catch(e){$("status").className="status err";$("status").textContent=e.message||String(e);}}
-$("backBtn").onclick=()=>location.href="question-uploader.html";
-if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",load);
-else load();
+  function $(id){ return document.getElementById(id); }
+  function esc(v){
+    return String(v == null ? "" : v)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  function showError(msg){
+    var s=$("status");
+    if(s){
+      s.className="status err";
+      s.textContent="Preview error: "+msg;
+    }
+  }
+
+  function getOptions(x){
+    var raw=x && x.options;
+    var out=[];
+    if(Array.isArray(raw)){
+      raw.forEach(function(o){
+        var v=(o && typeof o==="object") ? (o.text != null ? o.text : (o.label != null ? o.label : o.value)) : o;
+        v=String(v == null ? "" : v).trim();
+        if(v) out.push(v);
+      });
+    }
+    if(out.length>=2) return out;
+
+    var html=String(x && x.html ? x.html : "");
+    var m=html.match(/<ol[^>]*>([\\s\\S]*?)<\\/ol>/i);
+    if(!m) return out;
+    var re=/<li[^>]*>([\\s\\S]*?)<\\/li>/gi, hit;
+    while((hit=re.exec(m[1]))!==null){
+      var t=hit[1].replace(/<[^>]*>/g," ").replace(/&nbsp;/gi," ").replace(/\\s+/g," ").trim();
+      if(t) out.push(t);
+    }
+    return out;
+  }
+
+  function attemptKey(v){
+    var s=String(v || "").toLowerCase(), m=s.match(/(\\d{4})/);
+    var y=m ? Number(m[1]) : 9999;
+    var mo=/june|jun/.test(s)?6:/december|dec/.test(s)?12:/march|mar/.test(s)?3:/september|sep/.test(s)?9:99;
+    return y*100+mo;
+  }
+
+  function qKey(v){
+    var s=String(v || "").toLowerCase().replace(/question/g,"").replace(/[^0-9a-z]+/g," ");
+    var m=s.match(/(\\d+)\\s*([a-z])?/);
+    return m ? [Number(m[1]),String(m[2] || "")] : [999999,""];
+  }
+
+  function compare(a,b){
+    var aa=attemptKey(a.attempt), bb=attemptKey(b.attempt);
+    if(aa!==bb) return aa-bb;
+    var aq=qKey(a.q), bq=qKey(b.q);
+    if(aq[0]!==bq[0]) return aq[0]-bq[0];
+    return aq[1].localeCompare(bq[1],undefined,{numeric:true,sensitivity:"base"});
+  }
+
+  function card(item){
+    var x=item && item.data ? item.data : item;
+    var opts=getOptions(x);
+    var type=String(x.type || "").toLowerCase();
+    var isMcq=type==="mcq" || opts.length>=2;
+    var optionHtml="";
+    if(opts.length){
+      optionHtml='<ol type="A">';
+      opts.forEach(function(o,i){
+        var correct=(String(x.answer)===String(i)) || String(x.answer || "").toUpperCase()===String.fromCharCode(65+i);
+        optionHtml+="<li>"+esc(o)+(correct ? " <b>✓ Correct</b>" : "")+"</li>";
+      });
+      optionHtml+="</ol>";
+    }
+    var solution=Array.isArray(x.solutionHtmls) ? x.solutionHtmls.length>0 : !!String(x.solutionHtml || "").trim();
+    return '<article class="question"><div class="qhead"><div>'+
+      '<h2 class="qtitle">'+(isMcq ? "MCQ " : "Question ")+esc(x.q || "—")+'</h2>'+
+      '<div class="meta"><b>Type:</b> '+esc(isMcq ? "mcq" : (x.type || "subjective"))+'</div>'+
+      '<div class="meta"><b>Subject:</b> '+esc(x.subject || "")+'</div>'+
+      '<div class="meta"><b>Chapter:</b> '+esc(x.chapter || "Chapter not specified")+'</div>'+
+      (x.marks!==null && x.marks!==undefined && x.marks!=="" ? '<div class="meta"><b>Marks:</b> '+esc(x.marks)+'</div>' : "")+
+      '</div><span class="attempt">'+esc(x.attempt || "Attempt not specified")+' Attempt</span></div>'+
+      '<div class="qhtml">'+String(x.html || "")+'</div>'+
+      optionHtml+
+      (x.explanationHtml ? '<div class="solution">✓ MCQ explanation available.</div>' : "")+
+      (solution ? '<div class="solution">✓ Suggested answer available — hidden here just like the student portal before View Solution.</div>' : "")+
+      '</article>';
+  }
+
+  function load(){
+    try{
+      var raw=sessionStorage.getItem(KEY);
+      if(!raw) throw new Error("No staged Question JSON was found. Go back to the uploader and import the JSON again.");
+      var state=JSON.parse(raw);
+      var items=Array.isArray(state.items) ? state.items : [];
+      if(!items.length) throw new Error("The staged Question JSON is empty.");
+      items.sort(function(a,b){return compare(a.data || a,b.data || b);});
+      $("count").textContent=items.length.toLocaleString("en-IN")+" question(s)";
+      $("status").className="status";
+      $("status").textContent="Preview loaded. "+items.length.toLocaleString("en-IN")+" question(s) are staged locally and are NOT in Firebase.";
+      $("preview").innerHTML='<div class="portal-preview-label">STUDENT PORTAL PREVIEW — '+items.length.toLocaleString("en-IN")+' QUESTION(S)</div>'+items.map(card).join("");
+      sessionStorage.setItem(VERIFIED_KEY,"1");
+    }catch(e){ showError(e && e.message ? e.message : String(e)); }
+  }
+
+  window.addEventListener("error",function(e){ showError(e && e.message ? e.message : "JavaScript error"); });
+  window.addEventListener("unhandledrejection",function(e){ showError(e && e.reason ? String(e.reason) : "Unhandled script error"); });
+  $("backBtn").onclick=function(){ location.href="question-uploader.html"; };
+  setTimeout(function(){
+    var s=$("status");
+    if(s && s.textContent.indexOf("Loading staged questions")===0){
+      showError("Preview script did not finish loading. Please refresh once. If it still happens, return to the uploader and open Preview Page again.");
+    }
+  },2500);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",load);
+  else load();
+})();
 </script>
 </body></html>
