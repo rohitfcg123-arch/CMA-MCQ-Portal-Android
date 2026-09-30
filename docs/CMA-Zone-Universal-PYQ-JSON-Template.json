@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0",
+  "questions": [
+    {
+      "type": "mcq",
+      "group": "inter1",
+      "subject": "Cost Accounting",
+      "chapter": "Introduction to Cost Accounting",
+      "chapterId": "Paper8-C01",
+      "source": "pyq",
+      "attempt": "June 2026",
+      "q": "1",
+      "html": "<p>Question text exactly as in the PDF.</p>",
+      "options": [
+        "Option A",
+        "Option B",
+        "Option C",
+        "Option D"
+      ],
+      "answer": 1,
+      "marks": 2,
+      "explanationHtml": "<p>Optional explanation.</p>"
+    },
+    {
+      "type": "subjective",
+      "group": "inter1",
+      "subject": "Cost Accounting",
+      "chapter": "Introduction to Cost Accounting",
+      "chapterId": "Paper8-C01",
+      "source": "pyq",
+      "attempt": "June 2026",
+      "q": "8(a)",
+      "html": "<p>Subjective question text exactly as in the PDF.</p>",
+      "marks": 7,
+      "solutionHtml": "<p>Optional suggested answer.</p>"
+    }
+  ]
+}
