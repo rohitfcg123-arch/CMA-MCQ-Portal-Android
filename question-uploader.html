@@ -1343,6 +1343,28 @@ function askDuplicateDecisions(conflicts){
     $("duplicateModal").classList.remove("hidden");
   });
 }
+function normalizeOptionArray(raw){
+  let v=raw;
+  if(v==null) return [];
+  if(Array.isArray(v)) return v.map(o=>typeof o==="object"?String(o.text??o.label??o.value??""):String(o)).map(s=>s.trim()).filter(Boolean);
+  if(typeof v==="object") return Object.keys(v).sort().map(k=>{
+    const o=v[k];
+    return typeof o==="object"?String(o.text??o.label??o.value??""):String(o);
+  }).map(s=>s.trim()).filter(Boolean);
+  return [];
+}
+function detectMcqOptions(q){
+  const direct=normalizeOptionArray(q?.options||q?.choices||q?.answersOptions||q?.answerOptions);
+  if(direct.length>=2) return direct;
+  const keys=["A","B","C","D","E","F"];
+  const keyed=keys.map(k=>q?.["option"+k]??q?.["option_"+k.toLowerCase()]??q?.[k]??null).filter(v=>v!=null&&String(v).trim()!=="");
+  return normalizeOptionArray(keyed);
+}
+function optionsFromHtml(html){
+  const m=String(html||"").match(/<ol\\b[^>]*>([\\s\\S]*?)<\\/ol>/i);
+  if(!m) return [];
+  return [...m[1].matchAll(/<li\\b[^>]*>([\\s\\S]*?)<\\/li>/gi)].map(x=>String(x[1]).replace(/<[^>]+>/g," ").replace(/&nbsp;/gi," ").replace(/\\s+/g," ").trim()).filter(Boolean);
+}
 function normalizeQuestionJsonPayload(raw){
   const parsed=JSON.parse(raw);
   if(Array.isArray(parsed)) return parsed;
@@ -1350,32 +1372,33 @@ function normalizeQuestionJsonPayload(raw){
   if(parsed&&Array.isArray(parsed.data)) return parsed.data;
   if(parsed&&Array.isArray(parsed.questions)){
     // Accept the CMA question-paper JSON format as well as the uploader's flat format.
-    // Paper metadata is copied into every question, while question/id/options are
-    // converted to the required q/html fields without changing the source wording.
+    // Paper metadata is copied into every question. MCQ options are normalized from
+    // arrays, optionA/optionB-style fields, or an ordered-list HTML fallback.
     const escHtml=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
     const questionToHtml=q=>{
-      if(String(q.html||q.questionHtml||q.qHtml||"").trim()) return String(q.html||q.questionHtml||q.qHtml).trim();
+      const existing=String(q.html||q.questionHtml||q.qHtml||"").trim();
+      const opts=detectMcqOptions(q);
+      if(existing) return existing;
       const body=escHtml(q.question||"").replace(/\\n/g,"<br>");
       let out="<p>"+body+"</p>";
-      if(Array.isArray(q.options)&&q.options.length){
-        out+="<ol type=\"A\">"+q.options.map(o=>{
-          const text=typeof o==="object"?(o.text??""):o;
-          return "<li>"+escHtml(text).replace(/\\n/g,"<br>")+"</li>";
-        }).join("")+"</ol>";
-      }
+      if(opts.length) out+="<ol type=\"A\">"+opts.map(o=>"<li>"+escHtml(o).replace(/\\n/g,"<br>")+"</li>").join("")+"</ol>";
       return out;
     };
-    return parsed.questions.map((q,i)=>({
-      ...q,
-      group:q.group||parsed.group||"",
-      subject:q.subject||parsed.subject||"",
-      chapter:q.chapter||q.chapterName||q.topic||"",
-      attempt:q.attempt||parsed.attempt||"",
-      q:q.q||q.id||q.questionNumber||q.questionNo||"",
-      html:questionToHtml(q),
-      marks:q.marks==null?q.marks:q.marks,
-      sort:q.sort==null?(i+1):q.sort
-    }));
+    return parsed.questions.map((q,i)=>{
+      const opts=detectMcqOptions(q);
+      return {
+        ...q,
+        options:opts.length?opts:q.options,
+        group:q.group||parsed.group||"",
+        subject:q.subject||parsed.subject||"",
+        chapter:q.chapter||q.chapterName||q.topic||"",
+        attempt:q.attempt||parsed.attempt||"",
+        q:q.q||q.id||q.questionNumber||q.questionNo||"",
+        html:questionToHtml(q),
+        marks:q.marks==null?q.marks:q.marks,
+        sort:q.sort==null?(i+1):q.sort
+      };
+    });
   }
   throw Error("JSON must be a non-empty array, or an object containing rows[], questions[] or data[], or a CMA question-paper object containing questions[].");
 }
@@ -1504,14 +1527,24 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
   // Existing subjective JSON remains backward-compatible when type is omitted.
   importItems=importItems.map((rawItem,i)=>{
     const x={...rawItem};
-    x.type=String(x.type||(Array.isArray(x.options)&&x.options.length?"mcq":"subjective")).trim().toLowerCase();
+    let detectedOptions=detectMcqOptions(x);
+    if(detectedOptions.length<2 && (String(x.type||"").toLowerCase()==="mcq" || x.answer!==undefined || x.correctAnswer!==undefined)){
+      detectedOptions=optionsFromHtml(x.html);
+    }
+    if(detectedOptions.length>=2){
+      x.options=detectedOptions;
+      if(!x.type || String(x.type).toLowerCase()==="subjective" || String(x.type).toLowerCase()==="objective") x.type="mcq";
+    }
+    x.type=String(x.type||(detectedOptions.length>=2?"mcq":"subjective")).trim().toLowerCase();
     if(x.type==="objective")x.type="mcq";
     if(!["mcq","subjective"].includes(x.type))throw Error("Item "+(i+1)+" has invalid type. Use mcq or subjective.");
     x.source=String(x.source||(x.type==="mcq"?"pyq":"pyq")).trim().toLowerCase();
     if(!["bank","pyq"].includes(x.source))throw Error("Item "+(i+1)+" has invalid source. Use bank or pyq.");
     if(x.type==="mcq"){
-      const opts=Array.isArray(x.options)?x.options:[];
-      if(opts.length<2)throw Error("MCQ Item "+(i+1)+" must contain options[].");
+      let opts=normalizeOptionArray(x.options);
+      if(opts.length<2) opts=optionsFromHtml(x.html);
+      if(opts.length<2)throw Error("MCQ Item "+(i+1)+" must contain at least 2 options. Supported formats: options[], choices[], optionA/optionB…, or an ordered <ol><li> list in html.");
+      x.options=opts;
       x.options=opts.map(o=>typeof o==="object"?String(o.text??o.label??""):String(o)).map(v=>v.trim());
       let ans=x.answer;
       if(typeof ans==="string"){
