@@ -32,8 +32,10 @@
 <div class="app">
 <header class="top"><div class="topline"><div><div class="brand">CMA Intermediate Group 2</div><div class="mini">MCQ Practice System</div></div><button class="home" id="homeBtn">⌂ Home</button></div></header>
 <section id="setup" class="screen active">
-<div class="hero"><h1>Management Accounting</h1><p>378 MCQs loaded (303 MCQ Bank + 75 PYQ-based questions). Choose a chapter, round size, answer mode and timer before starting.</p></div>
-<div class="pyq-switch" aria-label="Question source"><button type="button" id="mcqBankBtn" class="active">MCQ Bank (303)</button><button type="button" id="pyqBtn">Previous Year Questions (75)</button></div><div class="card"><h2>Chapter</h2><select id="chapterSelect"><option value="all">All Chapters</option><option value="pyq">Previous Year Questions — June 2026 to June 2024 (75)</option><option value="1">Chapter 1 — Introduction to Management Accounting</option><option value="2">Chapter 2 — Activity Based Costing</option><option value="3">Chapter 3 — Marginal Costing</option><option value="4">Chapter 4 — Applications of Marginal Costing in Short Term Decision Making</option><option value="5">Chapter 5 — Transfer Pricing</option><option value="6">Chapter 6 — Standard Costing and Variance Analysis</option><option value="7">Chapter 7 — Forecasting, Budgeting and Budgetary Control</option><option value="8">Chapter 8 — Divisional Performance Measurement</option><option value="9">Chapter 9 — Responsibility Accounting</option><option value="10">Chapter 10 — Decision Theory</option></select><span class="desc" id="chapterCount">303 questions available.</span></div>
+<div class="hero"><h1>Management Accounting</h1><p><span id="sourceSummary">303 MCQ Bank questions loaded.</span> Choose the question source, round size, answer mode and timer before starting.</p></div>
+<div class="card"><h2>Question Source</h2><div class="row"><div><div class="label">What do you want to solve?</div><span class="desc">Choose between the regular MCQ Bank and Previous Year Papers.</span></div><select id="sourceSelect" style="max-width:240px"><option value="bank">MCQ Bank</option><option value="pyq">Previous Year Paper</option></select></div></div>
+<div class="card" id="bankCard"><h2>Chapter</h2><select id="chapterSelect"><option value="all">All Chapters</option><option value="1">Chapter 1 — Introduction to Management Accounting</option><option value="2">Chapter 2 — Activity Based Costing</option><option value="3">Chapter 3 — Marginal Costing</option><option value="4">Chapter 4 — Applications of Marginal Costing in Short Term Decision Making</option><option value="5">Chapter 5 — Transfer Pricing</option><option value="6">Chapter 6 — Standard Costing and Variance Analysis</option><option value="7">Chapter 7 — Forecasting, Budgeting and Budgetary Control</option><option value="8">Chapter 8 — Divisional Performance Measurement</option><option value="9">Chapter 9 — Responsibility Accounting</option><option value="10">Chapter 10 — Decision Theory</option></select><span class="desc" id="chapterCount">303 questions available in all chapters.</span></div>
+<div class="card" id="pyqCard" style="display:none"><h2>Previous Year Paper</h2><select id="attemptSelect"><option value="all">All Attempts — 75 Questions</option><option value="June 2026">June 2026 — 15 Questions</option><option value="December 2025">December 2025 — 15 Questions</option><option value="June 2025">June 2025 — 15 Questions</option><option value="December 2024">December 2024 — 15 Questions</option><option value="June 2024">June 2024 — 15 Questions</option></select><span class="desc" id="attemptCount">75 previous-year questions available.</span></div>
 <div class="quick"><button class="outline" id="wrongBtn">↻ Reattempt Wrong <span id="wrongCount"></span></button><button class="outline" id="bookBtn">★ Bookmarked <span id="bookCount"></span></button></div>
 <div class="card"><h2>Round</h2><div class="row"><div><div class="label">Number of questions</div><span class="desc">Choose how many MCQs to attempt.</span></div><div class="stepper"><button id="qDown">−</button><span class="count" id="qCount">20</span><button id="qUp">+</button></div></div><div class="row"><div><div class="label">Marks per question</div><span class="desc">Used for the final score.</span></div><div class="stepper"><button id="mDown">−</button><span class="count" id="mCount">1</span><button id="mUp">+</button></div></div></div>
 <div class="card"><h2>Answer mode</h2><div class="row"><div><div class="label">Instant answer</div><span class="desc">Show correct/wrong immediately after selection.</span></div><label class="switch"><input id="instant" type="checkbox" checked><span class="track"></span></label></div><div class="row"><div><div class="label">Random question order</div><span class="desc">Fresh random set on every round.</span></div><label class="switch"><input id="random" type="checkbox" checked><span class="track"></span></label></div></div>
@@ -51,16 +53,21 @@ const $=id=>document.getElementById(id);
 const storage=()=>JSON.parse(localStorage.getItem(KEY)||'{}');
 function saveState(){localStorage.setItem(KEY,JSON.stringify({bookmarks:[...bookmarks],wrong:storage().wrong||[]}));updateCounts();}
 function currentSourcePool(){
-  const v=$('chapterSelect').value, qs=window.CMA_MA_PYQ||[];
-  if(window.cmaQuestionSource==='pyq') return v==='pyq-all'?qs:qs.filter(q=>q.pyqTerm===v.slice(4));
+  if(window.cmaQuestionSource==='pyq'){
+    const v=$('attemptSelect').value, qs=window.CMA_MA_PYQ||[];
+    return v==='all'?qs:qs.filter(q=>q.pyqTerm===v);
+  }
+  const v=$('chapterSelect').value;
   return v==='all'?QUESTIONS.filter(q=>q.chapter!=='pyq'):QUESTIONS.filter(q=>String(q.chapter)===v);
 }
 function updateChapterCount(){
   const n=currentSourcePool().length;
-  const label=window.cmaQuestionSource==='pyq'?(n===75?'all previous year questions':'selected exam'):(n===303?'all chapters':'selected chapter');
-  $('chapterCount').textContent=n+' questions available in '+label+'.';
+  if(window.cmaQuestionSource==='pyq') $('attemptCount').textContent=n+' previous-year questions available.';
+  else $('chapterCount').textContent=n+' questions available in '+(n===303?'all chapters':'selected chapter')+'.';
+  $('sourceSummary').textContent=n+' '+(window.cmaQuestionSource==='pyq'?'Previous Year Paper':'MCQ Bank')+' questions loaded.';
   clampCount();
 }
+function updateSourceUI(){const pyq=window.cmaQuestionSource==='pyq';$('bankCard').style.display=pyq?'none':'block';$('pyqCard').style.display=pyq?'block':'none';updateChapterCount();}
 function loadState(){const x=storage();bookmarks=new Set(x.bookmarks||[]);updateCounts();}
 function currentSubject(){return $('subjectSelect').value;}
 function gotoSubject(slug){location.href=slug;}
@@ -75,7 +82,7 @@ function clampCount(){
 }
 function step(id,delta,min,max,render){cfg[id]=Math.max(min,Math.min(max,cfg[id]+delta));render();}
 function setupEvents(){
- $('chapterSelect').addEventListener('change',updateChapterCount);
+ $('sourceSelect').onchange=e=>{window.cmaQuestionSource=e.target.value;updateSourceUI()}; $('chapterSelect').addEventListener('change',updateChapterCount); $('attemptSelect').addEventListener('change',updateChapterCount);
  $('qDown').onclick=()=>step('questions',-5,5,selectedMaxQuestions(),clampCount);$('qUp').onclick=()=>step('questions',5,5,selectedMaxQuestions(),clampCount);
  $('mDown').onclick=()=>step('marks',-1,1,5,()=> $('mCount').textContent=cfg.marks);$('mUp').onclick=()=>step('marks',1,1,5,()=> $('mCount').textContent=cfg.marks);
  $('sDown').onclick=()=>step('seconds',-5,15,180,()=> $('sCount').textContent=cfg.seconds);$('sUp').onclick=()=>step('seconds',5,15,180,()=> $('sCount').textContent=cfg.seconds);
@@ -88,11 +95,7 @@ function setupEvents(){
  $('homeBtn').onclick=$('homeResult').onclick=()=>location.href='index.html';
 }
 function startRound(mode){
- clearInterval(interval);let base=[...QUESTIONS];const selectedChapter=$('chapterSelect').value;
- if(window.cmaQuestionSource==='pyq'){
-   if(selectedChapter!=='pyq-all') base=base.filter(q=>q.pyqTerm===selectedChapter.slice(4));
-   else base=base.filter(q=>q.chapter==='pyq');
- }else if(selectedChapter!=='all') base=base.filter(q=>String(q.chapter)===selectedChapter);const st=storage();
+ clearInterval(interval);let base=[...currentSourcePool()];const st=storage();
  if(mode==='wrong'){const ids=new Set(st.wrong||[]);base=base.filter(q=>ids.has(q.id));if(!base.length){alert('No wrong questions available. Complete a round first.');return}}
  if(mode==='bookmarks'){base=base.filter(q=>bookmarks.has(q.id));if(!base.length){alert('No bookmarked questions available.');return}}
  if(cfg.random)shuffle(base);pool=base.slice(0,Math.min(cfg.questions,base.length));answers=pool.map(()=>null);roundResults=[];index=0;score=0;cfg.questions=pool.length;$('qCount').textContent=pool.length;show('quiz');if(cfg.timer==='round'){roundEnd=Date.now()+cfg.roundMinutes*60000;}else roundEnd=0;renderQ();
@@ -114,36 +117,8 @@ function updateTimerUI(){clearInterval(interval);$('timer').textContent='';$('ti
 function tickRound(){const left=Math.max(0,roundEnd-Date.now());const sec=Math.ceil(left/1000);$('timer').textContent='⏱ '+format(sec);$('timerfill').style.width=(left/(cfg.roundMinutes*60000)*100)+'%';$('timer').classList.toggle('urgent',sec<=60);$('timerfill').classList.toggle('urgent',sec<=60);if(left<=0)finish()}
 function format(sec){const m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-loadState();setupEvents();$('chapterSelect').value='all';updateChapterCount();$('mCount').textContent=cfg.marks;$('sCount').textContent=cfg.seconds;clampCount();
-</script><script>
-(function(){
-  const bankBtn=document.getElementById('mcqBankBtn'), pyqBtn=document.getElementById('pyqBtn'), sel=document.getElementById('chapterSelect'), count=document.getElementById('chapterCount');
-  const bankOptions=[['all','All Chapters'],['1','Chapter 1 — Introduction to Management Accounting'],['2','Chapter 2 — Activity Based Costing'],['3','Chapter 3 — Marginal Costing'],['4','Chapter 4 — Applications of Marginal Costing in Short Term Decision Making'],['5','Chapter 5 — Transfer Pricing'],['6','Chapter 6 — Standard Costing and Variance Analysis'],['7','Chapter 7 — Forecasting, Budgeting and Budgetary Control'],['8','Chapter 8 — Divisional Performance Measurement'],['9','Chapter 9 — Responsibility Accounting'],['10','Chapter 10 — Decision Theory']];
-  const pyqOptions=[['pyq-all','All Previous Year Questions (75)'],['pyq:June 2026','June 2026 — 15 Questions'],['pyq:December 2025','December 2025 — 15 Questions'],['pyq:June 2025','June 2025 — 15 Questions'],['pyq:December 2024','December 2024 — 15 Questions'],['pyq:June 2024','June 2024 — 15 Questions']];
-  function renderOptions(mode){
-    const opts=mode==='pyq'?pyqOptions:bankOptions;
-    sel.innerHTML=opts.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join('');
-    sel.value=opts[0][0];
-    window.cmaQuestionSource=mode;
-    bankBtn.classList.toggle('active',mode==='bank'); pyqBtn.classList.toggle('active',mode==='pyq');
-    updateCount();
-    clampCount();
-  }
-  function updateCount(){
-    const v=sel.value, qs=window.CMA_MA_PYQ||[];
-    let total;
-    if(window.cmaQuestionSource==='pyq') total=v==='pyq-all'?qs.length:qs.filter(q=>q.pyqTerm===v.slice(4)).length;
-    else total=v==='all'?QUESTIONS.filter(q=>q.chapter!=='pyq').length:QUESTIONS.filter(q=>String(q.chapter)===v).length;
-    count.textContent=total+' questions available.';
-  }
-  window.source=function(){return window.cmaQuestionSource||'bank'};
-  bankBtn.onclick=()=>renderOptions('bank');
-  pyqBtn.onclick=()=>renderOptions('pyq');
-  sel.addEventListener('change',updateCount);
-  renderOptions('bank');
-})();
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+window.cmaQuestionSource='bank';loadState();setupEvents();$('chapterSelect').value='all';$('attemptSelect').value='all';$('sourceSelect').value='bank';updateSourceUI();$('mCount').textContent=cfg.marks;$('sCount').textContent=cfg.seconds;clampCount();
+</script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
