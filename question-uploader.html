@@ -547,19 +547,37 @@ function showLoginError(e){
 }
 async function login(){
   const btn=$("loginBtn");
-  btn.disabled=true; btn.textContent="Opening Google…";
+  if(!btn)return;
+  btn.disabled=true;
+  btn.textContent="Opening Google…";
   $("loginMsg").className="msg";
-  $("loginMsg").textContent="Google sign-in is opening. Please select rohit.fcg123@gmail.com.";
+  $("loginMsg").textContent="Opening Google sign-in…";
   try{
-    const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if(isMobile){
+    provider.setCustomParameters({prompt:"select_account"});
+    try{
+      await auth.signInWithPopup(provider);
+      return;
+    }catch(popupError){
+      const code=popupError&&popupError.code?popupError.code:"";
+      const fallbackCodes=[
+        "auth/popup-blocked",
+        "auth/popup-closed-by-user",
+        "auth/cancelled-popup-request",
+        "auth/operation-not-supported-in-this-environment",
+        "auth/web-storage-unsupported"
+      ];
+      if(fallbackCodes.indexOf(code)===-1){
+        throw popupError;
+      }
+      $("loginMsg").className="msg";
+      $("loginMsg").textContent="Google popup unavailable. Redirecting to Google sign-in…";
       await auth.signInWithRedirect(provider);
       return;
     }
-    await auth.signInWithPopup(provider);
   }catch(e){
     showLoginError(e);
-    btn.disabled=false; btn.textContent="Continue with Google";
+    btn.disabled=false;
+    btn.textContent="Continue with Google";
   }
 }
 async function logout(){
