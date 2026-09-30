@@ -41,7 +41,7 @@
       target.length=0;
       const pyqTarget=window.__CMA_PYQ_QUESTIONS__;
       if(Array.isArray(pyqTarget))pyqTarget.length=0;
-      rows.forEach(x=>{
+      rows.forEach(x=>target.push({
         ...x,
         source:x.source==="pyq"?"pyq":"bank",
         options:Array.isArray(x.options)?x.options:[],
