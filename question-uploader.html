@@ -5,6 +5,39 @@
 <title>CMA Zone — Question Uploader</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script>
+(function(){
+  window.cmaGoogleLogin=async function(){
+    var btn=document.getElementById("loginBtn"), msg=document.getElementById("loginMsg");
+    if(btn){btn.disabled=true;btn.textContent="Opening Google…";}
+    if(msg){msg.className="msg";msg.textContent="Connecting to Google…";}
+    try{
+      var cfg={apiKey:"AIzaSyCDQRVXCxHZfy3cLUgJ2g3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
+      if(!firebase.apps.length) firebase.initializeApp(cfg);
+      var a=firebase.auth(), p=new firebase.auth.GoogleAuthProvider();
+      p.setCustomParameters({prompt:"select_account"});
+      p.addScope("email");
+      await a.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      try{
+        await a.signInWithPopup(p);
+      }catch(e){
+        var code=e&&e.code?e.code:"";
+        if(code==="auth/popup-blocked"||code==="auth/popup-closed-by-user"||code==="auth/cancelled-popup-request"||code==="auth/web-storage-unsupported"||code==="auth/operation-not-supported-in-this-environment"){
+          if(msg){msg.textContent="Opening Google sign-in page…";}
+          await a.signInWithRedirect(p);
+        }else{
+          throw e;
+        }
+      }
+    }catch(e){
+      var code=e&&e.code?e.code:"";
+      var detail=code ? code+" — " : "";
+      if(msg){msg.className="msg err";msg.textContent=detail+(e&&e.message?e.message:String(e));}
+      if(btn){btn.disabled=false;btn.textContent="Continue with Google";}
+    }
+  };
+})();
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/sfm-subjective-pyq-v29.js?v=20260927u50"></script>
@@ -35,7 +68,7 @@
 <div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #231</b> — Fixed the JSON import crash caused by the removed PDF status element. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
 <h2>Question Uploader Login</h2>
 <p>Use the authorised CMA Zone administrator Google account.</p>
-<button class="btn gold" id="loginBtn" type="button" onclick="login()">Continue with Google</button>
+<button class="btn gold" id="loginBtn" type="button" onclick="cmaGoogleLogin()">Continue with Google</button>
 <div id="loginMsg" class="msg"></div>
 </div>
 
