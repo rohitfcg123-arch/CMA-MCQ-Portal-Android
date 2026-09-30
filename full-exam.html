@@ -96,20 +96,28 @@ function examGroupMatches(value,target){
 }
 function examSubjectMatches(value,target){
   const v=normExamKey(value),t=normExamKey(target);
+  if(!v||!t)return false;
   if(v===t)return true;
   const aliases={
-    businesslawandethics:["businesslawandethics","businesslawsandethics"],
-    businesslawsandethics:["businesslawandethics","businesslawsandethics"],
+    businesslawandethics:["businesslawandethics","businesslawsandethics","businesslawsethics"],
+    businesslawsandethics:["businesslawandethics","businesslawsandethics","businesslawsethics"],
+    businesslawsethics:["businesslawandethics","businesslawsandethics","businesslawsethics"],
     fundamentalslawandbusinesscommunication:[
       "fundamentalsoflawandbusinesscommunication",
       "fundamentalsofbusinesslawsandbusinesscommunication"
     ]
   };
-  return (aliases[t]||[]).includes(v)||(aliases[v]||[]).includes(t);
+  if((aliases[t]||[]).includes(v)||(aliases[v]||[]).includes(t))return true;
+  // Handle harmless punctuation/wording differences in imported subject names.
+  if(v.includes("businesslaw")&&t.includes("businesslaw")&&v.includes("ethic")&&t.includes("ethic"))return true;
+  if(v.includes("fundamentalsof")&&t.includes("fundamentalsof")&&v.includes("businesscommunication")&&t.includes("businesscommunication"))return true;
+  return false;
 }
 function examRowMatches(x){
-  return examGroupMatches(x.group,selectedGroup) &&
-    (examSubjectMatches(x.subject,selectedSubject)||examSubjectMatches(x.subjectKey,selectedSubject));
+  const groupOk=examGroupMatches(x.group,selectedGroup)||examGroupMatches(x.groupKey,selectedGroup);
+  const subjectOk=examSubjectMatches(x.subject,selectedSubject)||
+    examSubjectMatches(x.subjectKey,selectedSubject);
+  return groupOk&&subjectOk;
 }
 function isExamMcq(x){
   const t=String(x&&x.type||"").trim().toLowerCase();
