@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>
-<!-- UPDATE #243: Replaced preview runtime with a minimal mobile-safe renderer. -->CMA Zone — Uploaded JSON Preview</title>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<title>CMA Zone — Uploaded JSON Preview</title>
 <style>
 :root{--teal:#0d3b3e;--dark:#082627;--gold:#c8a24a;--cream:#faf6ee;--paper:#fffdf8;--line:#e3dbc9;--muted:#65716f;--green:#2f7042}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:#22302f;font-family:Inter,Segoe UI,Arial,sans-serif}
@@ -25,7 +26,7 @@
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Uploaded JSON Preview</div><div id="count"></div></header>
 <main class="wrap">
-<div class="toolbar"><button class="gold" id="backBtn" type="button">← Back to Question Uploader</button></div>
+<div class="toolbar"><button class="gold" id="backBtn" type="button">← Back to Question Uploader</button><button class="gold" id="approveBtn" type="button">✅ Approve &amp; Publish</button></div>
 <div class="note"><b>STUDENT PORTAL PREVIEW</b><br>This page shows the staged Question JSON as it will appear in the question content area. Nothing on this page writes to Firebase. Review order, numbering, paragraphs, lists, tables, marks, chapter and attempt before returning to the uploader.</div>
 <div id="status" class="status">Loading staged questions…</div>
 <div id="preview"></div>
@@ -34,6 +35,10 @@
 (function(){
   var KEY="CMA_ZONE_PENDING_PREVIEW_V1";
   var VERIFIED_KEY="CMA_ZONE_PREVIEW_VERIFIED_V1";
+  var firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
+  if(window.firebase && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  var db=window.firebase?firebase.firestore():null;
+
 
   function el(id){return document.getElementById(id);}
   function esc(v){
@@ -145,6 +150,39 @@
   window.addEventListener("error",function(e){error(e&&e.message?e.message:"JavaScript error");});
   window.addEventListener("unhandledrejection",function(e){error(e&&e.reason?String(e.reason):"Unhandled script error");});
   el("backBtn").onclick=function(){location.href="question-uploader.html";};
+  el("approveBtn").onclick=async function(){
+    try{
+      var raw=sessionStorage.getItem(KEY);
+      if(!raw)throw new Error("No staged questions found.");
+      var state=JSON.parse(raw);
+      var items=Array.isArray(state.items)?state.items:[];
+      if(!items.length)throw new Error("The staged question list is empty.");
+      if(!db)throw new Error("Firebase could not be initialized.");
+      if(!confirm("Have you checked all questions? Publish "+items.length+" question(s) to the user portal?"))return;
+      var btn=el("approveBtn");
+      btn.disabled=true;btn.textContent="Publishing…";
+      for(var i=0;i<items.length;i+=450){
+        var batch=db.batch();
+        items.slice(i,i+450).forEach(function(item){
+          var data=item.data||item;
+          var collectionName=item.collection||(String(data.type||"").toLowerCase()==="mcq"?"mcqQuestions":"subjectiveQuestions");
+          var ref=item.update&&item.id?db.collection(collectionName).doc(item.id):db.collection(collectionName).doc();
+          batch.set(ref,Object.assign({},data,{updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"}),{merge:!!item.update});
+        });
+        await batch.commit();
+      }
+      sessionStorage.removeItem(KEY);
+      sessionStorage.removeItem(VERIFIED_KEY);
+      el("status").className="status";
+      el("status").textContent=items.length.toLocaleString("en-IN")+" question(s) approved and published successfully.";
+      el("approveBtn").textContent="✅ Published";
+      el("preview").innerHTML="";
+    }catch(e){
+      var b=el("approveBtn");if(b){b.disabled=false;b.textContent="✅ Approve & Publish";}
+      error(e&&e.message?e.message:String(e));
+    }
+  };
+
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",load);else load();
 })();
 </script>
