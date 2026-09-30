@@ -74,7 +74,20 @@ function storage(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(
 function saveState(){const x=storage();const v={...x,bookmarks:[...bookmarks],wrong:x.wrong||[]};try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){window.__cmaState=v}updateCounts()}
 function source(){return $('sourceSelect').value}
 function selectedAttempt(){return $('attemptSelect').value}
-function sourceQuestions(){return QUESTIONS.filter(q=>q.source===source())}
+function getPyqQuestions(){
+  const rows=window.CMA_FINAL_PYQ?.P17?.rows;
+  if(Array.isArray(rows)&&rows.length){
+    return rows.map((q,i)=>({
+      ...q,
+      source:"pyq",
+      attempt:q.attempt||q.pyqTerm||"Unknown Attempt",
+      id:q.id||("P17-"+(i+1)),
+      chapter:q.chapter==null?"":String(q.chapter)
+    }));
+  }
+  return QUESTIONS.filter(q=>q.source==="pyq");
+}
+function sourceQuestions(){return source()==="pyq"?getPyqQuestions():QUESTIONS.filter(q=>q.source==="bank")}
 const CHAPTER_NAMES={
   1:"Chapter 1: Basics of Cost Audit",
   2:"Chapter 2: Companies (Cost Records and Audit) Rules, 2014 (as amended)",
@@ -101,7 +114,7 @@ function renderChapters(){
  $('chapterSelect').innerHTML='<option value="all">All Chapters</option>'+ids.map(id=>'<option value="'+id+'">'+escapeHtml(CHAPTER_NAMES[id])+'</option>').join('');
 }
 function renderAttempts(){
- const pyq=QUESTIONS.filter(q=>q.source==="pyq");
+ const pyq=getPyqQuestions();
  const attempts=[...new Set(pyq.map(q=>q.attempt).filter(Boolean))];
  $('attemptSelect').innerHTML='<option value="all">All Attempts — '+pyq.length+' Questions</option>'+attempts.map(a=>'<option value="'+escapeHtml(a)+'">'+escapeHtml(a)+' — '+pyq.filter(q=>q.attempt===a).length+' Questions</option>').join('');
 }
@@ -211,6 +224,12 @@ function tickRound(){const left=Math.max(0,roundEnd-Date.now());const sec=Math.c
 function format(sec){const m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 loadState();setupEvents();$('sourceSelect').value='bank';$('chapterSelect').value='all';$('attemptSelect').value='all';$('mCount').textContent=cfg.marks;$('sCount').textContent=cfg.seconds;renderChapters();renderAttempts();updateSourceUI();updateChapterCount();
+window.addEventListener('load',()=>{
+  if(window.CMA_FINAL_PYQ?.P17?.rows?.length){
+    renderAttempts();
+    if(source()==='pyq') updateSourceUI();
+  }
+});
 function loadState(){const x=storage();bookmarks=new Set(x.bookmarks||[]);updateCounts()}
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
