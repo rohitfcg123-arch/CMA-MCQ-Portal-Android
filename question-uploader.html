@@ -33,7 +33,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #240</b> — Fixed JSON staging persistence before opening the separate Live Question Preview. Imported questions are now stored in sessionStorage first, so Preview and Approve & Publish can use the exact staged upload.<div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #241</b> — Added an independent Live Preview launcher fallback. The Preview button now reads the staged JSON directly from sessionStorage and opens question-preview.html even if another uploader handler has failed or disabled the button.<div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
 <div style="font-size:12px;font-weight:850;color:var(--teal);margin-bottom:7px">Question Portal Options</div>
 <select id="portalSectionSelect" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f;font-weight:750">
 <option value="upload">Upload New Subjective Question</option>
@@ -2105,5 +2105,24 @@ $("runExtractionBtn").onclick=async()=>{const btn=$("runExtractionBtn");try{if(!
 function hashCode(s){let h=0;for(let i=0;i<String(s).length;i++)h=((h<<5)-h)+String(s).charCodeAt(i)|0;return h;}
 function renderExtractionRows(){const body=$("masterExtractionRows");body.innerHTML=CMA_EXTRACTED.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.q||x.questionNo||'')+'</td><td>'+esc(x.attempt||'')+'</td><td>'+esc(x.subject||'')+'</td><td>'+esc(x.chapterOriginal||x.originalChapter||'')+'</td><td>'+esc(x.chapter||'')+'</td><td>'+esc(x.topic||'')+'</td><td>'+esc(x.marks??'')+'</td><td>'+esc(x.extractionStatus||'')+'</td></tr>').join('');}
 $("downloadExtractionBtn").onclick=()=>{if(!CMA_EXTRACTED.length)return;const out=CMA_EXTRACTED.map(x=>{const y={...x};delete y.chapterOriginal;delete y.originalChapter;delete y.extractionStatus;return y;});downloadJson('CMA_Zone_Corrected_Chapter_Topic.json',out);$("masterExtractionMsg").textContent='Corrected JSON downloaded. Review Needs Review items before importing to Firebase.';$("masterExtractionMsg").className='msg ok';};
+
+/* CMA Zone — UPDATE #241: independent Live Preview launcher fallback */
+(function(){
+  var PREVIEW_KEY="CMA_ZONE_PENDING_PREVIEW_V1";
+  function hasPending(){
+    try{var raw=sessionStorage.getItem(PREVIEW_KEY);if(!raw)return false;var s=JSON.parse(raw);return !!(s&&Array.isArray(s.items)&&s.items.length);}catch(e){return false;}
+  }
+  function wire(){
+    var btn=document.getElementById("downloadPendingPdfTopBtn");
+    if(!btn)return;
+    if(hasPending()){btn.disabled=false;btn.textContent="👁️ Open Preview Page";}
+    btn.addEventListener("click",function(ev){
+      if(!hasPending())return;
+      ev.preventDefault();ev.stopImmediatePropagation();location.href="question-preview.html";
+    },true);
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",wire);else wire();
+  var tries=0;var timer=setInterval(function(){wire();if(++tries>30)clearInterval(timer);},500);
+})();
 </script>
 </body></html>
