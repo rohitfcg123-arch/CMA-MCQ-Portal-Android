@@ -114,14 +114,28 @@ function examSubjectMatches(value,target){
   return false;
 }
 function examRowMatches(x){
-  const groupOk=examGroupMatches(x.group,selectedGroup)||examGroupMatches(x.groupKey,selectedGroup);
-  const subjectOk=examSubjectMatches(x.subject,selectedSubject)||
-    examSubjectMatches(x.subjectKey,selectedSubject);
+  const groupValues=[x.group,x.groupKey,x.groupName,x.groupLabel,x.cmaGroup,x.cmaGroupName];
+  const subjectValues=[x.subject,x.subjectKey,x.subjectName,x.subjectLabel,x.subjectTitle];
+  const groupOk=groupValues.some(v=>examGroupMatches(v,selectedGroup));
+  const subjectOk=subjectValues.some(v=>examSubjectMatches(v,selectedSubject));
   return groupOk&&subjectOk;
 }
 function isExamMcq(x){
   const t=String(x&&x.type||"").trim().toLowerCase();
-  return t==="mcq"||t==="objective"||(Array.isArray(x&&x.options)&&x.options.length>=2)||(Array.isArray(x&&x.opts)&&x.opts.length>=2);
+  const opts=Array.isArray(x&&x.options)?x.options:(Array.isArray(x&&x.opts)?x.opts:(Array.isArray(x&&x.choices)?x.choices:[]));
+  return t==="mcq"||t==="objective"||opts.length>=2;
+}
+function examOptionArray(x){
+  const a=Array.isArray(x&&x.options)?x.options:
+    Array.isArray(x&&x.opts)?x.opts:
+    Array.isArray(x&&x.choices)?x.choices:[];
+  return a.map(v=>typeof v==="object"?String(v.text??v.label??v.value??""):String(v)).filter(v=>v.trim());
+}
+function examAnswerIndex(x){
+  const raw=x&&x.answer??x&&x.ans??x&&x.correctAnswer??x&&x.correct;
+  if(typeof raw==="number"&&Number.isInteger(raw))return raw;
+  const s=String(raw??"").trim().toUpperCase();
+  return /^[A-Z]$/.test(s)?s.charCodeAt(0)-65:(/^\\d+$/.test(s)?Number(s):-1);
 }
 async function loadMcqs(url){
   const results=await Promise.allSettled([
@@ -132,29 +146,35 @@ async function loadMcqs(url){
   const errors=[];
   results.forEach((r,i)=>{
     if(r.status==="fulfilled"){
-      r.value.docs.forEach(d=>rows.push({id:d.id,...d.data()}));
+      r.value.docs.forEach(d=>rows.push({id:d.id,_collection:i===0?"mcqQuestions":"subjectiveQuestions",...d.data()}));
     }else{
       errors.push((i===0?"mcqQuestions":"subjectiveQuestions")+": "+(r.reason?.message||r.reason));
     }
   });
-  const matched=rows.filter(x=>isExamMcq(x)&&examRowMatches(x));
+  const mcqRows=rows.filter(isExamMcq);
+  const matched=mcqRows.filter(examRowMatches);
   const seen=new Set(),out=[];
   matched.forEach(x=>{
-    const k=[normExamKey(x.group),normExamKey(x.subject),normExamKey(x.attempt),normExamKey(x.q||x.question)].join("|");
+    const opts=examOptionArray(x);
+    const qText=String(x.q||x.question||x.questionText||"");
+    const k=[normExamKey(x.group||x.groupKey||x.groupName),normExamKey(x.subject||x.subjectKey||x.subjectName),normExamKey(x.attempt),normExamKey(qText)].join("|");
     if(seen.has(k))return;
     seen.add(k);
     out.push({
       ...x,
-      q:String(x.q||x.question||""),
-      opts:Array.isArray(x.options)?x.options:(Array.isArray(x.opts)?x.opts:[]),
-      ans:Number.isInteger(x.answer)?x.answer:Number(x.ans??x.correctAnswer??-1),
-      sl:x.sl??x.sourceSl??null
+      q:qText,
+      opts,
+      ans:examAnswerIndex(x),
+      sl:x.sl??x.sourceSl??x.questionNo??null
     });
   });
   if(out.length)return out;
   if(errors.length)throw Error("Firestore MCQ bank could not be loaded. "+errors.join(" | "));
-  throw Error("No MCQs found for "+selectedSubject+". Check that the uploaded JSON has the exact CMA group and subject.");
-}
+  const subjectOnly=mcqRows.filter(x=>[x.subject,x.subjectKey,x.subjectName,x.subjectLabel,x.subjectTitle].some(v=>examSubjectMatches(v,selectedSubject)));
+  if(subjectOnly.length){
+    throw Error("MCQs were found for "+selectedSubject+" ("+subjectOnly.length+"), but their CMA group value does not match Group 1. Please re-save those questions from Question Uploader.");
+  }
+  throw Error("No MCQs found for "+selectedSubject+". Firestore MCQ records are not carrying the expected subject field/value.");}
 async function loadSubjective(group,subject){
   const snap=await db.collection("subjectiveQuestions").get();
   return snap.docs.map(d=>({id:d.id,...d.data()}))
