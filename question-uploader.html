@@ -33,7 +33,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #241</b> — Added an independent Live Preview launcher fallback. The Preview button now reads the staged JSON directly from sessionStorage and opens question-preview.html even if another uploader handler has failed or disabled the button.<div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #242</b> — Rebuilt the Open Preview Page button as an independent direct launcher. It can reconstruct staged preview data from the JSON box if the normal uploader staging handler fails.<div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
 <div style="font-size:12px;font-weight:850;color:var(--teal);margin-bottom:7px">Question Portal Options</div>
 <select id="portalSectionSelect" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f;font-weight:750">
 <option value="upload">Upload New Subjective Question</option>
@@ -62,6 +62,44 @@
 
 <section class="panel"><h2>JSON Upload / Backup</h2><div class="body">
 <div class="note"><b>Universal JSON Upload:</b> One JSON file can now contain both <b>MCQ and Subjective</b> questions. Use <b>type: "mcq"</b> with <b>options[] + answer</b> for objective questions, or <b>type: "subjective"</b> with <b>solutionHtml</b> for subjective questions. The uploader automatically routes MCQs to the MCQ Bank and subjective questions to the Subjective PYQ portal. Chapter/subject validation uses the central CMA Zone master. See <code>docs/CMA-Zone-Question-JSON-Schema-v1.json</code> for the exact format. You can upload 3, 10, 100, 500 or more questions in a single JSON file. All questions are validated first, duplicates are merged by Group + Subject + Attempt + Question Number, and large uploads are automatically split into safe Firestore batches.  For <b>Corporate Accounting and Auditing (Paper 10)</b> uses the exact 8 modules shown in the syllabus, grouped as Section A: Corporate Accounting and Section B: Auditing. <b>Direct Tax Laws and International Taxation</b> uses the exact 14 module names from the chapter dropdown. <b>Strategic Cost Management</b> uses the exact 26 chapter names from the chapter dropdown (including COST OF QUALITY, DECISION MAKING MAKE OR BUY, TRANSFER PRICING, STANDARD COSTING AND VARIANCE ANALYSIS, LINEAR PROGRAMMING, TRANSPORTATION, ASSIGNMENT, GAME THEORY, SIMULATION, PROJECT MANAGEMENT, LEARNING CURVE, BUSINESS APPLICATION OF MAXIMA AND MINIMA and BUSINESS FORECASTING MODELS). Each item needs: <b>group, subject, chapter, attempt, q, html</b>. Optional: <b>marks, solutionHtml</b>.</div>
+<script>
+window.cmaOpenPreview=function(){
+  var KEY="CMA_ZONE_PENDING_PREVIEW_V1";
+  try{
+    var raw=sessionStorage.getItem(KEY);
+    if(!raw){
+      var box=document.getElementById("json");
+      var text=box&&box.value?box.value.trim():"";
+      if(text){
+        var parsed=JSON.parse(text);
+        var arr=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.questions)?parsed.questions:(parsed&&Array.isArray(parsed.items)?parsed.items:[]));
+        if(arr.length){
+          var items=arr.map(function(x){
+            var data=x&&x.data?x.data:x;
+            return {data:data,collection:(data&&String(data.type).toLowerCase()==="mcq"?"mcqQuestions":"subjectiveQuestions"),update:false};
+          });
+          raw=JSON.stringify({items:items,createdAt:new Date().toISOString(),sourceCount:items.length});
+          sessionStorage.setItem(KEY,raw);
+        }
+      }
+    }
+    if(!raw){
+      alert("No staged questions found. Please click Import Questions JSON first.");
+      return false;
+    }
+    var state=JSON.parse(raw);
+    if(!state.items||!state.items.length){
+      alert("No staged questions found. Please import the JSON again.");
+      return false;
+    }
+    location.href="question-preview.html";
+    return false;
+  }catch(e){
+    alert("Could not open preview: "+(e&&e.message?e.message:e));
+    return false;
+  }
+};
+</script>
 <input id="jsonFile" type="file" accept=".json,application/json" multiple onchange="window.cmaLoadJsonFiles(this)" style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff">
 <script>
 window.cmaLoadJsonFiles=async function(input){
@@ -83,7 +121,7 @@ window.cmaLoadJsonFiles=async function(input){
 </script>
 <div class="count" style="margin-top:6px">Select <b>one or multiple Question JSON files</b> at the same time, or paste JSON below. You can select all 6 attempts together.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
-<div class="toolbar"><button type="button" class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL JSONs</button><button type="button" class="btn gold" id="downloadPendingPdfTopBtn" disabled>👁️ Open Preview Page</button><button type="button" class="btn" id="approvePendingTopBtn" disabled>✅ Approve &amp; Publish</button></div>
+<div class="toolbar"><button type="button" class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL JSONs</button><button type="button" class="btn gold" id="downloadPendingPdfTopBtn" onclick="window.cmaOpenPreview()" >👁️ Open Preview Page</button><button type="button" class="btn" id="approvePendingTopBtn" disabled>✅ Approve &amp; Publish</button></div>
 <div class="count" id="portalQuestionExportCount" style="margin-top:8px"></div>
 <div style="height:1px;background:var(--line);margin:18px 0"></div>
 <div class="note"><b>🔧 Chapter + Topic Correction JSON:</b> Upload the correction JSON generated from the exported portal questions. It uses Group + Subject + Attempt + Question No. + HTML hash to identify the exact existing Firestore question. It updates <b>only</b> Chapter/Chapter ID where correction is required and Topic; question HTML, marks, attempt, q, subject and solution remain untouched. The complete file is validated before any Firestore write, so an ambiguous/missing match blocks the whole operation.</div>
