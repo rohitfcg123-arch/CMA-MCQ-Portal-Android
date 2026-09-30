@@ -121,7 +121,7 @@ window.cmaLoadJsonFiles=async function(input){
 </script>
 <div class="count" style="margin-top:6px">Select <b>one or multiple Question JSON files</b> at the same time, or paste JSON below. You can select all 6 attempts together.</div>
 <textarea id="json" style="margin-top:12px;min-height:210px" placeholder='Paste Question JSON array here...'></textarea>
-<div class="toolbar"><button type="button" class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL JSONs</button><button type="button" class="btn gold" id="downloadPendingPdfTopBtn" onclick="window.cmaOpenPreview()" >👁️ Open Preview Page</button><button type="button" class="btn" id="approvePendingTopBtn" disabled>✅ Approve &amp; Publish</button></div>
+<div class="toolbar"><button type="button" class="btn gold" id="importBtn">Import Questions JSON</button><button class="btn gray" id="exportBtn">Export All Questions JSON</button><button class="btn gold" id="exportPortalQuestionsBtn">📥 Download ALL JSONs</button><button type="button" class="btn gold" id="downloadPendingPdfTopBtn" onclick="window.cmaOpenPreview()" >👁️ Open Preview Page</button><button type="button" class="btn" id="approvePendingTopBtn" onclick="return window.cmaUploaderDirectApprove()">✅ Approve &amp; Publish</button></div>
 <div class="count" id="portalQuestionExportCount" style="margin-top:8px"></div>
 <div style="height:1px;background:var(--line);margin:18px 0"></div>
 <div class="note"><b>🔧 Chapter + Topic Correction JSON:</b> Upload the correction JSON generated from the exported portal questions. It uses Group + Subject + Attempt + Question No. + HTML hash to identify the exact existing Firestore question. It updates <b>only</b> Chapter/Chapter ID where correction is required and Topic; question HTML, marks, attempt, q, subject and solution remain untouched. The complete file is validated before any Firestore write, so an ambiguous/missing match blocks the whole operation.</div>
@@ -148,7 +148,7 @@ window.cmaLoadJsonFiles=async function(input){
 </div>
 <div class="toolbar">
 <button class="btn gold" id="downloadPendingPdfBtn" type="button" disabled>👁️ Open Preview Page</button>
-<button class="btn" id="approvePendingBtn" type="button" disabled>✅ Approve &amp; Publish</button>
+<button class="btn" id="approvePendingBtn" type="button" style="pointer-events:auto!important;opacity:1!important;cursor:pointer!important;position:relative;z-index:9999" onclick="return window.cmaUploaderDirectApprove()">✅ Approve &amp; Publish</button>
 <button class="btn gray" id="discardPendingBtn" type="button" disabled>Discard Pending</button>
 </div>
 <div id="pendingVerificationMsg" class="msg"></div>
