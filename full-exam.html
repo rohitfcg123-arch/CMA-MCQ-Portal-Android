@@ -80,7 +80,38 @@ function extractQuestions(html){
   for(;end<html.length;end++){const ch=html[end];if(inStr){if(escp)escp=false;else if(ch==="\\")escp=true;else if(ch==='"')inStr=false;continue}if(ch==='"'){inStr=true;continue}if(ch==="[")depth++;else if(ch==="]"){depth--;if(depth===0){end++;break}}}
   return JSON.parse(html.slice(start,end));
 }
-async function loadMcqs(url){const res=await fetch(url+"?v=exam20260930");if(!res.ok)throw Error("Could not load MCQ bank ("+res.status+").");return extractQuestions(await res.text());}
+async function loadMcqs(url){
+  const key=String(selectedSubject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+  const g=String(selectedGroup||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+  const norm=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+  const isMcq=x=>{const t=String(x&&x.type||"").trim().toLowerCase();return t==="mcq"||t==="objective"||(Array.isArray(x&&x.options)&&x.options.length>=2);};
+  try{
+    const [mcqSnap,subjSnap]=await Promise.all([
+      db.collection("mcqQuestions").get(),
+      db.collection("subjectiveQuestions").get()
+    ]);
+    const rows=mcqSnap.docs.map(d=>({id:d.id,...d.data()}))
+      .concat(subjSnap.docs.map(d=>({id:d.id,...d.data()})))
+      .filter(x=>isMcq(x)&&norm(x.subject)===key&&norm(x.group)===g);
+    const seen=new Set(),out=[];
+    rows.forEach(x=>{
+      const k=[norm(x.group),norm(x.subject),norm(x.attempt),norm(x.q)].join("|");
+      if(seen.has(k))return; seen.add(k);
+      out.push({
+        ...x,
+        q:String(x.q||x.question||""),
+        opts:Array.isArray(x.options)?x.options:[],
+        ans:Number.isInteger(x.answer)?x.answer:Number(x.ans??x.correctAnswer??-1),
+        sl:x.sl??null
+      });
+    });
+    return out;
+  }catch(e){
+    console.warn("Firestore MCQ load failed; falling back to static subject page:",e);
+    const res=await fetch(url+"?v=exam20261001");if(!res.ok)throw Error("Could not load MCQ bank ("+res.status+").");
+    return extractQuestions(await res.text());
+  }
+}
 async function loadSubjective(group,subject){
   const snap=await db.collection("subjectiveQuestions").where("group","==",group).where("subject","==",subject).get();
   return snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>String(x.html||"").trim());
