@@ -1888,7 +1888,7 @@ function pendingQuestionCard(item,index){
   const x=item.data||item;
   const solutionAvailable=Array.isArray(x.solutionHtmls)?x.solutionHtmls.length>0:!!String(x.solutionHtml||"").trim();
   const options=Array.isArray(x.options)?x.options:[];
-  const optionHtml=x.type==="mcq"&&options.length
+  const optionHtml=options.length
     ? '<ol type="A" style="margin:10px 0 0;padding-left:24px">'+options.map((o,i)=>'<li style="margin:5px 0">'+String(o||"")+(Number(x.answer)===i?' <b>✓ Correct</b>':"")+'</li>').join("")+'</ol>'
     : "";
   return '<article class="verification-question portal-question">'+
