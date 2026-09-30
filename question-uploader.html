@@ -5,58 +5,7 @@
 <title>CMA Zone — Question Uploader</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script>
-(function(){
-  // This handler is loaded before the main uploader script, so it must
-  // initialise Firebase itself. Otherwise an early/inline click can call
-  // firebase.auth() before the DEFAULT app exists.
-  var cfg={
-    apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",
-    authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",
-    projectId:"cma-mcq-portal-cf33f",
-    storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",
-    messagingSenderId:"208738737302",
-    appId:"1:208738737302:web:3754a55033f67a8ffef6b7",
-    measurementId:"G-TXD74QQE8F"
-  };
-  window.cmaGoogleLogin=async function(){
-    var btn=document.getElementById("loginBtn"), msg=document.getElementById("loginMsg");
-    if(btn){btn.disabled=true;btn.textContent="Opening Google…";}
-    if(msg){msg.className="msg";msg.textContent="Opening Google sign-in…";}
-    try{
-      if(!window.firebase) throw new Error("Firebase SDK did not load.");
-      if(!firebase.apps.length) firebase.initializeApp(cfg);
-      var a=firebase.auth(), p=new firebase.auth.GoogleAuthProvider();
-      p.setCustomParameters({prompt:"select_account"});
-      p.addScope("email");
-      await a.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-      // Chrome Android can leave the Firebase popup promise hanging after
-      // the Google account chooser. Use the redirect flow directly on mobile.
-      var isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if(isMobile){
-        if(msg){msg.className="msg";msg.textContent="Redirecting to Google sign-in…";}
-        await a.signInWithRedirect(p);
-        return;
-      }
-      try{
-        await a.signInWithPopup(p);
-        return;
-      }catch(e){
-        var code=e&&e.code?e.code:"";
-        var fallback=["auth/popup-blocked","auth/popup-closed-by-user","auth/cancelled-popup-request","auth/operation-not-supported-in-this-environment","auth/web-storage-unsupported"];
-        if(fallback.indexOf(code)===-1) throw e;
-        if(msg){msg.className="msg";msg.textContent="Popup unavailable. Redirecting to Google…";}
-        await a.signInWithRedirect(p);
-      }
-    }catch(e){
-      var code=e&&e.code?e.code:"";
-      var detail=code ? code+" — " : "";
-      if(msg){msg.className="msg err";msg.textContent=detail+(e&&e.message?e.message:String(e));}
-      if(btn){btn.disabled=false;btn.textContent="Continue with Google";}
-    }
-  };
-})();
-</script>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/sfm-subjective-pyq-v29.js?v=20260927u50"></script>
@@ -83,16 +32,8 @@
 </style>
 </head>
 <body>
-<header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div><div><span id="who"></span> <button class="btn gray" id="logout" type="button" onclick="logout()">Logout</button></div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #233</b> — Fixed the mobile Google-login hang after account selection by using Firebase redirect sign-in directly on Android; desktop keeps popup sign-in with redirect fallback. Uploaded questions are validated and staged locally first; they are NOT written to Firestore or shown in the user portal until the administrator opens the Live Question Preview and explicitly approves them. Subject + Chapter master validation remains strict and never auto-changes uploaded metadata.<div id="login" class="login">
-<h2>Question Uploader Login</h2>
-<p>Use the authorised CMA Zone administrator Google account.</p>
-<button class="btn gold" id="loginBtn" type="button" onclick="cmaGoogleLogin()">Continue with Google</button>
-<div id="loginMsg" class="msg"></div>
-</div>
-
-<div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b">
-<div style="font-size:12px;font-weight:850;color:var(--teal);margin-bottom:7px">Question Portal Options</div>
+<header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div></header>
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #234</b> — Google login has been removed from the Question Uploader. The uploader now opens directly without an administrator sign-in screen; Firebase is still used for Firestore data access.</div>
 <select id="portalSectionSelect" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f;font-weight:750">
 <option value="upload">Upload New Subjective Question</option>
 <option value="json">JSON Upload / Backup</option>
@@ -289,13 +230,9 @@
 </div>
 
 <script>
-const ADMIN_EMAIL="rohit.fcg123@gmail.com";
 const firebaseConfig={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(),db=firebase.firestore(),provider=new firebase.auth.GoogleAuthProvider();
-provider.setCustomParameters({prompt:"select_account"});
-provider.addScope("email");
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+const db=firebase.firestore();
 const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();
 function questionIdentityKey(x){
   const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
@@ -591,67 +528,6 @@ function setBusy(btn,busy,label){if(!btn)return;if(busy){btn.disabled=true;btn.i
 let DATA=[];
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function fmt(v){if(!v)return"";if(v.toDate)return v.toDate().toLocaleString("en-IN");return new Date(v).toLocaleString("en-IN")}
-function showLoginError(e){
-  const code=e&&e.code?e.code:"";
-  const raw=e&&e.message?e.message:String(e||"Login failed");
-  $("loginMsg").className="msg err";
-  $("loginMsg").textContent=code ? code+" — "+raw : raw;
-}
-async function login(){
-  const btn=$("loginBtn");
-  if(!btn)return;
-  btn.disabled=true;
-  btn.textContent="Opening Google…";
-  $("loginMsg").className="msg";
-  $("loginMsg").textContent="Opening Google sign-in…";
-  try{
-    provider.setCustomParameters({prompt:"select_account"});
-    try{
-      await auth.signInWithPopup(provider);
-      return;
-    }catch(popupError){
-      const code=popupError&&popupError.code?popupError.code:"";
-      const fallbackCodes=[
-        "auth/popup-blocked",
-        "auth/popup-closed-by-user",
-        "auth/cancelled-popup-request",
-        "auth/operation-not-supported-in-this-environment",
-        "auth/web-storage-unsupported"
-      ];
-      if(fallbackCodes.indexOf(code)===-1){
-        throw popupError;
-      }
-      $("loginMsg").className="msg";
-      $("loginMsg").textContent="Google popup unavailable. Redirecting to Google sign-in…";
-      await auth.signInWithRedirect(provider);
-      return;
-    }
-  }catch(e){
-    showLoginError(e);
-    btn.disabled=false;
-    btn.textContent="Continue with Google";
-  }
-}
-async function logout(){
-  try{
-    await auth.signOut();
-    window.location.replace(window.location.pathname+"?loggedout=1");
-  }catch(e){
-    showLoginError(e);
-  }
-}
-$("loginBtn").onclick=login;
-$("logout").onclick=logout;
-auth.getRedirectResult().then(r=>{
-  if(r&&r.user){
-    $("loginMsg").className="msg ok";
-    $("loginMsg").textContent="Google sign-in successful. Loading Question Uploader…";
-  }
-}).catch(e=>{
-  showLoginError(e);
-  $("loginMsg").className="msg err";
-  $("loginMsg").textContent="Google sign-in failed: "+(e&&e.code?e.code+" — ":"")+(e&&e.message?e.message:String(e));
-});
 const CAA_SECTIONED_CHAPTERS=[
   {section:"Section A: Corporate Accounting",chapters:[
     "Accounting for Shares and Debentures",
@@ -690,27 +566,8 @@ $("subject").onchange=()=>populateUploadChapters($("subject").value);
 populateUploadChapters($("subject").value);
 setupPortalSections();
 populateSubjects($("group").value,"Strategic Financial Management");
-auth.onAuthStateChanged(async u=>{
-  if(!u){
-    $("login").classList.remove("hidden");
-    $("app").classList.add("hidden");
-    $("who").textContent="";
-    $("loginBtn").disabled=false;
-    $("loginBtn").textContent="Continue with Google";
-    return;
-  }
-  if(norm(u.email)!==ADMIN_EMAIL){
-    $("login").classList.remove("hidden");
-    $("app").classList.add("hidden");
-    $("loginMsg").className="msg err";
-    $("loginMsg").textContent="This Google account is not authorised. Please sign in with "+ADMIN_EMAIL+".";
-    await auth.signOut();
-    return;
-  }
-  $("login").classList.add("hidden");
+async function initOpenQuestionUploader(){
   $("app").classList.remove("hidden");
-  $("who").textContent=u.email;
-  $("loginMsg").textContent="";
   try{
     await loadStrictChapterMaster();
     populateSubjects($("group").value,"Strategic Financial Management");
@@ -721,7 +578,8 @@ auth.onAuthStateChanged(async u=>{
     $("msg").className="msg err";
     $("msg").textContent="Could not load questions: "+(e.message||e);
   }
-});
+}
+initOpenQuestionUploader();
 async function loadQuestions(){populateBulkNumberFilters();
  const snap=await db.collection("subjectiveQuestions").get();
  DATA=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.attempt||"").localeCompare(b.attempt||"")||(a.sort||0)-(b.sort||0));
@@ -863,10 +721,10 @@ window.approveMarks=async function(id){
       marks:pending,
       pendingMarks:firebase.firestore.FieldValue.delete(),
       marksApprovalStatus:"approved",
-      marksApprovedBy:ADMIN_EMAIL,
+      marksApprovedBy:"CMA Zone Question Uploader",
       marksApprovedAt:firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-      updatedBy:ADMIN_EMAIL
+      updatedBy:"CMA Zone Question Uploader"
     });
     const idx=DATA.findIndex(q=>q.id===id);
     if(idx>=0){
@@ -948,7 +806,7 @@ $("saveMetadata").onclick=async()=>{
     setBusy(btn,true,"Saving…");
     const current=DATA.find(q=>q.id===editingQuestionId)||{};
     const currentApproved=current.marks==null||current.marks===""?null:Number(current.marks);
-    const updates={group,subject,chapter,attempt,q:qno,solutionHtml:solutionHtmls[0]||"",solutionHtmls,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL};
+    const updates={group,subject,chapter,attempt,q:qno,solutionHtml:solutionHtmls[0]||"",solutionHtmls,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"};
     if(marksRaw===""){
       if(currentApproved!==null){
         $("editMsg").className="msg err";
@@ -1081,7 +939,7 @@ $("saveBulkMarks").onclick=async()=>{
     for(let i=0;i<ids.length;i+=450){
       const batch=db.batch();
       ids.slice(i,i+450).forEach(id=>batch.update(db.collection("subjectiveQuestions").doc(id),{
-        pendingMarks:n,marksApprovalStatus:"pending",marksRequestedBy:ADMIN_EMAIL,
+        pendingMarks:n,marksApprovalStatus:"pending",marksRequestedBy:"CMA Zone Question Uploader",
         marksRequestedAt:firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:ADMIN_EMAIL
       }));
