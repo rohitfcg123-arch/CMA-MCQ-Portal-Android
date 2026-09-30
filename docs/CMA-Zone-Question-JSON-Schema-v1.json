@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0",
+  "description": "CMA Zone universal PYQ JSON format. One file can contain MCQ and subjective questions; uploader routes each item by type.",
+  "rootFormats": [
+    "array",
+    "object-with-questions"
+  ],
+  "item": {
+    "required": [
+      "type",
+      "group",
+      "subject",
+      "chapter",
+      "attempt",
+      "q",
+      "html"
+    ],
+    "fields": {
+      "type": "mcq | subjective",
+      "group": "foundation | inter1 | inter2 | final3 | final4",
+      "subject": "Exact CMA Zone subject-master name",
+      "chapter": "Exact CMA Zone chapter-master name",
+      "chapterId": "Optional exact chapter ID from master",
+      "topic": "Optional topic; uploader preserves it",
+      "source": "bank | pyq (required for mcq; subjective defaults to pyq)",
+      "attempt": "Attempt label, e.g. June 2026",
+      "q": "Question number, e.g. 1, 2(a), 8B",
+      "html": "Question HTML preserving paragraphs, lists and tables",
+      "marks": "Optional numeric marks",
+      "sort": "Optional numeric sort order",
+      "options": "Required for mcq; array of option strings or {text, value} objects",
+      "answer": "Required for mcq; 0-based option index, or A/B/C/D...",
+      "explanationHtml": "Optional MCQ explanation/suggested answer",
+      "solutionHtml": "Optional subjective suggested answer",
+      "solutionHtmls": "Optional subjective alternative answers array"
+    }
+  },
+  "examples": {
+    "mcq": {
+      "type": "mcq",
+      "group": "inter1",
+      "subject": "Cost Accounting",
+      "chapter": "Introduction to Cost Accounting",
+      "chapterId": "Paper8-C01",
+      "source": "pyq",
+      "attempt": "June 2026",
+      "q": "1",
+      "html": "<p>Question text</p>",
+      "options": [
+        "Option A",
+        "Option B",
+        "Option C",
+        "Option D"
+      ],
+      "answer": 1,
+      "marks": 2
+    },
+    "subjective": {
+      "type": "subjective",
+      "group": "inter1",
+      "subject": "Cost Accounting",
+      "chapter": "Introduction to Cost Accounting",
+      "chapterId": "Paper8-C01",
+      "source": "pyq",
+      "attempt": "June 2026",
+      "q": "8(a)",
+      "html": "<p>Question text</p>",
+      "marks": 7,
+      "solutionHtml": "<p>Suggested answer</p>"
+    }
+  }
+}
