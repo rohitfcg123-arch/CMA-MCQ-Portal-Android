@@ -2162,5 +2162,45 @@ $("downloadExtractionBtn").onclick=()=>{if(!CMA_EXTRACTED.length)return;const ou
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",wire);else wire();
   var tries=0;var timer=setInterval(function(){wire();if(++tries>30)clearInterval(timer);},500);
 })();
+
+// CMA Zone — UPDATE #248: secure Admin authentication only when publishing
+window.cmaUploaderDirectApprove=async function(){
+  try{
+    var raw=sessionStorage.getItem("CMA_ZONE_PENDING_PREVIEW_V1");
+    if(!raw){alert("No staged questions found. Please import the JSON first.");return false;}
+    var state=JSON.parse(raw),items=Array.isArray(state.items)?state.items:[];
+    if(!items.length){alert("No staged questions found.");return false;}
+    var auth=firebase.auth(),db=firebase.firestore(),user=auth.currentUser;
+    if(!user){
+      var provider=new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({prompt:"select_account"});
+      user=(await auth.signInWithPopup(provider)).user;
+    }
+    if(!user||String(user.email||"").toLowerCase()!=="rohit.fcg123@gmail.com"){
+      if(user)await auth.signOut();
+      throw new Error("Only the Super Admin account rohit.fcg123@gmail.com can publish questions.");
+    }
+    if(!confirm("Publish "+items.length+" staged question(s) to the user portal?"))return false;
+    var btn=document.getElementById("approvePendingBtn");if(btn){btn.disabled=true;btn.textContent="Publishing…";}
+    for(var i=0;i<items.length;i+=450){
+      var batch=db.batch();
+      items.slice(i,i+450).forEach(function(item){
+        var data=item&&item.data?item.data:item;
+        var collection=item.collection||(String(data.type||"").toLowerCase()==="mcq"?"mcqQuestions":"subjectiveQuestions");
+        var ref=item.update&&item.id?db.collection(collection).doc(item.id):db.collection(collection).doc();
+        batch.set(ref,Object.assign({},data,{updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"}),{merge:!!item.update});
+      });
+      await batch.commit();
+    }
+    sessionStorage.removeItem("CMA_ZONE_PENDING_PREVIEW_V1");
+    sessionStorage.removeItem("CMA_ZONE_PREVIEW_VERIFIED_V1");
+    if(btn){btn.disabled=true;btn.textContent="✅ Published";}
+    var msg=document.getElementById("pendingVerificationMsg");if(msg){msg.className="msg ok";msg.textContent=items.length+" question(s) approved and published successfully.";}
+    return false;
+  }catch(e){
+    var b=document.getElementById("approvePendingBtn");if(b){b.disabled=false;b.textContent="✅ Approve & Publish";}
+    alert("Publish failed: "+(e&&e.message?e.message:e));return false;
+  }
+};
 </script>
 </body></html>
