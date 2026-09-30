@@ -80,49 +80,77 @@ function extractQuestions(html){
   for(;end<html.length;end++){const ch=html[end];if(inStr){if(escp)escp=false;else if(ch==="\\")escp=true;else if(ch==='"')inStr=false;continue}if(ch==='"'){inStr=true;continue}if(ch==="[")depth++;else if(ch==="]"){depth--;if(depth===0){end++;break}}}
   return JSON.parse(html.slice(start,end));
 }
+function normExamKey(v){
+  return String(v??"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+}
+function examGroupMatches(value,target){
+  const v=normExamKey(value),t=normExamKey(target);
+  const aliases={
+    foundation:["foundation","cmafoundation"],
+    inter1:["inter1","intergroup1","cmaintermediategroup1"],
+    inter2:["inter2","intergroup2","cmaintermediategroup2"],
+    final3:["final3","finalgroup3","cmafinalgroup3"],
+    final4:["final4","finalgroup4","cmafinalgroup4"]
+  };
+  return v===t||(aliases[t]||[]).includes(v);
+}
+function examSubjectMatches(value,target){
+  const v=normExamKey(value),t=normExamKey(target);
+  if(v===t)return true;
+  const aliases={
+    businesslawandethics:["businesslawandethics","businesslawsandethics"],
+    businesslawsandethics:["businesslawandethics","businesslawsandethics"],
+    fundamentalslawandbusinesscommunication:[
+      "fundamentalsoflawandbusinesscommunication",
+      "fundamentalsofbusinesslawsandbusinesscommunication"
+    ]
+  };
+  return (aliases[t]||[]).includes(v)||(aliases[v]||[]).includes(t);
+}
+function examRowMatches(x){
+  return examGroupMatches(x.group,selectedGroup) &&
+    (examSubjectMatches(x.subject,selectedSubject)||examSubjectMatches(x.subjectKey,selectedSubject));
+}
+function isExamMcq(x){
+  const t=String(x&&x.type||"").trim().toLowerCase();
+  return t==="mcq"||t==="objective"||(Array.isArray(x&&x.options)&&x.options.length>=2)||(Array.isArray(x&&x.opts)&&x.opts.length>=2);
+}
 async function loadMcqs(url){
-  const key=String(selectedSubject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-  const g=String(selectedGroup||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-  const norm=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-  const isMcq=x=>{const t=String(x&&x.type||"").trim().toLowerCase();return t==="mcq"||t==="objective"||(Array.isArray(x&&x.options)&&x.options.length>=2);};
-  try{
-    const [mcqSnap,subjSnap]=await Promise.all([
-      db.collection("mcqQuestions").get(),
-      db.collection("subjectiveQuestions").get()
-    ]);
-    const rows=mcqSnap.docs.map(d=>({id:d.id,...d.data()}))
-      .concat(subjSnap.docs.map(d=>({id:d.id,...d.data()})))
-      .filter(x=>isMcq(x)&&norm(x.subject)===key&&norm(x.group)===g);
-    const seen=new Set(),out=[];
-    rows.forEach(x=>{
-      const k=[norm(x.group),norm(x.subject),norm(x.attempt),norm(x.q)].join("|");
-      if(seen.has(k))return; seen.add(k);
-      out.push({
-        ...x,
-        q:String(x.q||x.question||""),
-        opts:Array.isArray(x.options)?x.options:[],
-        ans:Number.isInteger(x.answer)?x.answer:Number(x.ans??x.correctAnswer??-1),
-        sl:x.sl??null
-      });
+  const results=await Promise.allSettled([
+    db.collection("mcqQuestions").get(),
+    db.collection("subjectiveQuestions").get()
+  ]);
+  const rows=[];
+  const errors=[];
+  results.forEach((r,i)=>{
+    if(r.status==="fulfilled"){
+      r.value.docs.forEach(d=>rows.push({id:d.id,...d.data()}));
+    }else{
+      errors.push((i===0?"mcqQuestions":"subjectiveQuestions")+": "+(r.reason?.message||r.reason));
+    }
+  });
+  const matched=rows.filter(x=>isExamMcq(x)&&examRowMatches(x));
+  const seen=new Set(),out=[];
+  matched.forEach(x=>{
+    const k=[normExamKey(x.group),normExamKey(x.subject),normExamKey(x.attempt),normExamKey(x.q||x.question)].join("|");
+    if(seen.has(k))return;
+    seen.add(k);
+    out.push({
+      ...x,
+      q:String(x.q||x.question||""),
+      opts:Array.isArray(x.options)?x.options:(Array.isArray(x.opts)?x.opts:[]),
+      ans:Number.isInteger(x.answer)?x.answer:Number(x.ans??x.correctAnswer??-1),
+      sl:x.sl??x.sourceSl??null
     });
-    return out;
-  }catch(e){
-    console.warn("Firestore MCQ load failed; falling back to static subject page:",e);
-    const res=await fetch(url+"?v=exam20261001");if(!res.ok)throw Error("Could not load MCQ bank ("+res.status+").");
-    return extractQuestions(await res.text());
-  }
+  });
+  if(out.length)return out;
+  if(errors.length)throw Error("Firestore MCQ bank could not be loaded. "+errors.join(" | "));
+  throw Error("No MCQs found for "+selectedSubject+". Check that the uploaded JSON has the exact CMA group and subject.");
 }
 async function loadSubjective(group,subject){
-  const snap=await db.collection("subjectiveQuestions").where("group","==",group).where("subject","==",subject).get();
-  return snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>String(x.html||"").trim());
-}
-function selectSubjective(rows){
-  const byAttempt={};rows.forEach(x=>{const a=String(x.attempt||"Unknown");(byAttempt[a]??=[]).push(x)});
-  const attempts=Object.keys(byAttempt).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
-  let picked=[];
-  attempts.forEach(a=>{if(picked.length<SUB_COUNT)picked.push(shuffle(byAttempt[a])[0])});
-  const rest=shuffle(rows.filter(x=>!picked.includes(x)));picked=[...picked,...rest];
-  return unique(picked,x=>x.id||[x.attempt,x.q,x.html].join("|")).slice(0,SUB_COUNT);
+  const snap=await db.collection("subjectiveQuestions").get();
+  return snap.docs.map(d=>({id:d.id,...d.data()}))
+    .filter(x=>String(x.html||"").trim() && examRowMatches(x) && !isExamMcq(x));
 }
 function makePaper(mcqs,subs){
   if(mcqs.length<MCQ_COUNT)throw Error("Selected subject has only "+mcqs.length+" MCQs; at least 15 are required.");
