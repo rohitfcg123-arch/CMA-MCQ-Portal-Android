@@ -12,7 +12,7 @@
     if(btn){btn.disabled=true;btn.textContent="Opening Google…";}
     if(msg){msg.className="msg";msg.textContent="Opening Google sign-in…";}
     try{
-      var cfg={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2G3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
+      var cfg={apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",projectId:"cma-mcq-portal-cf33f",storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",messagingSenderId:"208738737302",appId:"1:208738737302:web:3754a55033f67a8ffef6b7",measurementId:"G-TXD74QQE8F"};
       if(!firebase.apps.length) firebase.initializeApp(cfg);
       var a=firebase.auth(), p=new firebase.auth.GoogleAuthProvider();
       p.setCustomParameters({prompt:"select_account"});
