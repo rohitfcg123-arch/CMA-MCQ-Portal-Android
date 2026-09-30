@@ -54,10 +54,10 @@ select,.field,.chapter-select,.topic-select{background:#f7f5ef!important;color:#
 <div class="app">
 <header class="top"><div class="topline"><div><div class="brand">CMA Final Group 4</div><div class="mini">MCQ Practice System</div></div><button class="home" id="homeBtn">⌂ Home</button></div></header>
 <section id="setup" class="screen active">
-<div class="hero"><h1>Cost and Management Audit</h1><p><span id="sourceSummary">395 MCQ Bank questions loaded.</span> Choose the question source, round size, answer mode and timer before starting.</p></div>
+<div class="hero"><h1>Cost and Management Audit</h1><p><span id="sourceSummary">MCQ Bank questions loaded.</span> Choose the question source, round size, answer mode and timer before starting.</p></div>
 <div class="card"><h2>Question Source</h2><div class="row"><div><div class="label">What do you want to solve?</div><span class="desc">Choose between the regular MCQ Bank and Previous Year Papers.</span></div><select id="sourceSelect" style="max-width:240px"><option value="bank">MCQ Bank</option><option value="pyq">Previous Year Paper</option></select></div></div>
-<div class="card" id="bankCard"><h2>Chapter</h2><select id="chapterSelect"><option value="all">All Chapters</option><option value="1">Chapter 1: Basics of Cost Audit</option><option value="2">Chapter 2: Companies (Cost Records and Audit) Rules, 2014 (as amended)</option><option value="3">Chapter 3: Cost Auditor</option><option value="4">Chapter 4: Overview of Cost Accounting Standards and GACAP</option><option value="5">Chapter 5: Cost Auditing and Assurance Standards</option><option value="6">Chapter 6: Cost Audit Programme</option><option value="7">Chapter 7: Cost Audit Documentation, Audit Process and Execution</option><option value="8">Chapter 8: Preparation and Filing of Cost Audit Report</option><option value="9">Chapter 9: Basics of Management Audit</option><option value="10">Chapter 10: Management Reporting Issues and Analysis</option><option value="11">Chapter 11: Management Audit in Different Functions</option><option value="12">Chapter 12: Evaluation of Corporate Image</option><option value="13">Chapter 13: Information Systems Security Audit</option><option value="14">Chapter 14: Internal Control and Internal Audit</option><option value="15">Chapter 15: Operational Audit and Internal Audit under Companies Act, 2013</option><option value="16">Chapter 16: Audit of Different Service Organisations</option><option value="17">Chapter 17: Forensic Audit</option><option value="18">Chapter 18: Anti-Money Laundering</option></select><span class="desc" id="chapterCount">249 questions available in all chapters.</span></div>
-<div class="card" id="pyqCard" style="display:none"><h2>Previous Year Paper</h2><select id="attemptSelect"><option value="all">All Attempts — 75 Questions</option><option value="June 2026">June 2026 — 15 Questions</option><option value="December 2025">December 2025 — 15 Questions</option><option value="June 2025">June 2025 — 15 Questions</option><option value="December 2024">December 2024 — 15 Questions</option><option value="June 2024">June 2024 — 15 Questions</option></select><span class="desc" id="attemptCount">75 previous-year questions available.</span></div>
+<div class="card" id="bankCard"><h2>Chapter</h2><select id="chapterSelect"><option value="all">All Chapters</option></select><span class="desc" id="chapterCount">Questions available in all chapters.</span></div>
+<div class="card" id="pyqCard" style="display:none"><h2>Previous Year Paper</h2><select id="attemptSelect"><option value="all">All Attempts</option></select><span class="desc" id="attemptCount">Previous-year questions available.</span></div>
 <div class="quick"><button class="outline" id="wrongBtn">↻ Reattempt Wrong <span id="wrongCount"></span></button><button class="outline" id="bookBtn">★ Bookmarked <span id="bookCount"></span></button></div>
 <div class="card"><h2>Round</h2><div class="row"><div><div class="label">Number of questions</div><span class="desc">Choose how many MCQs to attempt.</span></div><div class="stepper"><button id="qDown">−</button><span class="count" id="qCount">20</span><button id="qUp">+</button></div></div><div class="row"><div><div class="label">Marks per question</div><span class="desc">Used for the final score.</span></div><div class="stepper"><button id="mDown">−</button><span class="count" id="mCount">1</span><button id="mUp">+</button></div></div></div>
 <div class="card"><h2>Answer mode</h2><div class="row"><div><div class="label">Instant answer</div><span class="desc">Show correct/wrong immediately after selection.</span></div><label class="switch"><input id="instant" type="checkbox" checked><span class="track"></span></label></div><div class="row"><div><div class="label">Random question order</div><span class="desc">Fresh random set on every round.</span></div><label class="switch"><input id="random" type="checkbox" checked><span class="track"></span></label></div></div>
@@ -75,42 +75,101 @@ function saveState(){const x=storage();const v={...x,bookmarks:[...bookmarks],wr
 function source(){return $('sourceSelect').value}
 function selectedAttempt(){return $('attemptSelect').value}
 function sourceQuestions(){return QUESTIONS.filter(q=>q.source===source())}
+const CHAPTER_NAMES={
+  1:"Chapter 1: Basics of Cost Audit",
+  2:"Chapter 2: Companies (Cost Records and Audit) Rules, 2014 (as amended)",
+  3:"Chapter 3: Cost Auditor",
+  4:"Chapter 4: Overview of Cost Accounting Standards and GACAP",
+  5:"Chapter 5: Cost Auditing and Assurance Standards",
+  6:"Chapter 6: Cost Audit Programme",
+  7:"Chapter 7: Cost Audit Documentation, Audit Process and Execution",
+  8:"Chapter 8: Preparation and Filing of Cost Audit Report",
+  9:"Chapter 9: Basics of Management Audit",
+  10:"Chapter 10: Management Reporting Issues and Analysis",
+  11:"Chapter 11: Management Audit in Different Functions",
+  12:"Chapter 12: Evaluation of Corporate Image",
+  13:"Chapter 13: Information Systems Security Audit",
+  14:"Chapter 14: Internal Control and Internal Audit",
+  15:"Chapter 15: Operational Audit and Internal Audit under Companies Act, 2013",
+  16:"Chapter 16: Audit of Different Service Organisations",
+  17:"Chapter 17: Forensic Audit",
+  18:"Chapter 18: Anti-Money Laundering"
+};
+function renderChapters(){
+ const bank=QUESTIONS.filter(q=>q.source==="bank");
+ const ids=[...new Set(bank.map(q=>String(q.chapter)).filter(x=>CHAPTER_NAMES[x]))].sort((a,b)=>Number(a)-Number(b));
+ $('chapterSelect').innerHTML='<option value="all">All Chapters</option>'+ids.map(id=>'<option value="'+id+'">'+escapeHtml(CHAPTER_NAMES[id])+'</option>').join('');
+}
+function renderAttempts(){
+ const pyq=QUESTIONS.filter(q=>q.source==="pyq");
+ const attempts=[...new Set(pyq.map(q=>q.attempt).filter(Boolean))];
+ $('attemptSelect').innerHTML='<option value="all">All Attempts — '+pyq.length+' Questions</option>'+attempts.map(a=>'<option value="'+escapeHtml(a)+'">'+escapeHtml(a)+' — '+pyq.filter(q=>q.attempt===a).length+' Questions</option>').join('');
+}
 function selectedMaxQuestions(){
- if(source()==='pyq') return selectedAttempt()==='all'?75:15;
- const ch=$('chapterSelect').value; return ch==='all'?sourceQuestions().length:sourceQuestions().filter(q=>String(q.chapter)===ch).length;
+ if(source()==='pyq'){
+   const all=sourceQuestions(), a=selectedAttempt();
+   return a==='all'?all.length:all.filter(q=>q.attempt===a).length;
+ }
+ const ch=$('chapterSelect').value;
+ return ch==='all'?sourceQuestions().length:sourceQuestions().filter(q=>String(q.chapter)===ch).length;
 }
 function setDefaultRoundForSource(){
- if(source()==='pyq'){
-   const max=selectedMaxQuestions(); cfg.questions=max; cfg.marks=2;
- }else{
-   cfg.questions=Math.min(20,selectedMaxQuestions()); if(cfg.questions<5) cfg.questions=selectedMaxQuestions(); cfg.marks=1;
- }
- $('qCount').textContent=cfg.questions;$('mCount').textContent=cfg.marks;
+ const max=selectedMaxQuestions();
+ cfg.questions=source()==='pyq'?max:Math.min(20,max);
+ if(cfg.questions<5&&max>=5)cfg.questions=5;
+ $('qCount').textContent=cfg.questions;
+ $('mCount').textContent=cfg.marks;
 }
 function updateSourceUI(){
  const isPyq=source()==='pyq';
- $('bankCard').style.display=isPyq?'none':'block';$('pyqCard').style.display=isPyq?'block':'none';
- setDefaultRoundForSource(); updateCounts(); updateRoundDesc();
- $('sourceSummary').textContent=isPyq?'75 Previous Year Paper questions loaded across 5 attempts.':'249 MCQ Bank questions loaded.';
+ $('bankCard').style.display=isPyq?'none':'block';
+ $('pyqCard').style.display=isPyq?'block':'none';
+ renderChapters();
+ renderAttempts();
+ setDefaultRoundForSource();
+ updateCounts();
+ updateRoundDesc();
+ const total=sourceQuestions().length;
+ $('sourceSummary').textContent=isPyq
+   ? total+' Previous Year Paper questions loaded across '+new Set(sourceQuestions().map(q=>q.attempt).filter(Boolean)).size+' attempts.'
+   : total+' MCQ Bank questions loaded.';
+ if(isPyq) updateRoundDesc(); else updateChapterCount();
 }
 function updateRoundDesc(){
- if(source()==='pyq') $('attemptCount').textContent=(selectedAttempt()==='all'?'75':15)+' previous-year questions available for the selected attempt.';
+ if(source()==='pyq'){
+   const n=selectedMaxQuestions();
+   $('attemptCount').textContent=n+' previous-year questions available for the selected attempt.';
+ }
 }
-function updateChapterCount(){const v=$('chapterSelect').value;const n=v==='all'?sourceQuestions().length:sourceQuestions().filter(q=>String(q.chapter)===v).length;$('chapterCount').textContent=n+' questions available in '+(v==='all'?'all chapters':'selected chapter')+'.';cfg.questions=Math.min(cfg.questions,n);if(cfg.questions<5&&n>=5)cfg.questions=5;$('qCount').textContent=cfg.questions;}
+function updateChapterCount(){
+ const v=$('chapterSelect').value;
+ const n=v==='all'?sourceQuestions().length:sourceQuestions().filter(q=>String(q.chapter)===v).length;
+ $('chapterCount').textContent=n+' questions available in '+(v==='all'?'all chapters':'selected chapter')+'.';
+ cfg.questions=Math.min(cfg.questions,n);
+ if(cfg.questions<5&&n>=5)cfg.questions=5;
+ $('qCount').textContent=cfg.questions;
+}
 function updateAttempt(){setDefaultRoundForSource();updateRoundDesc()}
 function step(id,delta,min,max,render){cfg[id]=Math.max(min,Math.min(max,cfg[id]+delta));render()}
 function setupEvents(){
  $('sourceSelect').onchange=updateSourceUI;
  $('chapterSelect').onchange=()=>{updateChapterCount();updateRoundDesc()};
  $('attemptSelect').onchange=updateAttempt;
- $('qDown').onclick=()=>step('questions',-5,5,selectedMaxQuestions(),()=> $('qCount').textContent=cfg.questions);
- $('qUp').onclick=()=>step('questions',5,5,selectedMaxQuestions(),()=> $('qCount').textContent=cfg.questions);
- $('mDown').onclick=()=>step('marks',-1,1,5,()=> $('mCount').textContent=cfg.marks);$('mUp').onclick=()=>step('marks',1,1,5,()=> $('mCount').textContent=cfg.marks);
- $('sDown').onclick=()=>step('seconds',-5,15,180,()=> $('sCount').textContent=cfg.seconds);$('sUp').onclick=()=>step('seconds',5,15,180,()=> $('sCount').textContent=cfg.seconds);
- $('instant').onchange=e=>cfg.instant=e.target.checked;$('random').onchange=e=>cfg.random=e.target.checked;
+ $('qDown').onclick=()=>step('questions',-5,5,Math.max(5,selectedMaxQuestions()),()=> $('qCount').textContent=cfg.questions);
+ $('qUp').onclick=()=>step('questions',5,5,Math.max(5,selectedMaxQuestions()),()=> $('qCount').textContent=cfg.questions);
+ $('mDown').onclick=()=>step('marks',-1,1,5,()=> $('mCount').textContent=cfg.marks);
+ $('mUp').onclick=()=>step('marks',1,1,5,()=> $('mCount').textContent=cfg.marks);
+ $('sDown').onclick=()=>step('seconds',-5,15,180,()=> $('sCount').textContent=cfg.seconds);
+ $('sUp').onclick=()=>step('seconds',5,15,180,()=> $('sCount').textContent=cfg.seconds);
+ $('instant').onchange=e=>cfg.instant=e.target.checked;
+ $('random').onchange=e=>cfg.random=e.target.checked;
  $('timerMode').onchange=e=>{cfg.timer=e.target.value;$('questionTimeRow').style.display=cfg.timer==='question'?'flex':'none';$('roundTimeRow').style.display=cfg.timer==='round'?'flex':'none'};
  $('roundTime').onchange=e=>cfg.roundMinutes=+e.target.value;
- $('startBtn').onclick=function(){startRound('normal');};$('wrongBtn').onclick=()=>startRound('wrong');$('bookBtn').onclick=()=>startRound('bookmarks');$('retryWrong').onclick=()=>startRound('wrong');$('newRound').onclick=()=>show('setup');
+ $('startBtn').onclick=()=>startRound('normal');
+ $('wrongBtn').onclick=()=>startRound('wrong');
+ $('bookBtn').onclick=()=>startRound('bookmarks');
+ $('retryWrong').onclick=()=>startRound('wrong');
+ $('newRound').onclick=()=>show('setup');
  $('prev').onclick=()=>nav(-1);$('next').onclick=()=>nav(1);$('end').onclick=()=>finish();$('reveal').onclick=()=>reveal();$('bookmark').onclick=toggleBookmark;
  $('toggleReview').onclick=()=>{const el=$('reviewList');el.style.display=el.style.display==='block'?'none':'block'};
  $('homeBtn').onclick=$('homeResult').onclick=()=>location.href='index.html';
@@ -151,7 +210,7 @@ function updateTimerUI(){clearInterval(interval);$('timer').textContent='';$('ti
 function tickRound(){const left=Math.max(0,roundEnd-Date.now());const sec=Math.ceil(left/1000);$('timer').textContent='⏱ '+format(sec);$('timerfill').style.width=(left/(cfg.roundMinutes*60000)*100)+'%';$('timer').classList.toggle('urgent',sec<=60);$('timerfill').classList.toggle('urgent',sec<=60);if(left<=0)finish()}
 function format(sec){const m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-loadState();setupEvents();$('sourceSelect').value='bank';$('chapterSelect').value='all';$('attemptSelect').value='all';$('mCount').textContent=cfg.marks;$('sCount').textContent=cfg.seconds;updateSourceUI();updateChapterCount();
+loadState();setupEvents();$('sourceSelect').value='bank';$('chapterSelect').value='all';$('attemptSelect').value='all';$('mCount').textContent=cfg.marks;$('sCount').textContent=cfg.seconds;renderChapters();renderAttempts();updateSourceUI();updateChapterCount();
 function loadState(){const x=storage();bookmarks=new Set(x.bookmarks||[]);updateCounts()}
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
