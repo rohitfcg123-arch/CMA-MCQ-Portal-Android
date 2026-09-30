@@ -247,7 +247,7 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
 const $=id=>document.getElementById(id), norm=v=>(v||"").trim().toLowerCase();
 function questionIdentityKey(x){
   const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-  return [canon(x&&x.group),canon(x&&x.subject),canon(x&&x.attempt),canon(x&&x.q)].join("|");
+  return [canon(x&&x.type||"subjective"),canon(x&&x.group),canon(x&&x.subject),canon(x&&x.attempt),canon(x&&x.q)].join("|");
 }
 function setupPortalSections(){
  const sections=[...document.querySelectorAll("#app > section.panel")];
@@ -1500,12 +1500,36 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
     });
   }else importItems=arr;
 
-  /* HARD STOP: strict Group + Subject + Chapter master validation happens
-     before any staging or Firebase write. Subject and chapter are NEVER
-     silently changed to make an invalid JSON pass. */
+  // Universal JSON format: one file may contain both MCQ and subjective items.
+  // Existing subjective JSON remains backward-compatible when type is omitted.
+  importItems=importItems.map((rawItem,i)=>{
+    const x={...rawItem};
+    x.type=String(x.type||"subjective").trim().toLowerCase();
+    if(x.type==="objective")x.type="mcq";
+    if(!["mcq","subjective"].includes(x.type))throw Error("Item "+(i+1)+" has invalid type. Use mcq or subjective.");
+    x.source=String(x.source||(x.type==="mcq"?"pyq":"pyq")).trim().toLowerCase();
+    if(!["bank","pyq"].includes(x.source))throw Error("Item "+(i+1)+" has invalid source. Use bank or pyq.");
+    if(x.type==="mcq"){
+      const opts=Array.isArray(x.options)?x.options:[];
+      if(opts.length<2)throw Error("MCQ Item "+(i+1)+" must contain options[].");
+      x.options=opts.map(o=>typeof o==="object"?String(o.text??o.label??""):String(o)).map(v=>v.trim());
+      let ans=x.answer;
+      if(typeof ans==="string"){
+        const a=ans.trim().toUpperCase();
+        if(/^[A-Z]$/.test(a))ans=a.charCodeAt(0)-65;
+        else if(/^\\d+$/.test(a))ans=Number(a);
+      }
+      if(!Number.isInteger(ans)||ans<0||ans>=x.options.length)throw Error("MCQ Item "+(i+1)+" must have a valid answer index (0-based) or option letter.");
+      x.answer=ans;
+      x.explanationHtml=String(x.explanationHtml||x.explanation||"").trim();
+    }
+    return x;
+  });
+
   importItems=validateAllQuestionsAgainstStrictMaster(importItems);
 
-  const existingSnap=await db.collection("subjectiveQuestions").get();
+  const existingSubjectiveSnap=await db.collection("subjectiveQuestions").get();
+  const existingMcqSnap=await db.collection("mcqQuestions").get();
   const canon=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
   function normalizeGroupValue(v){
     const n=String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
@@ -1516,20 +1540,20 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
     if(n==="final4"||n==="finalgroup4"||n==="cmafinalgroup4")return "final4";
     return "";
   }
-  const canonicalKey=x=>questionIdentityKey(x);
   const existing=new Map();
-  existingSnap.docs.forEach(d=>{
-    const x=d.data(),key=canonicalKey(x);
-    if(!existing.has(key))existing.set(key,{id:d.id,data:x});
-  });
+  [existingSubjectiveSnap,existingMcqSnap].forEach(snap=>snap.docs.forEach(d=>{
+    const x={type:d.ref.parent.id==="mcqQuestions"?"mcq":"subjective",...d.data()},key=questionIdentityKey(x);
+    if(!existing.has(key))existing.set(key,{id:d.id,data:x,collection:d.ref.parent.id});
+  }));
 
   const incoming=new Map();
   importItems.forEach((rawItem,i)=>{
     const x={...rawItem,group:normalizeGroupValue(rawItem.group)};
-    if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required question fields. Required: group, subject, chapter, attempt, q, html.");
-    if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+(rawItem.group||"unknown group")+". Use the exact subject from the dropdown. The uploader will not change the subject automatically.");
-    if(typeof x.chapter!=="string"||!x.chapter.trim())throw Error("Item "+(i+1)+" is missing a chapter.");
-    incoming.set(canonicalKey(x),x);
+    if(!x.group||!x.subject||!x.chapter||!x.attempt||!x.q||!x.html)throw Error("Item "+(i+1)+" is missing required fields. Required: type, group, subject, chapter, attempt, q, html.");
+    if(!(SUBJECTS[x.group]||[]).includes(x.subject))throw Error("Item "+(i+1)+" has an invalid subject for "+(rawItem.group||"unknown group")+". Use the exact subject from the dropdown.");
+    if(x.type==="mcq" && (!Array.isArray(x.options)||!x.options.length))throw Error("MCQ Item "+(i+1)+" is missing options[].");
+    if(x.type==="mcq") x.html=String(x.html||"");
+    incoming.set(questionIdentityKey(x),x);
   });
 
   const conflicts=[];
@@ -1547,8 +1571,10 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
   let added=0,updated=0,skipped=0;
   const pendingItems=[];
   incoming.forEach(x=>{
-    const key=canonicalKey(x);
+    const key=questionIdentityKey(x);
     const cleanData={
+      type:x.type,
+      source:x.source,
       group:x.group,
       subject:x.subject,
       chapter:x.chapter,
@@ -1558,18 +1584,21 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
       q:x.q,
       marks:x.marks===""||x.marks==null?null:Number(x.marks),
       html:String(x.html||""),
+      options:x.type==="mcq"?x.options:[],
+      answer:x.type==="mcq"?x.answer:null,
+      explanationHtml:x.type==="mcq"?String(x.explanationHtml||"").trim():"",
       solutionHtml:String(x.solutionHtml||"").trim(),
       solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):(String(x.solutionHtml||"").trim()?[String(x.solutionHtml).trim()]:[]),
       sort:Number(x.sort)||0
     };
     if(existing.has(key)){
       if(decisions.get(key)==="replace"){
-        pendingItems.push({id:existing.get(key).id,data:cleanData,update:true});
+        pendingItems.push({id:existing.get(key).id,data:cleanData,update:true,collection:existing.get(key).collection});
         updated++;
       }else skipped++;
       return;
     }
-    pendingItems.push({id:null,data:cleanData,update:false});
+    pendingItems.push({id:null,data:cleanData,update:false,collection:x.type==="mcq"?"mcqQuestions":"subjectiveQuestions"});
     added++;
   });
 
