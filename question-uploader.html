@@ -1663,32 +1663,27 @@ $("exportPortalQuestionsBtn").onclick=async()=>{
   const btn=$("exportPortalQuestionsBtn");
   try{
     setBusy(btn,true,"Reading All Portal Questions…");
-    const snap=await db.collection("subjectiveQuestions").get();
-    const questions=snap.docs.map(d=>{
-      const x=d.data();
-      const out={...x};
-      delete out.updatedAt;
-      delete out.updatedBy;
-      out.id=d.id;
-      out.topic=String(x.topic||x.topicName||"").trim();
-      out.chapter=String(x.chapter||x.chapterName||"").trim();
-      return out;
-    });
-    const topicCount=questions.filter(x=>x.topic).length;
+    const [subjectiveSnap,mcqSnap]=await Promise.all([db.collection("subjectiveQuestions").get(),db.collection("mcqQuestions").get()]);
+    const questions=[];
+    subjectiveSnap.docs.forEach(d=>{const x=d.data();questions.push({...x,type:"subjective",id:d.id});});
+    mcqSnap.docs.forEach(d=>{const x=d.data();questions.push({...x,type:"mcq",id:d.id});});
+    questions.forEach(x=>{x.topic=String(x.topic||x.topicName||"").trim();x.chapter=String(x.chapter||x.chapterName||"").trim();delete x.updatedAt;delete x.updatedBy;});
     const payload={
-      exportVersion:"1.0",
+      exportVersion:"1.1",
       exportedAt:new Date().toISOString(),
-      source:"CMA Zone Firebase subjectiveQuestions",
+      source:"CMA Zone Firebase subjectiveQuestions + mcqQuestions",
       totalQuestions:questions.length,
-      questionsWithTopic:topicCount,
-      questionsWithoutTopic:questions.length-topicCount,
-      note:"This export contains every currently uploaded subjective question. Existing topic values are preserved when present; blank topic values are intentionally left blank so ChatGPT can classify them from the question content.",
+      mcqQuestions:questions.filter(x=>x.type==="mcq").length,
+      subjectiveQuestions:questions.filter(x=>x.type==="subjective").length,
+      questionsWithTopic:questions.filter(x=>x.topic).length,
+      questionsWithoutTopic:questions.filter(x=>!x.topic).length,
+      note:"Universal export containing both objective MCQs and subjective PYQs. Existing metadata is preserved.",
       questions
     };
-    downloadJson("CMA_Zone_ALL_Portal_Questions_Topic_Audit.json",payload);
-    $("portalQuestionExportCount").textContent="Exported "+questions.length.toLocaleString("en-IN")+" questions — "+topicCount.toLocaleString("en-IN")+" already have topic data; "+(questions.length-topicCount).toLocaleString("en-IN")+" need topic classification.";
+    downloadJson("CMA_Zone_ALL_Portal_Questions_Universal.json",payload);
+    $("portalQuestionExportCount").textContent="Exported "+questions.length.toLocaleString("en-IN")+" questions — "+payload.mcqQuestions+" MCQ + "+payload.subjectiveQuestions+" subjective.";
     $("portalQuestionExportCount").className="count ok";
-    $("jsonMsg").textContent="All uploaded Firestore questions have been exported as JSON. Send this JSON to ChatGPT for chapter correction and topic assignment.";
+    $("jsonMsg").textContent="Universal MCQ + Subjective JSON exported successfully.";
     $("jsonMsg").className="msg ok";
   }catch(e){
     $("portalQuestionExportCount").textContent="";
