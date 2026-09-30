@@ -1588,7 +1588,8 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
       html:String(x.html||""),
       options:x.type==="mcq"?x.options:[],
       answer:x.type==="mcq"?x.answer:null,
-      explanationHtml:x.type==="mcq"?String(x.explanationHtml||"").trim():"",
+      explanationHtml:x.type==="mcq"?String(x.explanationHtml||x.explanation||"").trim():"",
+      explanation:x.type==="mcq"?String(x.explanation||x.explanationHtml||"").trim():"",
       solutionHtml:String(x.solutionHtml||"").trim(),
       solutionHtmls:Array.isArray(x.solutionHtmls)?x.solutionHtmls.map(v=>String(v||"").trim()).filter(Boolean):(String(x.solutionHtml||"").trim()?[String(x.solutionHtml).trim()]:[]),
       sort:Number(x.sort)||0
