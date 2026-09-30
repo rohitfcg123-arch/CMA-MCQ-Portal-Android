@@ -33,7 +33,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #234</b> — Google login has been removed from the Question Uploader. The uploader now opens directly without an administrator sign-in screen; Firebase is still used for Firestore data access.</div>
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #235</b> — Google login has been removed from the Question Uploader. The uploader now opens directly without an administrator sign-in screen; Firebase is still used for Firestore data access.</div>
 <div id="portalSectionNav" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px auto 0;max-width:1250px;box-shadow:0 5px 18px #0826270b"><div style="font-size:12px;font-weight:850;color:var(--teal);margin-bottom:7px">Question Portal Options</div><select id="portalSectionSelect" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#22302f;font-weight:750">
 <option value="upload">Upload New Subjective Question</option>
 <option value="json">JSON Upload / Backup</option>
@@ -41,8 +41,8 @@
 <option value="marks">Bulk Update Marks</option>
 <option value="uploaded">Uploaded Questions</option>
 </select>
-</div>\n</div>
-<div id="app" class="wrap hidden">
+</div>
+<div id="app" class="wrap">
 <section class="panel"><h2>Upload New Subjective Question</h2><div class="body">
 <div class="note"><b>Permanent system:</b> questions uploaded here are saved in Firebase Firestore. The user portal reads the same collection automatically, so you do not need to edit JavaScript for every new question. Existing hard-coded questions remain untouched.</div>
 <div class="grid" style="margin-top:14px">
