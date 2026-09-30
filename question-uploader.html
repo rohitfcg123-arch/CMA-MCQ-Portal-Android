@@ -1698,7 +1698,7 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
     x.type=String(x.type||(detectedOptions.length>=2?"mcq":"subjective")).trim().toLowerCase();
     if(x.type==="objective")x.type="mcq";
     if(!["mcq","subjective"].includes(x.type))throw Error("Item "+(i+1)+" has invalid type. Use mcq or subjective.");
-    x.source=String(x.source||(x.type==="mcq"?"pyq":"pyq")).trim().toLowerCase();
+    x.source=String(x.source||(x.type==="mcq"?"bank":"pyq")).trim().toLowerCase();
     if(!["bank","pyq"].includes(x.source))throw Error("Item "+(i+1)+" has invalid source. Use bank or pyq.");
     if(x.type==="mcq"){
       let opts=normalizeOptionArray(x.options);
@@ -1789,7 +1789,7 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
     };
     if(existing.has(key)){
       if(decisions.get(key)==="replace"){
-        pendingItems.push({id:existing.get(key).id,data:cleanData,update:true,collection:existing.get(key).collection});
+        pendingItems.push({id:existing.get(key).id,data:cleanData,update:true,collection:x.type==="mcq"?"mcqQuestions":"subjectiveQuestions",previousCollection:existing.get(key).collection});
         updated++;
       }else skipped++;
       return;
@@ -2355,7 +2355,7 @@ window.cmaUploaderDirectApprove=async function(){
         var data=item&&item.data?item.data:item;
         var collection=item.collection||(String(data.type||"").toLowerCase()==="mcq"?"mcqQuestions":"subjectiveQuestions");
         var ref=item.update&&item.id?db.collection(collection).doc(item.id):db.collection(collection).doc();
-        batch.set(ref,Object.assign({},data,{updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"}),{merge:!!item.update});
+        if(item.previousCollection && item.previousCollection!==collectionName && item.id){ batch.delete(db.collection(item.previousCollection).doc(item.id)); }\n          batch.set(ref,Object.assign({},data,{updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:"CMA Zone Question Uploader"}),{merge:!!item.update});
       });
       await batch.commit();
     }
