@@ -2021,7 +2021,7 @@ $("approvePendingBtn").onclick=async()=>{
     for(let i=0;i<items.length;i+=450){
       const batch=db.batch();
       items.slice(i,i+450).forEach(item=>{
-        const ref=item.update?db.collection("subjectiveQuestions").doc(item.id):db.collection("subjectiveQuestions").doc();
+        const collectionName=item.collection||(item.data&&item.data.type==="mcq"?"mcqQuestions":"subjectiveQuestions"); const ref=item.update?db.collection(collectionName).doc(item.id):db.collection(collectionName).doc();
         batch.set(ref,{
           ...item.data,
           updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
