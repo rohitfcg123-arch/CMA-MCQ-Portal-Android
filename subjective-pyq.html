@@ -1144,7 +1144,7 @@ const key=x=>[x.a,x.q,x.t].join("|").toLowerCase();
 async function loadUploadedQuestions(){
   try{
     const snap=await db.collection("subjectiveQuestions").get();
-    const remote=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const remote=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>String(x.type||"subjective").toLowerCase()!=="mcq" && !(Array.isArray(x.options)&&x.options.length>=2));
     window.ALL_SUBJECTIVE_REMOTE=remote.map(x=>({
       id:x.id,group:String(x.group||"").trim(),subject:String(x.subject||"").trim(),
       a:String(x.attempt||x.a||"").trim(),q:String(x.q||x.question||x.questionNumber||x.questionNo||"").trim(),
