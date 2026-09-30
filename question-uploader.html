@@ -1576,6 +1576,8 @@ $("importBtn").onclick=async()=>{const btn=$("importBtn");try{
       type:x.type,
       source:x.source,
       group:x.group,
+      subjectKey:String(x.subject||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,""),
+      groupKey:x.group,
       subject:x.subject,
       chapter:x.chapter,
       chapterId:String(x.chapterId||"").trim(),
