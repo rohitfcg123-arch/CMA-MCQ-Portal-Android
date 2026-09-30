@@ -5,6 +5,96 @@
 <title>CMA Zone — Question Uploader</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script>
+/* CMA Zone — UPDATE #252: standalone Google Auth bootstrap.
+   This runs before the large uploader script so the login button still works
+   even if a later uploader-only script has a runtime/parse problem. */
+(function(){
+  var CFG={
+    apiKey:"AIzaSyCDQRVXCxHZfy3cLUJg2jG3kUTuBABHMbc",
+    authDomain:"cma-mcq-portal-cf33f.firebaseapp.com",
+    projectId:"cma-mcq-portal-cf33f",
+    storageBucket:"cma-mcq-portal-cf33f.firebasestorage.app",
+    messagingSenderId:"208738737302",
+    appId:"1:208738737302:web:3754a55033f67a8ffef6b7",
+    measurementId:"G-TXD74QQE8F"
+  };
+  var ADMIN="rohit.fcg123@gmail.com";
+  function show(allowed,message){
+    var gate=document.getElementById("authGate"),nav=document.getElementById("portalSectionNav"),app=document.getElementById("app"),msg=document.getElementById("authGateMsg");
+    if(gate)gate.style.display=allowed?"none":"block";
+    if(nav)nav.style.display=allowed?"block":"none";
+    if(app)app.style.display=allowed?"block":"none";
+    if(msg){msg.className=allowed?"msg ok":"msg err";msg.textContent=message||"";}
+  }
+  function init(){
+    try{
+      if(!window.firebase)throw new Error("Firebase Auth SDK did not load.");
+      if(!firebase.apps.length)firebase.initializeApp(CFG);
+      var a=firebase.auth();
+      var p=new firebase.auth.GoogleAuthProvider();
+      p.setCustomParameters({prompt:"select_account"});
+      window.cmaGoogleLogin=async function(){
+        var btn=document.getElementById("googleLoginBtn"),msg=document.getElementById("authGateMsg");
+        if(!btn)return false;
+        try{
+          btn.disabled=true;btn.textContent="Signing in…";
+          if(msg){msg.className="msg";msg.textContent="Opening Google sign-in…";}
+          var result;
+          try{
+            result=await a.signInWithPopup(p);
+          }catch(pop){
+            if(pop&&["auth/popup-blocked","auth/popup-closed-by-user","auth/cancelled-popup-request"].indexOf(pop.code)>=0){
+              if(msg){msg.className="msg";msg.textContent="Popup unavailable — opening Google sign-in page…";}
+              await a.signInWithRedirect(p);
+              return false;
+            }
+            throw pop;
+          }
+          var email=String(result&&result.user&&result.user.email||"").toLowerCase();
+          if(email!==ADMIN){
+            await a.signOut();
+            throw new Error("This Google account is not authorised. Use "+ADMIN+".");
+          }
+          show(true,"Signed in as "+email);
+        }catch(e){
+          var code=e&&e.code?String(e.code):"";
+          var detail=e&&e.message?String(e.message):String(e||"Google sign-in failed.");
+          if(msg){
+            msg.className="msg err";
+            msg.textContent=code?("Google sign-in failed ["+code+"]: "+detail):detail;
+          }
+        }finally{
+          if(btn&&document.visibilityState!=="hidden"){
+            btn.disabled=false;btn.textContent="🔵 Continue with Google";
+          }
+        }
+        return false;
+      };
+      a.getRedirectResult().then(function(result){
+        if(!result||!result.user)return;
+        var email=String(result.user.email||"").toLowerCase();
+        if(email===ADMIN)show(true,"Signed in as "+email);
+        else a.signOut().then(function(){show(false,"This Google account is not authorised for the Question Uploader.");});
+      }).catch(function(e){
+        var msg=document.getElementById("authGateMsg");
+        if(msg)msg.textContent="Google redirect failed ["+(e&&e.code?e.code:"unknown")+"]: "+(e&&e.message?e.message:e);
+        if(msg)msg.className="msg err";
+      });
+      a.onAuthStateChanged(function(user){
+        var email=String(user&&user.email||"").toLowerCase();
+        if(user&&email===ADMIN)show(true,"Signed in as "+email);
+        else if(!user)show(false,"");
+        else{a.signOut();show(false,"Please sign in with the authorised Google account.");}
+      });
+    }catch(e){
+      var msg=document.getElementById("authGateMsg");
+      if(msg){msg.className="msg err";msg.textContent="Login setup failed: "+(e&&e.message?e.message:e);}
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -39,7 +129,7 @@
 </head>
 <body>
 <header class="top"><div class="brand">CMA <span>ZONE</span> — Question Uploader</div></header>
-<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #242</b> — Rebuilt the Open Preview Page button as an independent direct launcher. It can reconstruct staged preview data from the JSON box if the normal uploader staging handler fails.<section id="authGate">
+<div style="max-width:1250px;margin:10px auto 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#f4eee2;color:var(--teal);font-size:12px;font-weight:850"><b>UPDATE #252</b> — Repaired Google login with an independent Firebase Auth bootstrap and popup/redirect fallback. It can reconstruct staged preview data from the JSON box if the normal uploader staging handler fails.<section id="authGate">
   <h2>🔐 CMA Zone Question Uploader</h2>
   <p>Sign in with the authorised Google account to access the Question Uploader.</p>
   <button type="button" class="google-login-btn" id="googleLoginBtn" onclick="return window.cmaGoogleLogin()">🔵 Continue with Google</button>
@@ -320,30 +410,33 @@ window.cmaGoogleLogin=async function(){
   const btn=$("googleLoginBtn"),msg=$("authGateMsg");
   if(!btn||btn.disabled)return false;
   try{
+    if(!window.firebase||!firebase.apps.length)throw new Error("Firebase Auth SDK is not initialised.");
     btn.disabled=true;btn.textContent="Signing in…";
-    if(msg){msg.className="msg";msg.textContent="Opening Google account selection…";}
-    const result=await auth.signInWithPopup(googleProvider);
-    const email=String(result.user&&result.user.email||"").toLowerCase();
+    if(msg){msg.className="msg";msg.textContent="Opening Google sign-in…";}
+    let result;
+    try{
+      result=await auth.signInWithPopup(googleProvider);
+    }catch(pop){
+      if(pop&&["auth/popup-blocked","auth/popup-closed-by-user","auth/cancelled-popup-request"].includes(pop.code)){
+        if(msg){msg.className="msg";msg.textContent="Popup unavailable — opening Google sign-in page…";}
+        await auth.signInWithRedirect(googleProvider);
+        return false;
+      }
+      throw pop;
+    }
+    const email=String(result&&result.user&&result.user.email||"").toLowerCase();
     if(email!==ADMIN_EMAIL){
       await auth.signOut();
-      throw new Error("This Google account is not authorised for the Question Uploader.");
+      throw new Error("This Google account is not authorised for the Question Uploader. Use "+ADMIN_EMAIL+".");
     }
     cmaShowUploader(true,"Signed in as "+email);
   }catch(e){
-    if(e&&e.code==="auth/popup-blocked"){
-      if(msg){msg.className="msg";msg.textContent="Popup blocked. Opening Google sign-in page…";}
-      try{
-        await auth.signInWithRedirect(googleProvider);
-      }catch(re){
-        if(msg){msg.className="err";msg.textContent=re&&re.message?re.message:"Google redirect sign-in failed.";}
-      }
-    }else if(e&&e.code==="auth/unauthorized-domain"){
-      if(msg){msg.className="err";msg.textContent="Firebase Auth has not authorised this website domain yet.";}
-    }else if(msg){
-      msg.className="err";msg.textContent=e&&e.message?e.message:"Google sign-in failed.";
+    if(msg){
+      msg.className="err";
+      msg.textContent="Google sign-in failed ["+(e&&e.code?e.code:"unknown")+"]: "+(e&&e.message?e.message:e||"Unknown error");
     }
   }finally{
-    if(btn.disabled && document.visibilityState!=="hidden"){
+    if(btn&&document.visibilityState!=="hidden"){
       btn.disabled=false;btn.textContent="🔵 Continue with Google";
     }
   }
