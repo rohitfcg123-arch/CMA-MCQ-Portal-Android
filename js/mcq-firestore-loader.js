@@ -23,7 +23,11 @@
     "final-group-4-indirect-tax-law-practice.html":["final4","Indirect Tax Laws and Practice"],
     "final-group-4-risk-management-banking-insurance.html":["final4","Risk Management in Banking and Insurance"],
     "final-group-4-strategic-performance-business-valuation.html":["final4","Strategic Performance Management and Business Valuation"],
-    "final-group-4-entrepreneurship-startup.html":["final4","Entrepreneurship and Start-Up"]
+    "final-group-4-entrepreneurship-startup.html":["final4","Entrepreneurship and Start-Up"],
+    "foundation-fundamentals-business-economics-management.html":["foundation","Fundamentals of Business Economics and Management"],
+    "foundation-fundamentals-business-mathematics-statistics.html":["foundation","Fundamentals of Business Mathematics and Statistics"],
+    "foundation-fundamentals-financial-cost-accounting.html":["foundation","Fundamentals of Financial and Cost Accounting"],
+    "foundation-fundamentals-law-business-communication.html":["foundation","Fundamentals of Business Laws and Business Communication"]
   };
   function norm(v){return String(v||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");}
   window.cmaLoadMCQs=async function(){
