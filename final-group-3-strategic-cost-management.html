@@ -1,77 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>CMA Final Group 3 — Strategic Cost Management MCQ Practice</title>
-<link rel="stylesheet" href="css/cma-subject-theme.css?v=20260930scm1">
-<style>
-:root{--ink:#17272a;--paper:#f7f5ef;--paper2:#eee9dc;--rule:#d5cdbb;--gold:#9a741e;--teal:#0e5052;--teal2:#08383a;--muted:#6d756f;--good:#2f7042;--bad:#a13d31}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-#cmaSessionBar{background:var(--teal2);color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px}
-#cmaSessionBar a,#cmaSessionBar button{color:#fff;background:transparent;border:1px solid rgba(255,255,255,.35);border-radius:7px;padding:7px 11px;font-weight:700;text-decoration:none}
-.wrap{max-width:820px;margin:auto;padding:12px 16px 48px}
-.masthead{position:sticky;top:0;z-index:20;background:rgba(247,245,239,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);box-shadow:0 5px 18px rgba(8,56,58,.04);padding:14px 0;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.masthead h1{margin:0;color:var(--teal2);font-size:1.35rem;font-weight:800}.sub{color:var(--gold);font-size:.75rem;font-weight:800;margin-top:3px}
-button,select{font:inherit}.home-btn,.ghost{background:var(--paper);color:var(--teal);border:1px solid var(--rule);border-radius:10px;padding:9px 13px;font-weight:750}
-.screen{display:none}.screen.active{display:block}.lede{color:var(--muted);line-height:1.55;margin:18px 0}
-.card{background:var(--paper2);border:1px solid var(--rule);border-radius:14px;padding:18px;margin:0 0 14px;box-shadow:0 4px 14px rgba(8,56,58,.035)}
-.card h2{margin:0 0 12px;color:var(--gold);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:.78rem;color:var(--muted);font-weight:700;margin-bottom:6px}
-select{width:100%;padding:11px;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:10px}
-.opt{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule);gap:12px}.opt:last-child{border-bottom:0}.opt span{font-weight:650}.desc{display:block;color:var(--muted);font-size:.75rem;font-weight:400;margin-top:3px}
-.primary{width:100%;background:var(--teal);color:#fff;border:0;border-radius:12px;padding:14px;font-weight:800;font-size:1rem}.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.quick button{padding:13px;background:var(--paper);border:1px solid var(--rule);border-radius:10px;color:var(--teal);font-weight:800}
-.quizbar{display:flex;justify-content:space-between;gap:8px;padding:12px 0;font-weight:800;color:var(--teal2)}.progress{height:7px;background:var(--rule);border-radius:10px;overflow:hidden;margin-bottom:18px}.progress i{display:block;height:100%;width:0;background:var(--teal)}
-.qmeta{color:var(--gold);font-size:.78rem;font-weight:800}.qtext{font-size:1.05rem;line-height:1.6;margin:10px 0 15px}.option{padding:13px;background:var(--paper2);border:1px solid var(--rule);border-radius:12px;margin:9px 0;cursor:pointer}.option.correct{border-color:var(--good);background:#e4f0e5}.option.wrong{border-color:var(--bad);background:#f4e2df}.feedback{display:none;padding:11px;border-radius:10px;margin:12px 0;font-weight:700}.feedback.show{display:block}.feedback.good{background:#e4f0e5;color:var(--good)}.feedback.bad{background:#f4e2df;color:var(--bad)}
-.actions{display:flex;gap:8px;margin-top:14px}.actions>*{flex:1}.score{text-align:center;padding:25px}.score strong{font-size:2.3rem;color:var(--teal2)}.review{margin-top:14px}.review-item{padding:13px;border:1px solid var(--rule);border-radius:10px;background:var(--paper2);margin:8px 0;line-height:1.5}
-.status{font-size:.78rem;color:var(--muted);margin-top:8px}.chapter-count{font-size:.78rem;color:var(--muted);margin-top:8px}
-@media(max-width:560px){.grid,.quick{grid-template-columns:1fr}.wrap{padding-left:12px;padding-right:12px}.masthead h1{font-size:1.15rem}}
-</style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Strategic Cost Management — CMA Final Group 3 MCQ Practice</title>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="css/cma-subject-theme.css?v=20260930scm2">
 </head>
 <body>
-<div id="cmaSessionBar"><strong>CMA MCQ Portal</strong><span><a href="index.html">Home</a></span></div>
-<div class="wrap">
-<header class="masthead"><div><h1>CMA Final Group 3 — Strategic Cost Management</h1><div class="sub">PAPER 16 · MCQ PRACTICE</div></div><button id="homeBtn" class="home-btn">⌂ Home</button></header>
+<div id="cmaSessionBar">
+  <div class="cma-session-left"><strong>CMA MCQ Portal</strong><span id="cmaSessionEmail" class="cma-session-email"></span></div>
+  <div style="display:flex;gap:7px;align-items:center">
+    <a href="index.html" style="color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:7px;padding:7px 11px;font-weight:700">Home</a>
+    <button id="cmaLoginBtn">Login</button>
+    <button id="cmaLogoutBtn" class="cma-logout" style="display:none">Logout</button>
+  </div>
+</div>
+<div id="cmaAuthOverlay">
+  <div id="cmaAuthCard">
+    <button id="cmaCloseAuth" aria-label="Close">×</button>
+    <h2>Sign in to continue</h2>
+    <p>Use the same Google account you used on the CMA MCQ Portal. If you are already signed in, the test will open directly.</p>
+    <button id="cmaGoogleLogin">Continue with Google</button>
+    <div id="cmaAuthMsg"></div>
+  </div>
+</div>
+<div id="cmaAccessNotice"></div>
+
+<div class="app">
+<header class="top">
+  <div class="topline">
+    <div><div class="brand">CMA Final Group 3</div><div class="mini">MCQ Practice System</div></div>
+    <button class="home" id="homeBtn">⌂ Home</button>
+  </div>
+</header>
 
 <section id="setup" class="screen active">
-<p class="lede">Strategic Cost Management — MCQ Practice. Select the chapter and build your practice round using the same CMA MCQ Portal design and flow.</p>
-<div class="quick"><button id="quickBtn">⚡ Quick Practice</button><button id="mockBtn">📝 Full Mock Test</button><button id="wrongBtn">🔁 Wrong Questions</button><button id="bookBtn">🔖 Bookmarked</button></div>
-
-<div class="card"><h2>Question Source</h2><div class="grid">
-<div class="field"><label>Source</label><select id="source"><option value="bank">MCQ Bank</option><option value="pyq">Previous Year Paper</option></select></div>
-<div class="field"><label>Attempt</label><select id="attempt"><option>All Attempts</option><option>June 2026</option><option>December 2025</option><option>June 2025</option><option>December 2024</option><option>June 2024</option></select></div></div></div>
-
-<div class="card"><h2>Chapter</h2><select id="chapter"></select><div id="chapterCount" class="chapter-count"></div></div>
-
-<div class="card"><h2>Round Settings</h2>
-<div class="opt"><span>Number of questions<small class="desc">Choose the size of your practice round</small></span><select id="count" style="max-width:150px"><option>10</option><option selected>20</option><option>30</option><option>50</option><option>100</option></select></div>
-<div class="opt"><span>Marks per question<small class="desc">Total marks scale automatically</small></span><select id="marks" style="max-width:150px"><option selected>1</option><option>2</option><option>3</option></select></div>
-<div class="opt"><span>Random order<small class="desc">Shuffle questions for each round</small></span><input id="random" type="checkbox" checked></div>
-<div class="opt"><span>Instant answer<small class="desc">Show the answer immediately after selection</small></span><input id="instant" type="checkbox" checked></div>
-<div class="opt"><span>Timer per question<small class="desc">Automatically move on when time expires</small></span><input id="timer" type="checkbox"></div>
-<div class="opt" id="secondsRow" style="display:none"><span>Seconds per question</span><select id="seconds" style="max-width:150px"><option>30</option><option selected>60</option><option>90</option><option>120</option></select></div>
+<div class="hero">
+  <h1>Strategic Cost Management</h1>
+  <p><span id="sourceSummary">MCQ Bank questions loaded.</span> Choose the question source, chapter/attempt, round size, answer mode and timer before starting.</p>
 </div>
-<button class="primary" id="start">Start Practice Round</button>
-<div id="status" class="status"></div>
+
+<div class="card">
+  <h2>Question Source</h2>
+  <div class="row">
+    <div><div class="label">What do you want to solve?</div><span class="desc">Choose between the regular MCQ Bank and Previous Year Papers.</span></div>
+    <select id="sourceSelect" style="max-width:240px">
+      <option value="bank">MCQ Bank</option>
+      <option value="pyq">Previous Year Paper</option>
+    </select>
+  </div>
+</div>
+
+<div class="card" id="bankCard">
+  <h2>Chapter</h2>
+  <select id="chapterSelect"></select>
+  <span class="desc" id="chapterCount"></span>
+</div>
+
+<div class="card" id="pyqCard" style="display:none">
+  <h2>Previous Year Paper</h2>
+  <select id="attemptSelect"></select>
+  <span class="desc" id="attemptCount"></span>
+</div>
+
+<div class="quick">
+  <button class="outline" id="wrongBtn">↻ Reattempt Wrong <span id="wrongCount"></span></button>
+  <button class="outline" id="bookBtn">★ Bookmarked <span id="bookCount"></span></button>
+</div>
+
+<div class="card">
+  <h2>Round</h2>
+  <div class="row">
+    <div><div class="label">Number of questions</div><span class="desc">Choose how many MCQs to attempt.</span></div>
+    <div class="stepper"><button id="qDown">−</button><span class="count" id="qCount">20</span><button id="qUp">+</button></div>
+  </div>
+  <div class="row">
+    <div><div class="label">Marks per question</div><span class="desc">Used for the final score.</span></div>
+    <div class="stepper"><button id="mDown">−</button><span class="count" id="mCount">1</span><button id="mUp">+</button></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Answer mode</h2>
+  <div class="row">
+    <div><div class="label">Instant answer</div><span class="desc">Show correct/wrong immediately after selection.</span></div>
+    <label class="switch"><input id="instant" type="checkbox" checked><span class="track"></span></label>
+  </div>
+  <div class="row">
+    <div><div class="label">Random question order</div><span class="desc">Fresh random set on every round.</span></div>
+    <label class="switch"><input id="random" type="checkbox" checked><span class="track"></span></label>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Timer</h2>
+  <div class="row">
+    <div><div class="label">Timer mode</div><span class="desc">Per question or for the complete round.</span></div>
+    <select id="timerMode" style="max-width:190px">
+      <option value="off">Off</option><option value="question">Per Question</option><option value="round">Whole Round</option>
+    </select>
+  </div>
+  <div class="row" id="questionTimeRow" style="display:none">
+    <div><div class="label">Seconds per question</div></div>
+    <div class="stepper"><button id="sDown">−</button><span class="count" id="sCount">60</span><button id="sUp">+</button></div>
+  </div>
+  <div class="row" id="roundTimeRow" style="display:none">
+    <div><div class="label">Round duration</div></div>
+    <select id="roundTime" style="max-width:160px">
+      <option value="10">10 min</option><option value="20">20 min</option><option value="30" selected>30 min</option>
+      <option value="45">45 min</option><option value="60">60 min</option><option value="90">90 min</option>
+    </select>
+  </div>
+</div>
+
+<button class="primary start" id="startBtn">Start Practice Round</button>
+<div class="desc" id="status" style="margin-top:9px"></div>
 </section>
 
 <section id="quiz" class="screen">
-<div class="quizbar"><span id="pos"></span><span id="timerText"></span><span id="score">Score 0</span></div><div class="progress"><i id="bar"></i></div>
-<div class="card"><div id="meta" class="qmeta"></div><div id="question" class="qtext"></div><div id="options"></div><div id="feedback" class="feedback"></div><div class="actions"><button class="ghost" id="end">End Round</button><button class="primary" id="next">Next</button></div></div>
+  <div class="quiz-head">
+    <div class="qbar"><span id="pos">Question 1 / 20</span><span id="timer" class="timer"></span><span id="scoreRun">Score 0</span></div>
+    <div class="trackbar"><div class="fill" id="progress"></div></div>
+    <div class="timerbar" id="timerbar"><div class="timerfill" id="timerfill"></div></div>
+  </div>
+  <div class="palette" id="palette"></div>
+  <div class="meta"><span class="qno" id="sl"></span><button class="bookmark" id="bookmark">☆ Bookmark</button></div>
+  <p class="qtext" id="qtext"></p>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="nav"><button class="outline" id="prev">← Prev</button><button class="primary" id="next">Next →</button><button class="danger" id="end">End</button></div>
+  <button class="reveal" id="reveal">Reveal answer without answering</button>
 </section>
 
-<section id="result" class="screen">
-<div class="card score"><strong id="finalScore">0 / 0</strong><div id="pct"></div><div class="status">Round complete</div></div>
-<div class="card"><div class="grid"><div>Correct: <b id="correct"></b></div><div>Wrong: <b id="wrong"></b></div><div>Skipped: <b id="skipped"></b></div><div>Marks: <b id="marksOut"></b></div></div></div>
-<div class="actions"><button class="ghost" id="resultHome">Home</button><button class="primary" id="again">New Round</button></div>
-<div class="card review" id="review"></div>
+<section id="results" class="screen">
+  <div class="results">
+    <div class="mini">Round Complete</div>
+    <div class="score" id="score">0 / 0</div><div class="pct" id="pct">0%</div>
+    <div class="stats">
+      <div class="stat"><b class="good" id="correct">0</b><span>Correct</span></div>
+      <div class="stat"><b class="bad" id="wrong">0</b><span>Wrong</span></div>
+      <div class="stat"><b id="skipped">0</b><span>Skipped</span></div>
+      <div class="stat"><b id="bookmarkedStat">0</b><span>Bookmarks</span></div>
+    </div>
+    <div class="actions"><button class="outline" id="homeResult">⌂ Home</button><button class="primary" id="newRound">New Round</button></div>
+    <button class="danger" id="retryWrong" style="width:100%;margin-top:9px">↻ Reattempt Wrong Questions</button>
+    <div class="review"><button class="outline" id="toggleReview" style="width:100%">Review Answers</button><div id="reviewList"></div></div>
+  </div>
 </section>
 </div>
 
 <script>
-/* Strategic Cost Management page shell.
-   Question data is intentionally not invented here. Existing SCM question data can be
-   connected through the uploader/portal data source without changing its chapter names. */
+/* SCM question data is intentionally read from the existing SCM data source when supplied.
+   No SFM/Law questions are copied into this page. */
+const QUESTIONS=Array.isArray(window.SCM_QUESTIONS)?window.SCM_QUESTIONS:[];
 const CHAPTERS=[
 "Introduction to Strategic Cost Management","Quality Cost Management","Decision Making Techniques",
 "Activity Based Management and Just in Time (JIT)","Evaluating Performance","Linear Programming",
@@ -79,22 +162,132 @@ const CHAPTERS=[
 "Business Application of Maxima and Minima","Business Forecasting Models — Time Series and Regression Analysis",
 "Introduction to Tools for Data Analytics"
 ];
-const QUESTIONS=Array.isArray(window.SCM_QUESTIONS)?window.SCM_QUESTIONS:[];
+const ATTEMPTS=["June 2026","December 2025","June 2025","December 2024","June 2024"];
 const $=id=>document.getElementById(id);
-let state={pool:[],i:0,score:0,correct:0,answered:0,log:[],timer:null,time:60};
-$("chapter").innerHTML='<option value="all">All Chapters</option>'+CHAPTERS.map(x=>'<option>'+x+'</option>').join("");
-function show(id){["setup","quiz","result"].forEach(x=>$(x).classList.toggle("active",x===id));$("homeBtn").style.display=id==="setup"?"inline-block":"none"}
-function filtered(){let ch=$("chapter").value;return QUESTIONS.filter(q=>ch==="all"||q.chapter===ch||q.topic===ch)}
-function updateCount(){$("chapterCount").textContent=filtered().length+" questions available for this selection."}
-$("chapter").onchange=updateCount;updateCount();
-$("timer").onchange=()=>{$("secondsRow").style.display=$("timer").checked?"flex":"none"};
-function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function startRound(pool){pool=pool||filtered();if(!pool.length){$("status").textContent="No SCM questions are currently loaded for this selection. Upload/publish SCM MCQs to populate this page.";return}let n=Math.min(+$("count").value,pool.length);state.pool=($("random").checked?shuffle(pool):pool.slice()).slice(0,n);state.i=0;state.score=0;state.correct=0;state.answered=0;state.log=[];show("quiz");render()}
-function render(){clearInterval(state.timer);let q=state.pool[state.i];$("pos").textContent="Question "+(state.i+1)+" / "+state.pool.length;$("score").textContent="Score "+state.score;$("bar").style.width=((state.i+1)/state.pool.length*100)+"%";$("meta").textContent=(q.chapter||q.topic||"Strategic Cost Management")+" · Q"+(q.id||q.sl||state.i+1);$("question").textContent=q.q||q.question||"";$("options").innerHTML=(q.options||q.opts||[]).map((x,i)=>'<div class="option" data-i="'+i+'">'+String.fromCharCode(65+i)+". "+x+"</div>").join("");$("feedback").className="feedback";$("next").textContent=state.i===state.pool.length-1?"Finish":"Next";[...document.querySelectorAll(".option")].forEach(o=>o.onclick=()=>answer(+o.dataset.i));if($("timer").checked){state.time=+$("seconds").value;tick();state.timer=setInterval(tick,1000)}}
-function tick(){state.time--;$("timerText").textContent="Time: "+state.time+"s";if(state.time<=0){clearInterval(state.timer);answer(null)}}
-function answer(i){if(state.log[state.i])return;clearInterval(state.timer);let q=state.pool[state.i],ans=Number(q.ans??q.answer??0),ok=i===ans;if(i!==null){state.answered++;if(ok){state.correct++;state.score+=+$("marks").value}}state.log[state.i]={q,chosen:i,ans,ok};let opts=[...document.querySelectorAll(".option")];opts.forEach((o,k)=>{o.classList.add("disabled");if(k===ans)o.classList.add("correct");if(i!==null&&k===i&&!ok)o.classList.add("wrong")});$("feedback").className="feedback show "+(ok?"good":"bad");$("feedback").textContent=i===null?"Time's up · Correct answer shown.":ok?"Correct":"Wrong · Correct answer: "+(q.options||q.opts||[])[ans];$("score").textContent="Score "+state.score;$("next").disabled=false}
-$("next").onclick=()=>{if(!state.log[state.i])return;if(state.i<state.pool.length-1){state.i++;$("next").disabled=false;render()}else finish()};
-function finish(){clearInterval(state.timer);show("result");$("finalScore").textContent=state.correct+" / "+state.pool.length;$("pct").textContent=(state.pool.length?Math.round(state.correct/state.pool.length*100):0)+"% correct";$("correct").textContent=state.correct;$("wrong").textContent=state.log.filter(x=>x&&x.chosen!==null&&!x.ok).length;$("skipped").textContent=state.log.filter(x=>x&&x.chosen===null).length;$("marksOut").textContent=state.score+" / "+(state.pool.length*+$("marks").value);$("review").innerHTML=state.log.map((x,i)=>{if(!x)return"";let opts=x.q.options||x.q.opts||[];return '<div class="review-item"><b>Q'+(i+1)+'.</b> '+(x.q.q||x.q.question||"")+'<br><span class="status">Your answer: '+(x.chosen===null?"Skipped":opts[x.chosen])+' · Correct: '+opts[x.ans]+"</span></div>"}).join("")}
-$("start").onclick=()=>startRound();$("quickBtn").onclick=()=>{ $("chapter").value="all";$("count").value="20";$("instant").checked=true;startRound()};$("mockBtn").onclick=()=>{ $("chapter").value="all";$("count").value="100";$("instant").checked=false;startRound()};$("wrongBtn").onclick=()=>{$("status").textContent="Wrong-question reattempt will use the saved SCM attempt history once SCM questions are loaded."};$("bookBtn").onclick=()=>{$("status").textContent="Bookmarks will be available for loaded SCM questions."};$("end").onclick=finish;$("again").onclick=()=>show("setup");$("resultHome").onclick=()=>location.href="index.html";$("homeBtn").onclick=()=>location.href="index.html";
+const KEY="cma_scm_mcq_bank_state_v1";
+let cfg={questions:20,marks:1,instant:true,random:true,timer:"off",seconds:60,roundMinutes:30};
+let pool=[],answers=[],roundResults=[],index=0,score=0,interval=null,roundEnd=0,bookmarks=new Set();
+
+function storage(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return {}}}
+function saveState(){const x=storage(),v={...x,bookmarks:[...bookmarks],wrong:x.wrong||[]};try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){}updateCounts()}
+function source(){return $("sourceSelect").value}
+function selectedAttempt(){return $("attemptSelect").value}
+function sourceQuestions(){return QUESTIONS.filter(q=>(q.source||"bank")===source())}
+function chapterValue(q){return String(q.chapter??q.topic??"")}
+function questionId(q,i){return q.id??q.sl??("scm-"+i)}
+function questionText(q){return q.q??q.question??""}
+function optionsOf(q){return q.options??q.opts??[]}
+function answerOf(q){return Number(q.answer??q.ans??0)}
+function selectedMaxQuestions(){
+  if(source()==="pyq"){const a=selectedAttempt();return a==="all"?sourceQuestions().length:sourceQuestions().filter(q=>q.attempt===a).length}
+  const ch=$("chapterSelect").value;return ch==="all"?sourceQuestions().length:sourceQuestions().filter(q=>chapterValue(q)===ch||String(q.chapter)===ch).length
+}
+function renderChapters(){
+  $("chapterSelect").innerHTML='<option value="all">All Chapters</option>'+CHAPTERS.map((x,i)=>'<option value="'+i+'">'+x+'</option>').join("");
+}
+function renderAttempts(){
+  const pyq=sourceQuestions();
+  const present=[...new Set(pyq.map(q=>q.attempt).filter(Boolean))];
+  const list=present.length?present:ATTEMPTS;
+  $("attemptSelect").innerHTML='<option value="all">All Attempts — '+pyq.length+' Questions</option>'+list.map(a=>'<option value="'+a+'">'+a+' — '+pyq.filter(q=>q.attempt===a).length+' Questions</option>').join("");
+}
+function selectedChapterPool(){const v=$("chapterSelect").value;return v==="all"?sourceQuestions():sourceQuestions().filter(q=>chapterValue(q)===v||String(q.chapter)===v)}
+function updateChapterCount(){
+  const n=selectedChapterPool().length;
+  $("chapterCount").textContent=n+" questions available in "+($("chapterSelect").value==="all"?"all chapters":"selected chapter")+".";
+  cfg.questions=Math.min(cfg.questions,n);if(cfg.questions<5&&n>=5)cfg.questions=5;if(n===0)cfg.questions=0;$("qCount").textContent=cfg.questions;
+}
+function updateAttempt(){
+  const n=selectedMaxQuestions();
+  $("attemptCount").textContent=n+" previous-year questions available for the selected attempt.";
+  cfg.questions=n?Math.min(cfg.questions,n):0;if(cfg.questions<5&&n>=5)cfg.questions=5;$("qCount").textContent=cfg.questions;
+}
+function updateSourceUI(){
+  const pyq=source()==="pyq";
+  $("bankCard").style.display=pyq?"none":"block";$("pyqCard").style.display=pyq?"block":"none";
+  renderAttempts();
+  if(pyq){$("sourceSummary").textContent=sourceQuestions().length+" Previous Year Paper questions loaded across "+new Set(sourceQuestions().map(q=>q.attempt).filter(Boolean)).size+" attempts.";updateAttempt()}
+  else{$("sourceSummary").textContent=sourceQuestions().length+" MCQ Bank questions loaded.";updateChapterCount()}
+  updateCounts();updateRoundDesc();
+}
+function updateRoundDesc(){if(source()==="pyq"&&$("attemptCount"))updateAttempt()}
+function step(id,delta,min,max,render){cfg[id]=Math.max(min,Math.min(max,cfg[id]+delta));render()}
+function setupEvents(){
+ $("sourceSelect").onchange=updateSourceUI;
+ $("chapterSelect").onchange=updateChapterCount;
+ $("attemptSelect").onchange=updateAttempt;
+ $("qDown").onclick=()=>step("questions",-5,0,Math.max(0,selectedMaxQuestions()),()=>$("qCount").textContent=cfg.questions);
+ $("qUp").onclick=()=>step("questions",5,5,Math.max(5,selectedMaxQuestions()),()=>$("qCount").textContent=cfg.questions);
+ $("mDown").onclick=()=>step("marks",-1,1,5,()=>$("mCount").textContent=cfg.marks);
+ $("mUp").onclick=()=>step("marks",1,1,5,()=>$("mCount").textContent=cfg.marks);
+ $("sDown").onclick=()=>step("seconds",-5,15,180,()=>$("sCount").textContent=cfg.seconds);
+ $("sUp").onclick=()=>step("seconds",5,15,180,()=>$("sCount").textContent=cfg.seconds);
+ $("instant").onchange=e=>cfg.instant=e.target.checked;
+ $("random").onchange=e=>cfg.random=e.target.checked;
+ $("timerMode").onchange=e=>{cfg.timer=e.target.value;$("questionTimeRow").style.display=cfg.timer==="question"?"flex":"none";$("roundTimeRow").style.display=cfg.timer==="round"?"flex":"none"};
+ $("roundTime").onchange=e=>cfg.roundMinutes=+e.target.value;
+ $("startBtn").onclick=()=>startRound("normal");$("wrongBtn").onclick=()=>startRound("wrong");$("bookBtn").onclick=()=>startRound("bookmarks");$("retryWrong").onclick=()=>startRound("wrong");$("newRound").onclick=()=>show("setup");
+ $("prev").onclick=()=>nav(-1);$("next").onclick=()=>nav(1);$("end").onclick=()=>finish();$("reveal").onclick=reveal;$("bookmark").onclick=toggleBookmark;
+ $("toggleReview").onclick=()=>{const el=$("reviewList");el.style.display=el.style.display==="block"?"none":"block"};
+ $("homeBtn").onclick=$("homeResult").onclick=()=>location.href="index.html";
+}
+function startRound(mode){
+ clearInterval(interval);let base=sourceQuestions();
+ if(source()==="bank")base=selectedChapterPool();
+ if(source()==="pyq"&&selectedAttempt()!=="all")base=base.filter(q=>q.attempt===selectedAttempt());
+ const st=storage();
+ if(mode==="wrong"){const ids=new Set(st.wrong||[]);base=base.filter(q=>ids.has(questionId(q,0)));if(!base.length){alert("No wrong questions available. Complete a round first.");return}}
+ if(mode==="bookmarks"){base=base.filter(q=>bookmarks.has(questionId(q,0)));if(!base.length){alert("No bookmarked questions available.");return}}
+ if(!base.length){$("status").textContent="No SCM questions are currently loaded for this selection. Publish/upload SCM MCQs to populate the practice round.";show("setup");return}
+ if(cfg.random)shuffle(base);pool=base.slice(0,Math.min(cfg.questions||base.length,base.length));answers=pool.map(()=>null);roundResults=[];index=0;score=0;cfg.questions=pool.length;$("qCount").textContent=pool.length;show("quiz");if(cfg.timer==="round")roundEnd=Date.now()+cfg.roundMinutes*60000;else roundEnd=0;renderQ()
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");window.scrollTo({top:0,behavior:"smooth"})}
+function renderPalette(){const p=$("palette");p.innerHTML="";pool.forEach((q,i)=>{const b=document.createElement("button");b.className="dot"+(i===index?" current ":"")+(answers[i]!==null?" answered ":"")+(bookmarks.has(questionId(q,i))?" bookmark":"");b.textContent=i+1;b.onclick=()=>{index=i;renderQ()};p.appendChild(b)})}
+function renderQ(){
+ const q=pool[index],a=answers[index],opts=optionsOf(q);
+ $("pos").textContent=`Question ${index+1} / ${pool.length}`;
+ $("sl").textContent=q.source==="pyq"?`PYQ — ${q.attempt||"Attempt"} — Q${q.id||index+1}`:`MCQ Bank — MCQ ${q.id||q.sl||index+1}`;
+ $("qtext").textContent=questionText(q);$("scoreRun").textContent=`Score ${score}`;$("progress").style.width=((index+1)/pool.length*100)+"%";
+ $("bookmark").textContent=bookmarks.has(questionId(q,index))?"★ Bookmarked":"☆ Bookmark";$("bookmark").classList.toggle("on",bookmarks.has(questionId(q,index)));
+ $("options").innerHTML="";opts.forEach((o,i)=>{const b=document.createElement("button");b.className="option"+(a===i?" selected":"");b.innerHTML='<span class="tag">'+String.fromCharCode(65+i)+'</span><span>'+escapeHtml(o)+'</span>';b.disabled=a!==null;b.onclick=()=>answer(i);$("options").appendChild(b)});
+ const fb=$("feedback");fb.className="feedback";fb.textContent="";
+ if(roundResults[index]){const r=roundResults[index];fb.classList.add("show",r.correct?"right":"miss");fb.textContent=r.revealed?"Answer revealed · Correct answer: "+opts[r.ans]:(r.correct?"✓ Correct":"✕ Wrong — Correct answer: "+opts[r.ans])}
+ $("next").textContent=index===pool.length-1?"Submit Round →":"Next →";$("prev").disabled=index===0;renderPalette();updateTimerUI()
+}
+function answer(choice){
+ if(answers[index]!==null)return;
+ const q=pool[index],ans=answerOf(q),correct=choice===ans;answers[index]=choice;roundResults[index]={choice,correct,ans};
+ if(correct)score+=cfg.marks;else{const st=storage(),ids=new Set(st.wrong||[]);ids.add(questionId(q,index));try{localStorage.setItem(KEY,JSON.stringify({...st,wrong:[...ids],bookmarks:[...bookmarks]}))}catch(e){}}
+ renderQ()
+}
+function nav(d){if(d>0){if(index===pool.length-1)finish();else{if(answers[index]===null&&!roundResults[index])roundResults[index]={choice:null,correct:false,ans:answerOf(pool[index])};index++;renderQ()}}else if(index>0){index--;renderQ()}}
+function reveal(){const q=pool[index];roundResults[index]={choice:answers[index],correct:false,revealed:true,ans:answerOf(q)};renderQ()}
+function toggleBookmark(){const id=questionId(pool[index],index);if(bookmarks.has(id))bookmarks.delete(id);else bookmarks.add(id);saveState();renderQ()}
+function finish(){
+ clearInterval(interval);const st=storage(),wrongNow=new Set(st.wrong||[]);
+ pool.forEach((q,i)=>{const id=questionId(q,i),r=roundResults[i];if(r&&r.correct)wrongNow.delete(id);else if(r&&r.choice!==null)wrongNow.add(id)});
+ try{localStorage.setItem(KEY,JSON.stringify({...st,wrong:[...wrongNow],bookmarks:[...bookmarks]}))}catch(e){}
+ renderResults();show("results")
+}
+function renderResults(){
+ const correct=roundResults.filter(x=>x&&x.correct).length,wrong=roundResults.filter(x=>x&&x.choice!==null&&!x.correct).length,skipped=pool.length-correct-wrong;
+ $("score").textContent=`${correct*cfg.marks} / ${pool.length*cfg.marks}`;$("pct").textContent=pool.length?Math.round(correct/pool.length*100)+"%":"0%";
+ $("correct").textContent=correct;$("wrong").textContent=wrong;$("skipped").textContent=skipped;$("bookmarkedStat").textContent=pool.filter((q,i)=>bookmarks.has(questionId(q,i))).length;
+ const list=$("reviewList");list.innerHTML="";pool.forEach((q,i)=>{const r=roundResults[i],opts=optionsOf(q),c=r&&r.correct,d=document.createElement("div");d.className="review-item "+(c?"ok":(r&&r.choice!==null?"no":""));d.innerHTML='<div class="review-q">'+(i+1)+". "+escapeHtml(questionText(q))+'</div><div class="review-meta">Source: '+escapeHtml(q.source==="pyq"?"Previous Year Paper — "+(q.attempt||"Attempt"):"MCQ Bank")+'<br>Your answer: '+(r&&r.choice!==null?escapeHtml(opts[r.choice]):"Not answered")+'<br>Correct answer: <span class="good">'+escapeHtml(opts[answerOf(q)]||"")+'</span></div>';list.appendChild(d)});updateCounts()
+}
+function updateCounts(){const x=storage();$("wrongCount").textContent=(x.wrong||[]).length?"("+(x.wrong||[]).length+")":"";$("bookCount").textContent=bookmarks.size?"("+bookmarks.size+")":"";$("retryWrong").disabled=!(x.wrong||[]).length}
+function updateTimerUI(){
+ clearInterval(interval);$("timer").textContent="";$("timerbar").style.display="none";
+ if(cfg.timer==="off")return;
+ if(cfg.timer==="round"){$("timerbar").style.display="block";tickRound();interval=setInterval(tickRound,1000)}
+ else{$("timerbar").style.display="block";const end=Date.now()+cfg.seconds*1000;function tick(){const left=Math.max(0,end-Date.now()),sec=Math.ceil(left/1000);$("timer").textContent="⏱ "+format(sec);$("timerfill").style.width=(left/(cfg.seconds*1000)*100)+"%";$("timer").classList.toggle("urgent",sec<=10);$("timerfill").classList.toggle("urgent",sec<=10);if(left<=0){clearInterval(interval);if(answers[index]===null)roundResults[index]={choice:null,correct:false,timeout:true,ans:answerOf(pool[index])};if(index===pool.length-1)finish();else{index++;renderQ()}}}tick();interval=setInterval(tick,250)}
+}
+function tickRound(){const left=Math.max(0,roundEnd-Date.now()),sec=Math.ceil(left/1000);$("timer").textContent="⏱ "+format(sec);$("timerfill").style.width=(left/(cfg.roundMinutes*60000)*100)+"%";$("timer").classList.toggle("urgent",sec<=60);$("timerfill").classList.toggle("urgent",sec<=60);if(left<=0)finish()}
+function format(sec){const m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")}
+function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+renderChapters();renderAttempts();setupEvents();$("sourceSelect").value="bank";$("chapterSelect").value="all";$("attemptSelect").value="all";$("mCount").textContent=cfg.marks;$("sCount").textContent=cfg.seconds;const x=storage();bookmarks=new Set(x.bookmarks||[]);updateSourceUI();
 </script>
-</body></html>
+<script src="js/firebase-init.js"></script><script src="js/popup-manager.js"></script><script src="js/access-controller.js"></script>
+</body>
+</html>
