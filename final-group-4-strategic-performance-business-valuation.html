@@ -42,7 +42,7 @@
 </section><section id="quiz" class="screen"><div class="quiz-head"><div class="qbar"><span id="pos">Question 1 / 20</span><span id="timer" class="timer"></span><span id="scoreRun">Score 0</span></div><div class="trackbar"><div class="fill" id="progress"></div></div><div class="timerbar" id="timerbar"><div class="timerfill" id="timerfill"></div></div></div><div class="palette" id="palette"></div><div class="meta"><span class="qno" id="sl"></span><button class="bookmark" id="bookmark">☆ Bookmark</button></div><p class="qtext" id="qtext"></p><div class="options" id="options"></div><div class="feedback" id="feedback"></div><div class="nav"><button class="outline" id="prev">← Prev</button><button class="primary" id="next">Next →</button><button class="danger" id="end">End</button></div><button class="reveal" id="reveal">Reveal answer without answering</button></section>
 <section id="results" class="screen"><div class="results"><div class="mini">Round Complete</div><div class="score" id="score">0 / 0</div><div class="pct" id="pct">0%</div><div class="stats"><div class="stat"><b class="good" id="correct">0</b><span>Correct</span></div><div class="stat"><b class="bad" id="wrong">0</b><span>Wrong</span></div><div class="stat"><b id="skipped">0</b><span>Skipped</span></div><div class="stat"><b id="bookmarkedStat">0</b><span>Bookmarks</span></div></div><div class="actions"><button class="outline" id="homeResult">⌂ Home</button><button class="primary" id="newRound">New Round</button></div><button class="danger" id="retryWrong" style="width:100%;margin-top:9px">↻ Reattempt Wrong Questions</button><div class="review"><button class="outline" id="toggleReview" style="width:100%">Review Answers</button><div id="reviewList"></div></div></div></section>
 </div>
-<script>const QUESTIONS=[];
+<script>let QUESTIONS=window.__CMA_QUESTIONS__=[];
 const $=id=>document.getElementById(id);
 const KEY='cma_ble_mcq_bank_state_v3';
 let cfg={questions:20,marks:1,instant:true,random:true,timer:'off',seconds:60,roundMinutes:30};
@@ -141,4 +141,5 @@ function loadState(){const x=storage();bookmarks=new Set(x.bookmarks||[]);update
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script><script src="js/firebase-init.js"></script><script src="js/popup-manager.js"></script><script src="js/access-controller.js"></script>
 <script src="js/subject-common.js"></script>
+<script src="js/mcq-firestore-loader.js"></script><script>window.cmaLoadMCQs();</script>
 </body></html>
