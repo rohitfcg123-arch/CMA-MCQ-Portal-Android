@@ -970,7 +970,7 @@ const g=document.getElementById("group"),s=document.getElementById("subject"),t=
 const filters=document.querySelector(".filters");
 filters.insertAdjacentHTML("beforeend",'<div class="field"><label for="attempt">4. Choose Attempt (optional)</label><select id="attempt"><option value="">All Attempts</option></select></div>');
 const at=document.getElementById("attempt");
-window.SFM_ATTEMPTS.forEach(x=>{const o=document.createElement("option");o.value=x;o.textContent=x+" Attempt";at.appendChild(o);});
+const CMA_ATTEMPTS=["June 2026","December 2025","June 2025","December 2024","June 2024"]; (window.SFM_ATTEMPTS||CMA_ATTEMPTS).forEach(x=>{const o=document.createElement("option");o.value=x;o.textContent=x+" Attempt";at.appendChild(o);});
 const update=()=>render();
 function normalize(v){return String(v||"").trim().replace(/\\s+/g," ").toUpperCase();}
 // Paper-order sorting: when viewing all chapters, an attempt, or a filtered
